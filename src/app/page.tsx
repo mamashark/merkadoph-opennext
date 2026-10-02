@@ -15,7 +15,7 @@ export default function Home() {
 			/>
 
 			<div className="rounded-full bg-white/85 px-6 py-3 text-center shadow-lg backdrop-blur-sm sm:px-10 sm:py-4">
-				<p className="text-lg font-semibold text-[#2f2a1f] sm:text-2xl">Bagong Merkado, coming soon! Abangan!</p>
+				<p className="text-lg font-semibold text-[#2f2a1f] sm:text-2xl">Merkado PH: Bagong Yugto, coming soon! Abangan!</p>
 			</div>
 		</main>
 	);

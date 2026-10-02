@@ -22,7 +22,7 @@ export default function BlogsLayout({ children }: LayoutProps<"/blogs">) {
 			<footer className="border-t border-amber-900/10">
 				<div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-8 text-sm text-slate-500 sm:flex-row sm:px-6">
 					<p>© {new Date().getFullYear()} Merkado PH. All rights reserved.</p>
-					<p className="font-medium text-slate-600">Bagong Merkado, coming soon! Abangan!</p>
+					<p className="font-medium text-slate-600">Merkado PH: Bagong Yugto, coming soon! Abangan!</p>
 				</div>
 			</footer>
 		</div>

@@ -3,7 +3,7 @@ import Image from "next/image";
 export default function Home() {
 	return (
 		<main
-			className="relative flex h-dvh w-full flex-col items-center justify-between overflow-hidden bg-[#f4ebd9] bg-[url('/underconstruction-site.jpg')] bg-no-repeat bg-center bg-[length:auto_100%] px-4 py-8 sm:py-12"
+			className="relative flex h-dvh w-full flex-col items-center justify-between overflow-hidden bg-[#ddb989] bg-[url('/underconstruction-site.jpg')] bg-no-repeat bg-center bg-size-[100%_auto] px-4 py-8 sm:py-12"
 		>
 			<Image
 				src="/logo.webp"

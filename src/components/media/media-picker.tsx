@@ -5,6 +5,8 @@ import { Check, ChevronRight, Folder, HardDrive, ImageOff, Loader2, RefreshCw, U
 import { browseMedia, uploadFromPicker } from "@/app/admin/media/actions";
 import type { MediaFile, MediaListing } from "@/lib/media";
 import { buttonClass, cn } from "@/lib/ui";
+import { MAX_FILES_PER_UPLOAD, UPLOAD_ACCEPT, uploadProblem } from "@/lib/upload-rules";
+import { UploadRulesNote } from "./upload-rules-note";
 
 export type PickedMedia = Pick<MediaFile, "url" | "name" | "path">;
 
@@ -67,6 +69,15 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 
 	const upload = (files: FileList | null) => {
 		if (!files?.length || !state) return;
+		// Same rules as the server, checked here first for instant feedback.
+		const list = Array.from(files);
+		const problem = list.length > MAX_FILES_PER_UPLOAD ? `Upload up to ${MAX_FILES_PER_UPLOAD} images at a time.` : list.map(uploadProblem).find(Boolean);
+		if (problem) {
+			setError(problem);
+			if (fileRef.current) fileRef.current.value = "";
+			return;
+		}
+		setError("");
 		const form = new FormData();
 		form.set("bucket", state.bucket);
 		form.set("path", state.path);
@@ -90,14 +101,15 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 				aria-modal="true"
 				aria-labelledby="media-picker-title"
 				tabIndex={-1}
-				className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl focus:outline-none sm:rounded-2xl"
+				className="flex max-h-[92dvh] w-full max-w-4xl flex-col overflow-hidden rounded-t-2xl bg-white dark:bg-slate-900 shadow-2xl focus:outline-none sm:rounded-2xl"
 			>
-				<div className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4">
+				<div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 px-5 py-4">
 					<div>
-						<h2 id="media-picker-title" className="text-base font-semibold text-slate-900">
+						<h2 id="media-picker-title" className="text-base font-semibold text-slate-900 dark:text-white">
 							{title}
 						</h2>
-						<p className="text-xs text-slate-500">Pick from the media library or upload a new image.</p>
+						<p className="text-xs text-slate-600 dark:text-slate-400">Pick from the media library or upload a new image.</p>
+						<UploadRulesNote id="picker-upload-rules" className="mt-1" />
 					</div>
 					<button type="button" onClick={onClose} className={buttonClass("ghost", "icon")} aria-label="Close">
 						<X className="h-5 w-5" />
@@ -105,16 +117,16 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 				</div>
 
 				{/* Toolbar: bucket, path, upload */}
-				<div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+				<div className="flex flex-col gap-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
 					<div className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
-						<label className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5">
-							<HardDrive className="h-4 w-4 text-slate-400" aria-hidden />
+						<label className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-2 py-1.5">
+							<HardDrive className="h-4 w-4 text-slate-400 dark:text-slate-500" aria-hidden />
 							<span className="sr-only">Bucket</span>
 							<select
 								value={state?.bucket ?? ""}
 								onChange={(e) => navigate(e.target.value, "")}
 								disabled={!state}
-								className="bg-transparent pr-1 text-sm font-medium text-slate-700 focus:outline-none"
+								className="bg-transparent pr-1 text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none"
 							>
 								{state?.buckets.map((b) => (
 									<option key={b} value={b}>
@@ -125,13 +137,13 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 						</label>
 						{state && (
 							<nav aria-label="Folder path" className="flex min-w-0 flex-wrap items-center gap-1">
-								<button type="button" onClick={() => navigate(state.bucket, "")} className="text-slate-600 hover:text-slate-900">
+								<button type="button" onClick={() => navigate(state.bucket, "")} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
 									root
 								</button>
 								{segments.map((seg, i) => (
 									<span key={i} className="flex items-center gap-1">
-										<ChevronRight className="h-3.5 w-3.5 text-slate-400" aria-hidden />
-										<button type="button" onClick={() => navigate(state.bucket, segments.slice(0, i + 1).join("/"))} className="text-slate-600 hover:text-slate-900">
+										<ChevronRight className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500" aria-hidden />
+										<button type="button" onClick={() => navigate(state.bucket, segments.slice(0, i + 1).join("/"))} className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
 											{seg}
 										</button>
 									</span>
@@ -153,7 +165,8 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 						<input
 							ref={fileRef}
 							type="file"
-							accept="image/jpeg,image/png,image/webp,image/gif,image/avif,image/svg+xml"
+							accept={UPLOAD_ACCEPT}
+							aria-describedby="picker-upload-rules"
 							multiple
 							className="sr-only"
 							id="media-picker-upload"
@@ -168,16 +181,16 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 
 				{/* Grid */}
 				<div className="min-h-[300px] flex-1 overflow-y-auto p-5">
-					{error && <p className="mb-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+					{error && <p className="mb-4 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 px-3 py-2 text-sm text-red-700 dark:text-red-300">{error}</p>}
 					{loading && !state ? (
-						<div className="flex h-60 items-center justify-center text-slate-400">
+						<div className="flex h-60 items-center justify-center text-slate-400 dark:text-slate-500">
 							<Loader2 className="h-6 w-6 animate-spin" aria-label="Loading" />
 						</div>
 					) : state && state.folders.length === 0 && state.files.length === 0 ? (
 						<div className="flex h-60 flex-col items-center justify-center text-center">
-							<ImageOff className="h-10 w-10 text-slate-300" aria-hidden />
-							<p className="mt-3 text-sm font-medium text-slate-700">No images here yet</p>
-							<p className="mt-1 text-sm text-slate-500">Upload one to use it right away.</p>
+							<ImageOff className="h-10 w-10 text-slate-300 dark:text-slate-600" aria-hidden />
+							<p className="mt-3 text-sm font-medium text-slate-700 dark:text-slate-300">No images here yet</p>
+							<p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Upload one to use it right away.</p>
 						</div>
 					) : (
 						state && (
@@ -187,9 +200,9 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 										<button
 											type="button"
 											onClick={() => navigate(state.bucket, state.path ? `${state.path}/${folder}` : folder)}
-											className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:border-teal-300 hover:text-slate-900"
+											className="flex aspect-square w-full flex-col items-center justify-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400 hover:border-teal-300 hover:text-slate-900 dark:hover:text-white"
 										>
-											<Folder className="h-8 w-8 fill-amber-100 text-amber-500" aria-hidden />
+											<Folder className="h-8 w-8 fill-amber-100 dark:fill-amber-900 text-amber-500" aria-hidden />
 											<span className="max-w-full truncate px-2 text-xs font-medium">{folder}</span>
 										</button>
 									</li>
@@ -206,7 +219,7 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 												title={file.name}
 												className={cn(
 													"relative block aspect-square w-full overflow-hidden rounded-lg border-2 bg-[repeating-conic-gradient(#f1f5f9_0_25%,#fff_0_50%)] bg-[length:16px_16px] transition",
-													isSelected ? "border-teal-500 ring-4 ring-teal-500/20" : "border-transparent ring-1 ring-slate-200 hover:ring-slate-300",
+													isSelected ? "border-teal-500 ring-4 ring-teal-500/20" : "border-transparent ring-1 ring-slate-200 dark:ring-slate-700 hover:ring-slate-300",
 												)}
 											>
 												{/* eslint-disable-next-line @next/next/no-img-element -- arbitrary storage objects, incl. SVG */}
@@ -225,8 +238,8 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 					)}
 				</div>
 
-				<div className="flex items-center justify-between gap-3 border-t border-slate-200 px-5 py-3">
-					<p className="min-w-0 truncate text-sm text-slate-500">{selected ? selected.name : "No image selected"}</p>
+				<div className="flex items-center justify-between gap-3 border-t border-slate-200 dark:border-slate-800 px-5 py-3">
+					<p className="min-w-0 truncate text-sm text-slate-500 dark:text-slate-400">{selected ? selected.name : "No image selected"}</p>
 					<div className="flex gap-2">
 						<button type="button" onClick={onClose} className={buttonClass("secondary")}>
 							Cancel

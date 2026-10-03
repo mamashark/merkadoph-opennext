@@ -19,16 +19,16 @@ export function PageHeader({
 			<div className="min-w-0">
 				{breadcrumbs.length > 0 && (
 					<nav aria-label="Breadcrumb" className="mb-2">
-						<ol className="flex flex-wrap items-center gap-1 text-xs text-slate-500">
+						<ol className="flex flex-wrap items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
 							{breadcrumbs.map((crumb, i) => (
 								<li key={crumb.label} className="flex items-center gap-1">
 									{i > 0 && <ChevronRight className="h-3 w-3" aria-hidden />}
 									{crumb.href ? (
-										<Link href={crumb.href} className="hover:text-slate-900">
+										<Link href={crumb.href} className="hover:text-slate-900 dark:hover:text-white">
 											{crumb.label}
 										</Link>
 									) : (
-										<span aria-current="page" className="text-slate-700">
+										<span aria-current="page" className="text-slate-700 dark:text-slate-300">
 											{crumb.label}
 										</span>
 									)}
@@ -37,8 +37,8 @@ export function PageHeader({
 						</ol>
 					</nav>
 				)}
-				<h1 className="truncate text-2xl font-semibold tracking-tight text-slate-900">{title}</h1>
-				{description && <p className="mt-1 text-sm text-slate-500">{description}</p>}
+				<h1 className="truncate text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">{title}</h1>
+				{description && <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{description}</p>}
 			</div>
 			{actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
 		</div>

@@ -6,7 +6,7 @@ import { BlogForm } from "../blog-form";
 export const metadata: Metadata = { title: "New post" };
 
 export default async function NewBlogPage() {
-	await requireAdmin();
+	const me = await requireAdmin();
 
 	return (
 		<>
@@ -19,7 +19,7 @@ export default async function NewBlogPage() {
 					{ label: "New post" },
 				]}
 			/>
-			<BlogForm />
+			<BlogForm defaultAuthor={me.name} />
 		</>
 	);
 }

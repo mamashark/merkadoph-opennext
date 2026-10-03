@@ -8,7 +8,7 @@ export function Alert({ tone = "success", children }: { tone?: "success" | "erro
 			role={tone === "error" ? "alert" : "status"}
 			className={cn(
 				"flex items-start gap-2.5 rounded-lg border px-4 py-3 text-sm",
-				tone === "success" ? "border-teal-200 bg-teal-50 text-teal-800" : "border-red-200 bg-red-50 text-red-700",
+				tone === "success" ? "border-teal-200 dark:border-teal-900 bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-200" : "border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300",
 			)}
 		>
 			<Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />

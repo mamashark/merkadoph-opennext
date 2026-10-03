@@ -48,10 +48,10 @@ export default async function EditUserPage({ params, searchParams }: PageProps<"
 				<UserForm key={`${user.email}-${user.name}-${user.hasAccess}`} user={user} isSelf={isSelf} />
 
 				{!isSelf && (
-					<section className={`${cardClass} flex flex-col gap-4 border-red-200 p-5 sm:flex-row sm:items-center sm:justify-between`}>
+					<section className={`${cardClass} flex flex-col gap-4 border-red-200 dark:border-red-900 p-5 sm:flex-row sm:items-center sm:justify-between`}>
 						<div>
-							<h2 className="text-sm font-semibold text-slate-900">Delete user</h2>
-							<p className="mt-0.5 text-sm text-slate-500">Removes the account and signs them out. Their posts are kept.</p>
+							<h2 className="text-sm font-semibold text-slate-900 dark:text-white">Delete user</h2>
+							<p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">Removes the account and signs them out. Their posts are kept.</p>
 						</div>
 						<form action={deleteUser}>
 							<input type="hidden" name="id" value={user.id} />

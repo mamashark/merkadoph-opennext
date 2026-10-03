@@ -1,4 +1,4 @@
-import { FileText, Images, LayoutDashboard, Users, type LucideIcon } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, FileText, Images, LayoutDashboard, TicketPercent, Users, type LucideIcon } from "lucide-react";
 
 export type NavLeaf = { label: string; href: string };
 export type NavItem = { label: string; icon: LucideIcon; href?: string; children?: NavLeaf[] };
@@ -18,6 +18,30 @@ export const adminNav: NavSection[] = [
 				children: [
 					{ label: "All posts", href: "/admin/blogs" },
 					{ label: "New post", href: "/admin/blogs/new" },
+				],
+			},
+			{
+				label: "Events",
+				icon: CalendarDays,
+				children: [
+					{ label: "All events", href: "/admin/events" },
+					{ label: "New event", href: "/admin/events/new" },
+				],
+			},
+			{
+				label: "Promotions",
+				icon: TicketPercent,
+				children: [
+					{ label: "All promotions", href: "/admin/promotions" },
+					{ label: "New promotion", href: "/admin/promotions/new" },
+				],
+			},
+			{
+				label: "Services",
+				icon: BriefcaseBusiness,
+				children: [
+					{ label: "All services", href: "/admin/services" },
+					{ label: "New service", href: "/admin/services/new" },
 				],
 			},
 			{ label: "Media", icon: Images, href: "/admin/media" },

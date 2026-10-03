@@ -14,7 +14,7 @@ export function Pagination({ page, perPage, total, basePath, params = {} }: { pa
 
 	return (
 		<nav aria-label="Pagination" className="flex items-center justify-between gap-4 text-sm">
-			<p className="text-slate-500">
+			<p className="text-slate-500 dark:text-slate-400">
 				Page {page} of {pages} · {total} total
 			</p>
 			<div className="flex gap-2">

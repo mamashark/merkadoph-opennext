@@ -90,7 +90,7 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 		.toUpperCase();
 
 	return (
-		<div className="min-h-dvh bg-[#F8FAFC] text-slate-900">
+		<div className="min-h-dvh bg-[#F8FAFC] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
 			{/* Backdrop for drawer / overlay modes */}
 			<div
 				aria-hidden
@@ -109,7 +109,7 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 				{/* Brand + collapse toggle */}
 				<div className={cn("flex h-16 shrink-0 items-center border-b border-white/5", mini ? "justify-center px-2" : "justify-between px-4")}>
 					<Link href="/admin" className="flex min-w-0 items-center gap-3" title="Merkado PH admin">
-						<Image src="/apple-touch-icon.png" alt="" width={36} height={36} priority className="h-9 w-9 shrink-0 rounded-lg bg-white" />
+						<Image src="/apple-touch-icon.png" alt="" width={36} height={36} loading="eager" className="h-9 w-9 shrink-0 rounded-lg bg-white" />
 						{!mini && (
 							<span className="min-w-0 leading-tight">
 								<span className="block truncate font-semibold tracking-wide text-white">MERKADO PH</span>
@@ -153,7 +153,7 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 						</button>
 					) : (
 						<label className="flex h-10 items-center gap-2 rounded-lg bg-[#1E293B] px-3 text-sm ring-teal-500/40 focus-within:ring-2">
-							<Search className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
+							<Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
 							<input
 								ref={searchRef}
 								value={query}
@@ -169,13 +169,13 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 
 				{/* Navigation */}
 				<nav className={cn("flex-1 py-4", mini ? "overflow-visible px-3" : "overflow-y-auto px-3")}>
-					{sections.length === 0 && <p className="px-3 text-sm text-slate-500">No matches for “{query}”.</p>}
+					{sections.length === 0 && <p className="px-3 text-sm text-slate-400">No matches for “{query}”.</p>}
 					{sections.map((section) => (
 						<div key={section.title} className="mb-5 last:mb-0">
 							{mini ? (
 								<div className="mx-auto mb-2 h-px w-6 bg-white/10" aria-hidden />
 							) : (
-								<p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-500">{section.title}</p>
+								<p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{section.title}</p>
 							)}
 							<ul className="space-y-1">
 								{section.items.map((item) => (
@@ -248,32 +248,32 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 					viewport === "desktop" && (collapsed ? "pl-[72px]" : "pl-[260px]"),
 				)}
 			>
-				<header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/85 px-4 backdrop-blur sm:px-6">
+				<header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-slate-200 bg-white/85 dark:border-slate-800 dark:bg-slate-950/85 px-4 backdrop-blur sm:px-6">
 					<button
 						type="button"
 						onClick={() => setOpen(true)}
-						className="-ml-1 rounded-lg p-2 text-slate-600 hover:bg-slate-100 md:hidden"
+						className="-ml-1 rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 md:hidden"
 						aria-label="Open menu"
 					>
 						<Menu className="h-5 w-5" />
 					</button>
 					<HeaderTitle current={current} />
 					<div className="ml-auto flex items-center gap-1">
-						<Link href="/admin/blogs/new" className="hidden items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 sm:inline-flex">
+						<Link href="/admin/blogs/new" className="hidden items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-2 text-xs font-medium text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 sm:inline-flex">
 							<Plus className="h-4 w-4" /> New post
 						</Link>
 						<a
 							href="/blogs"
 							target="_blank"
 							rel="noreferrer"
-							className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+							className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"
 							aria-label="View public blog"
 							title="View public blog"
 						>
 							<ExternalLink className="h-5 w-5" />
 						</a>
 						<form action={signOut} className="md:hidden">
-							<button type="submit" className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Sign out">
+							<button type="submit" className="rounded-lg p-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white" aria-label="Sign out">
 								<LogOut className="h-5 w-5" />
 							</button>
 						</form>
@@ -284,14 +284,14 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 					<div className="mx-auto w-full max-w-6xl">{children}</div>
 				</main>
 
-				<footer className="border-t border-slate-200 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:px-8">
+				<footer className="border-t border-slate-200 px-4 py-4 text-xs text-slate-600 dark:border-slate-800 dark:text-slate-400 sm:px-6 lg:px-8">
 					<div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
 						<p>© {new Date().getFullYear()} Merkado PH. All rights reserved.</p>
 						<div className="flex gap-4">
-							<a href="/blogs" className="hover:text-slate-900">
+							<a href="/blogs" className="hover:text-slate-900 dark:hover:text-white">
 								Public blog
 							</a>
-							<Link href="/" className="hover:text-slate-900">
+							<Link href="/" className="hover:text-slate-900 dark:hover:text-white">
 								Home
 							</Link>
 						</div>
@@ -397,11 +397,11 @@ function HeaderTitle({ current }: { current?: string }) {
 
 	return (
 		<div className="min-w-0 text-sm">
-			<span className="text-slate-500">{parent}</span>
+			<span className="text-slate-600 dark:text-slate-400">{parent}</span>
 			{match?.parent && (
 				<>
-					<span className="mx-1.5 text-slate-300">/</span>
-					<span className="font-medium text-slate-900">{isEdit ? "Edit" : match.label}</span>
+					<span className="mx-1.5 text-slate-400 dark:text-slate-600">/</span>
+					<span className="font-medium text-slate-900 dark:text-white">{isEdit ? "Edit" : match.label}</span>
 				</>
 			)}
 		</div>

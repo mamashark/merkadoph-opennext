@@ -29,9 +29,9 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 	const notice = notices[get("notice")];
 
 	return (
-		<main className="grid min-h-dvh bg-slate-50 lg:grid-cols-2">
+		<main className="grid min-h-dvh bg-slate-50 dark:bg-slate-950 lg:grid-cols-2">
 			<section className="relative hidden overflow-hidden bg-[#f4ebd9] lg:block" aria-hidden>
-				<Image src="/underconstruction-site.jpg" alt="" fill priority sizes="50vw" className="object-cover object-center" />
+				<Image src="/underconstruction-site.jpg" alt="" fill fetchPriority="high" sizes="50vw" className="object-cover object-center" />
 				<div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />
 				<div className="absolute inset-x-0 bottom-0 p-12 text-white">
 					<p className="text-sm font-medium uppercase tracking-widest text-teal-300">Merkado PH</p>
@@ -41,12 +41,12 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 
 			<section className="flex items-center justify-center px-4 py-12 sm:px-8">
 				<div className="w-full max-w-sm">
-					<Link href="/" className="mb-10 inline-block">
-						<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} priority className="h-auto w-44" />
+					<Link href="/" className="mb-10 inline-block rounded-xl dark:bg-white dark:px-3 dark:py-2">
+						<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" className="h-auto w-44" />
 					</Link>
 
-					<h1 className="text-2xl font-semibold tracking-tight text-slate-900">Sign in to admin</h1>
-					<p className="mt-1 text-sm text-slate-500">Use the account your administrator created for you.</p>
+					<h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Sign in to admin</h1>
+					<p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Use the account your administrator created for you.</p>
 
 					<div className="mt-6 space-y-3">
 						{error && <Alert tone="error">{error}</Alert>}
@@ -60,7 +60,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 								Email
 							</label>
 							<div className="relative">
-								<Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+								<Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden />
 								<input
 									id="email"
 									name="email"
@@ -78,7 +78,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 								Password
 							</label>
 							<div className="relative">
-								<Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden />
+								<Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" aria-hidden />
 								<input
 									id="password"
 									name="password"
@@ -95,7 +95,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 						</SubmitButton>
 					</form>
 
-					<p className="mt-10 text-xs text-slate-400">© {new Date().getFullYear()} Merkado PH. Authorized personnel only.</p>
+					<p className="mt-10 text-xs text-slate-500 dark:text-slate-400">© {new Date().getFullYear()} Merkado PH. Authorized personnel only.</p>
 				</div>
 			</section>
 		</main>

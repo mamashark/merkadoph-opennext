@@ -1,10 +1,15 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { MAX_FILES_PER_UPLOAD, uploadProblem } from "@/lib/upload-rules";
 
 // Callers must have passed requireAdmin(): everything here uses the service role.
 
-export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-export const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif", "image/svg+xml"];
+/** True when the bytes really are a WebP file ("RIFF" .... "WEBP"), whatever the name or reported type says. */
+function isWebpBytes(buf: ArrayBuffer): boolean {
+	const b = new Uint8Array(buf, 0, Math.min(12, buf.byteLength));
+	const ascii = (from: number, to: number) => String.fromCharCode(...b.slice(from, to));
+	return b.length === 12 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP";
+}
 
 /** Supabase Studio's marker object for empty folders. */
 const PLACEHOLDER = ".emptyFolderPlaceholder";
@@ -100,19 +105,27 @@ export async function uploadImages(bucket: string, folder: string, files: File[]
 	const storage = createAdminClient().storage.from(bucket);
 	const uploaded: MediaFile[] = [];
 
+	// Validate the whole batch first so nothing is uploaded when any file is rejected.
+	if (files.length > MAX_FILES_PER_UPLOAD) throw new Error(`Upload up to ${MAX_FILES_PER_UPLOAD} images at a time.`);
+	const bodies: ArrayBuffer[] = [];
 	for (const file of files) {
-		if (!ALLOWED_IMAGE_TYPES.includes(file.type)) throw new Error(`${file.name}: only JPG, PNG, WebP, GIF, AVIF or SVG images are allowed.`);
-		if (file.size > MAX_UPLOAD_BYTES) throw new Error(`${file.name}: images must be 10 MB or smaller.`);
-
-		const clean = cleanFileName(file.name);
+		const problem = uploadProblem(file);
+		if (problem) throw new Error(problem);
 		const body = await file.arrayBuffer();
+		if (!isWebpBytes(body)) throw new Error(`${file.name}: this isn't a real WebP image (it may be a renamed JPG/PNG). Convert it to WebP first.`);
+		bodies.push(body);
+	}
+
+	for (const [i, file] of files.entries()) {
+		const clean = cleanFileName(file.name);
+		const body = bodies[i];
 		// Never overwrite: on a name clash add a short suffix and retry.
 		for (let attempt = 0; attempt < 5; attempt++) {
 			const name = attempt === 0 ? clean : clean.replace(/(\.[a-z0-9]+)?$/, `-${Math.random().toString(36).slice(2, 7)}$1`);
 			const filePath = path ? `${path}/${name}` : name;
-			const { error } = await storage.upload(filePath, body, { contentType: file.type, cacheControl: "31536000", upsert: false });
+			const { error } = await storage.upload(filePath, body, { contentType: "image/webp", cacheControl: "31536000", upsert: false });
 			if (!error) {
-				uploaded.push({ name, path: filePath, url: publicUrl(bucket, filePath), size: file.size, type: file.type, updatedAt: new Date().toISOString() });
+				uploaded.push({ name, path: filePath, url: publicUrl(bucket, filePath), size: file.size, type: "image/webp", updatedAt: new Date().toISOString() });
 				break;
 			}
 			const exists = /exists|duplicate/i.test(error.message);

@@ -12,7 +12,7 @@ type Props = {
 
 export function UserForm({ user, isSelf, draft }: Props) {
 	return (
-		<form action={user ? updateUser : createUser} className={`${cardClass} max-w-2xl divide-y divide-slate-100`}>
+		<form action={user ? updateUser : createUser} className={`${cardClass} max-w-2xl divide-y divide-slate-100 dark:divide-slate-800`}>
 			{user && <input type="hidden" name="id" value={user.id} />}
 
 			<div className="grid gap-5 p-5 sm:grid-cols-2">
@@ -54,11 +54,11 @@ export function UserForm({ user, isSelf, draft }: Props) {
 						name="access"
 						defaultChecked={user ? user.hasAccess : true}
 						disabled={isSelf}
-						className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+						className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-teal-600 focus:ring-teal-500"
 					/>
 					<span>
-						<span className="block text-sm font-medium text-slate-800">Admin access</span>
-						<span className="block text-xs text-slate-500">
+						<span className="block text-sm font-medium text-slate-800 dark:text-slate-200">Admin access</span>
+						<span className="block text-xs text-slate-500 dark:text-slate-400">
 							{isSelf ? "You can't remove your own access." : "Allow this user to sign in to the admin panel. Turning this off signs them out on their next request."}
 						</span>
 					</span>
@@ -67,7 +67,7 @@ export function UserForm({ user, isSelf, draft }: Props) {
 				{isSelf && <input type="hidden" name="access" value="on" />}
 			</div>
 
-			<div className="flex justify-end gap-2 bg-slate-50/60 p-4">
+			<div className="flex justify-end gap-2 bg-slate-50/60 dark:bg-slate-800/40 p-4">
 				<SubmitButton pendingLabel={user ? "Saving…" : "Creating…"}>{user ? "Save changes" : "Create user"}</SubmitButton>
 			</div>
 		</form>

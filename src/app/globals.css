@@ -95,7 +95,7 @@ body {
 }
 .prose-blog figcaption {
 	margin-top: 0.75em;
-	color: #64748b;
+	color: #57534e;
 	font-size: 0.875rem;
 	line-height: 1.5;
 	text-align: center;
@@ -139,4 +139,44 @@ body {
 .prose-blog th {
 	color: #0f172a;
 	font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+	.prose-blog {
+		color: #d6d3d1;
+	}
+	.prose-blog h2,
+	.prose-blog h3,
+	.prose-blog h4,
+	.prose-blog strong,
+	.prose-blog th {
+		color: #fafaf9;
+	}
+	.prose-blog a {
+		color: #5eead4;
+		text-decoration-color: rgb(94 234 212 / 0.4);
+	}
+	.prose-blog blockquote {
+		border-left-color: #2dd4bf;
+		color: #a8a29e;
+	}
+	.prose-blog figure img {
+		background: #292524;
+	}
+	.prose-blog figcaption,
+	.prose-blog li::marker {
+		color: #a8a29e;
+	}
+	.prose-blog code {
+		background: #292524;
+		color: #fafaf9;
+	}
+	.prose-blog pre {
+		background: #1c1917;
+	}
+	.prose-blog hr,
+	.prose-blog th,
+	.prose-blog td {
+		border-color: #44403c;
+	}
 }

@@ -7,6 +7,7 @@ import type { MediaFile, MediaListing } from "@/lib/media";
 import { buttonClass, cn } from "@/lib/ui";
 import { MAX_FILES_PER_UPLOAD, UPLOAD_ACCEPT, uploadProblem } from "@/lib/upload-rules";
 import { UploadRulesNote } from "./upload-rules-note";
+import { WebpGuide } from "./webp-guide";
 
 export type PickedMedia = Pick<MediaFile, "url" | "name" | "path">;
 
@@ -181,6 +182,7 @@ export function MediaPicker({ onSelect, onClose, title = "Choose an image", conf
 
 				{/* Grid */}
 				<div className="min-h-[300px] flex-1 overflow-y-auto p-5">
+					<WebpGuide className="mb-4" />
 					{error && <p className="mb-4 rounded-lg border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950 px-3 py-2 text-sm text-red-700 dark:text-red-300">{error}</p>}
 					{loading && !state ? (
 						<div className="flex h-60 items-center justify-center text-slate-400 dark:text-slate-500">

@@ -13,6 +13,7 @@ import { buttonClass, cardClass, cn, dangerIconClass, inputClass } from "@/lib/u
 import { pageParam } from "@/lib/content";
 import { Pagination } from "@/components/admin/pagination";
 import { UploadRulesNote } from "@/components/media/upload-rules-note";
+import { WebpGuide } from "@/components/media/webp-guide";
 import { UPLOAD_ACCEPT, UPLOAD_RULES_TEXT } from "@/lib/upload-rules";
 
 export const metadata: Metadata = { title: "Media" };
@@ -66,6 +67,8 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 
 			<div className="space-y-4">
 				<FlashMessage notice={str("notice")} error={str("error") || loadError} />
+
+				<WebpGuide />
 
 				{!bucket ? (
 					<div className={`${cardClass} p-10 text-center text-sm text-slate-500 dark:text-slate-400`}>No public storage buckets found. Create one in Supabase Storage first.</div>
@@ -219,7 +222,7 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 				<Pagination page={page} perPage={PER_PAGE} total={files.length} basePath="/admin/media" params={listParams} />
 
 				<p className="text-xs text-slate-600 dark:text-slate-400">
-					{UPLOAD_RULES_TEXT}. Convert JPG/PNG to WebP first (e.g. squoosh.app) so every image on the site loads fast. Need it in a post? Use{" "}
+					{UPLOAD_RULES_TEXT}. Need it in a post? Use{" "}
 					<span className="font-medium">Choose from media</span> in the editor —{" "}
 					<Link href="/admin/blogs/new" className={buttonClass("ghost", "sm", "h-auto px-1 text-xs text-teal-700 dark:text-teal-300")}>
 						new post

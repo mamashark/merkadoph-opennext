@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
 import type { ContentStatus } from "@/lib/content";
@@ -59,7 +60,7 @@ function validityFilter(v: Validity | "current") {
 	}
 }
 
-export async function getPublicPromotions(show: "current" | "ended", page = 1, perPage = PROMOTIONS_PER_PAGE) {
+export const getPublicPromotions = cached(async (show: "current" | "ended", page: number = 1, perPage: number = PROMOTIONS_PER_PAGE) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("promotions").select(SUMMARY, { count: "exact" }));
 	query = show === "ended" ? query.lt("ends_at", new Date().toISOString()) : query.or(validityFilter("current"));
@@ -68,18 +69,18 @@ export async function getPublicPromotions(show: "current" | "ended", page = 1, p
 		.range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load promotions: ${error.message}`);
 	return { promotions: (data ?? []) as PromotionSummary[], total: count ?? 0 };
-}
+}, "promotions:getPublicPromotions", ["promotions"]);
 
-export const getPublicPromotionBySlug = cache(async (slug: string): Promise<Promotion | null> => {
+export const getPublicPromotionBySlug = cache(cached(async (slug: string): Promise<Promotion | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("promotions").select("*").eq("slug", slug)).maybeSingle();
 	if (error) throw new Error(`Failed to load promotion: ${error.message}`);
 	return data as Promotion | null;
-});
+}, "promotions:getPublicPromotionBySlug", ["promotions"]));
 
-export async function getPromotionSlugs() {
+export const getPromotionSlugs = cached(async () => {
 	const { data } = await onlyLive(createPublicClient().from("promotions").select("slug,updated_at")).limit(5000);
 	return (data ?? []) as Pick<Promotion, "slug" | "updated_at">[];
-}
+}, "promotions:getPromotionSlugs", ["promotions"]);
 
 /* ------------------------------ Admin ------------------------------ */
 

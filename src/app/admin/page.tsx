@@ -10,6 +10,7 @@ import { listUsers } from "@/lib/users";
 import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Alert } from "@/components/ui/alert";
+import { StagingCard } from "@/components/admin/staging-card";
 import { buttonClass, cardClass, cn } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -51,6 +52,8 @@ export default async function DashboardPage() {
 					</Link>
 				}
 			/>
+
+			<StagingCard />
 
 			{missingTables && (
 				<div className="mb-6">

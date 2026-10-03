@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState, onlyLive } from "@/lib/content-server";
@@ -40,7 +41,7 @@ export const BLOGS_PER_PAGE = 9;
 
 /* ----------------------------- Public (RLS) ----------------------------- */
 
-export async function getPublishedBlogs(page = 1, perPage = BLOGS_PER_PAGE) {
+export const getPublishedBlogs = cached(async (page: number = 1, perPage: number = BLOGS_PER_PAGE) => {
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS, { count: "exact" }))
 		.order("published_at", { ascending: false })
@@ -48,22 +49,22 @@ export async function getPublishedBlogs(page = 1, perPage = BLOGS_PER_PAGE) {
 
 	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
 	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
-}
+}, "blogs:getPublishedBlogs", ["blogs"]);
 
 /** Deduplicated per request so `generateMetadata` and the page share one query. */
-export const getPublishedBlogBySlug = cache(async (slug: string): Promise<Blog | null> => {
+export const getPublishedBlogBySlug = cache(cached(async (slug: string): Promise<Blog | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("blogs").select("*").eq("slug", slug)).maybeSingle();
 	if (error) throw new Error(`Failed to load blog: ${error.message}`);
 	return data as Blog | null;
-});
+}, "blogs:getPublishedBlogBySlug", ["blogs"]));
 
-export async function getAllPublishedSlugs() {
+export const getAllPublishedSlugs = cached(async () => {
 	const { data, error } = await onlyLive(createPublicClient().from("blogs").select("slug,updated_at"))
 		.order("published_at", { ascending: false })
 		.limit(5000);
 	if (error) return [];
 	return data as Pick<Blog, "slug" | "updated_at">[];
-}
+}, "blogs:getAllPublishedSlugs", ["blogs"]);
 
 /* ------------------------- Admin (service role) ------------------------- */
 // Callers must have passed requireAdmin().

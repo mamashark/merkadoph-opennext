@@ -8,9 +8,9 @@ import { pageMetadata } from "@/lib/seo";
 import { ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 
-export const dynamic = "force-dynamic";
+// Renders per request (it reads the tab/page from the URL); the data itself comes from the cache.
 
-const description = "Market days, food fairs, workshops and community gatherings from Merkado PH. See what's coming up and join us.";
+const description = "Gatherings, celebrations and home-improvement workshops from the Merkado PH Filipino-Swedish community. See what's coming up and join us.";
 
 export async function generateMetadata({ searchParams }: PageProps<"/events">): Promise<Metadata> {
 	const params = await searchParams;

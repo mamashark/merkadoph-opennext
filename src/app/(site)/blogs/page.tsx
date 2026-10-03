@@ -7,10 +7,9 @@ import { pageMetadata } from "@/lib/seo";
 import { ContentCard, EmptyNotice, PageIntro } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 
-// Always render from the database so newly published posts appear immediately.
-export const dynamic = "force-dynamic";
+// Renders per request (it reads the tab/page from the URL); the data itself comes from the cache.
 
-const description = "Stories, updates and guides from Merkado PH — the Filipino marketplace, rebuilt for the way we shop today.";
+const description = "Guides, stories and news from Merkado PH — roofing and home tips for Sweden, and life in our Filipino-Swedish community.";
 
 export async function generateMetadata({ searchParams }: PageProps<"/blogs">): Promise<Metadata> {
 	const page = pageParam(await searchParams);

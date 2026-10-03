@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
@@ -49,7 +50,7 @@ export type ServiceSummary = Pick<
 const SUMMARY = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,category,price_label,is_featured,sort_order,status,published_at,updated_at";
 export const SERVICES_PER_PAGE = 12;
 
-export async function getPublicServices(category: string | undefined, page = 1, perPage = SERVICES_PER_PAGE) {
+export const getPublicServices = cached(async (category: string | undefined, page: number = 1, perPage: number = SERVICES_PER_PAGE) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("services").select(SUMMARY, { count: "exact" }));
 	if (category) query = query.eq("category", category);
@@ -60,25 +61,25 @@ export async function getPublicServices(category: string | undefined, page = 1, 
 		.range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load services: ${error.message}`);
 	return { services: (data ?? []) as ServiceSummary[], total: count ?? 0 };
-}
+}, "services:getPublicServices", ["services"]);
 
 /** Distinct categories of live services (public) or of all services (admin). */
-export async function getServiceCategories(scope: "public" | "admin" = "public"): Promise<string[]> {
+export const getServiceCategories = cached(async (scope: "public" | "admin" = "public"): Promise<string[]> => {
 	const base = (scope === "admin" ? createAdminClient() : createPublicClient()).from("services").select("category").not("category", "is", null);
 	const { data } = await (scope === "admin" ? base : onlyLive(base)).limit(1000);
 	return Array.from(new Set((data ?? []).map((r) => r.category as string))).sort((a, b) => a.localeCompare(b));
-}
+}, "services:getServiceCategories", ["services"]);
 
-export const getPublicServiceBySlug = cache(async (slug: string): Promise<Service | null> => {
+export const getPublicServiceBySlug = cache(cached(async (slug: string): Promise<Service | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("services").select("*").eq("slug", slug)).maybeSingle();
 	if (error) throw new Error(`Failed to load service: ${error.message}`);
 	return data as Service | null;
-});
+}, "services:getPublicServiceBySlug", ["services"]));
 
-export async function getServiceSlugs() {
+export const getServiceSlugs = cached(async () => {
 	const { data } = await onlyLive(createPublicClient().from("services").select("slug,updated_at")).limit(5000);
 	return (data ?? []) as Pick<Service, "slug" | "updated_at">[];
-}
+}, "services:getServiceSlugs", ["services"]);
 
 /* ------------------------------ Admin ------------------------------ */
 

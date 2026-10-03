@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
 import type { ContentStatus } from "@/lib/content";
@@ -43,7 +44,7 @@ function timeFilter(when: "upcoming" | "past") {
 	return when === "upcoming" ? `ends_at.gte.${now},and(ends_at.is.null,starts_at.gte.${now})` : `ends_at.lt.${now},and(ends_at.is.null,starts_at.lt.${now})`;
 }
 
-export async function getPublicEvents(when: "upcoming" | "past", page = 1, perPage = EVENTS_PER_PAGE) {
+export const getPublicEvents = cached(async (when: "upcoming" | "past", page: number = 1, perPage: number = EVENTS_PER_PAGE) => {
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await onlyLive(createPublicClient().from("events").select(SUMMARY, { count: "exact" }))
 		.or(timeFilter(when))
@@ -51,18 +52,18 @@ export async function getPublicEvents(when: "upcoming" | "past", page = 1, perPa
 		.range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load events: ${error.message}`);
 	return { events: (data ?? []) as EventSummary[], total: count ?? 0 };
-}
+}, "events:getPublicEvents", ["events"]);
 
-export const getPublicEventBySlug = cache(async (slug: string): Promise<EventItem | null> => {
+export const getPublicEventBySlug = cache(cached(async (slug: string): Promise<EventItem | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("events").select("*").eq("slug", slug)).maybeSingle();
 	if (error) throw new Error(`Failed to load event: ${error.message}`);
 	return data as EventItem | null;
-});
+}, "events:getPublicEventBySlug", ["events"]));
 
-export async function getEventSlugs() {
+export const getEventSlugs = cached(async () => {
 	const { data } = await onlyLive(createPublicClient().from("events").select("slug,updated_at")).limit(5000);
 	return (data ?? []) as Pick<EventItem, "slug" | "updated_at">[];
-}
+}, "events:getEventSlugs", ["events"]);
 
 export function isPastEvent(e: Pick<EventItem, "starts_at" | "ends_at">): boolean {
 	return new Date(e.ends_at ?? e.starts_at).getTime() < Date.now();

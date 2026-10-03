@@ -8,9 +8,9 @@ import { pageMetadata } from "@/lib/seo";
 import { ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 
-export const dynamic = "force-dynamic";
+// Renders per request (it reads the tab/page from the URL); the data itself comes from the cache.
 
-const description = "Current sales, discounts and limited-time offers from Merkado PH. Grab them before they're gone.";
+const description = "Current offers on roofing and renovation work from Merkado PH, including community discounts. Limited time only.";
 
 export async function generateMetadata({ searchParams }: PageProps<"/promotions">): Promise<Metadata> {
 	const params = await searchParams;
@@ -33,7 +33,7 @@ export default async function PromotionsPage({ searchParams }: PageProps<"/promo
 
 	return (
 		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-			<PageIntro eyebrow="Promotions" title="Sulit deals sa Merkado" description={description} />
+			<PageIntro eyebrow="Promotions" title="Sulit offers" description={description} />
 
 			<LinkTabs
 				label="Promotion status"

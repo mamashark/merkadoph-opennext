@@ -1,5 +1,6 @@
 import "server-only";
 import { revalidatePath } from "next/cache";
+import { purgeContent, type ContentTag } from "@/lib/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fromDateTimeInput } from "@/lib/datetime";
 import { isHttpUrl, slugify, type ContentStatus, type ContentTable } from "@/lib/content";
@@ -70,12 +71,11 @@ export function commonFields(formData: FormData) {
 	};
 }
 
-export function revalidateContent(publicBase: string, adminBase: string, slugs: Array<string | null | undefined> = []) {
+/** After a save/delete in a Server Action: purge that content type's cached data and pages, plus the admin views. */
+export function revalidateContent(publicBase: `/${ContentTag}`, adminBase: string, slugs: Array<string | null | undefined> = []) {
+	purgeContent(publicBase.slice(1) as ContentTag, slugs);
 	revalidatePath(adminBase);
 	revalidatePath("/admin");
-	revalidatePath(publicBase);
-	revalidatePath("/sitemap.xml");
-	for (const slug of new Set(slugs)) if (slug) revalidatePath(`${publicBase}/${slug}`);
 }
 
 // Minimal view of a PostgREST filter builder. Kept out of the generic constraint on purpose:

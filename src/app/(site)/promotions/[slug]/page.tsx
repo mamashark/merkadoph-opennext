@@ -9,7 +9,13 @@ import { BackFooter, Body, CoverFigure, CtaLink, DetailHeader, Facts } from "@/c
 import { JsonLd } from "@/components/site/json-ld";
 import { CopyButton } from "@/components/ui/copy-button";
 
-export const dynamic = "force-dynamic";
+// Cached as an ISR page; refreshed every 5 minutes or when the content is saved / purged in Admin → Cache.
+export const revalidate = 300;
+
+/** No pages at build time; each one is rendered on its first visit and then served from the cache (ISR). */
+export function generateStaticParams() {
+	return [];
+}
 
 export async function generateMetadata({ params }: PageProps<"/promotions/[slug]">): Promise<Metadata> {
 	const promo = await getPublicPromotionBySlug((await params).slug);

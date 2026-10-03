@@ -2,14 +2,11 @@
  * For more details on how to configure Wrangler, refer to:
  * https://developers.cloudflare.com/workers/wrangler/configuration/
  */
-/**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
- */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "merkadoph-opennext",
-	"main": ".open-next/worker.js",
+	// Custom entry: wraps the OpenNext worker and adds the cron (scheduled) handler.
+	"main": "cloudflare-worker.js",
 	"compatibility_date": "2026-10-01",
 	"compatibility_flags": [
 		"global_fetch_strictly_public"
@@ -25,32 +22,40 @@
 	},
 	"services": [
 		{
-			// Self-reference service binding, the service name must match the worker name
+			// Self-reference service binding, the service name must match the worker name.
+			// Used by the ISR queue and by the cron handler to call /api/cron/keepalive.
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
 			"service": "merkadoph-opennext"
 		}
 	],
+	// Page/data cache (ISR + unstable_cache). See open-next.config.ts.
+	"kv_namespaces": [
+		{
+			"binding": "NEXT_INC_CACHE_KV",
+			"id": "b8ab751db2df44bbb36af9e9eeb834fe"
+		}
+	],
+	// Cache tags for on-demand purges (revalidateTag / revalidatePath). Table is created by `opennextjs-cloudflare deploy`.
+	"d1_databases": [
+		{
+			"binding": "NEXT_TAG_CACHE_D1",
+			"database_name": "merkadoph-next-tag-cache",
+			"database_id": "1974e60a-64d9-4e8d-9a26-264edceec683"
+		}
+	],
+	// Supabase keep-alive: 03:00 UTC (11:00 PH) every Monday and Thursday. Keep in sync with src/lib/keepalive.ts.
+	"triggers": {
+		"crons": ["0 3 * * 1,4"]
+	},
 	"observability": {
 		"enabled": true
 	},
 	"upload_source_maps": true
 	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
+	 * Secrets (set with `npx wrangler secret put NAME`, never committed):
+	 * - SUPABASE_SERVICE_ROLE_KEY
+	 * - CRON_SECRET
+	 * - STAGE_KEY            (preview key for the gated public site, see src/lib/stage.ts)
 	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Environment Variables
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#environment-variables
-	 * Note: Use secrets to store sensitive data.
-	 * https://developers.cloudflare.com/workers/configuration/secrets/
-	 */
-	// "vars": {  "MY_VARIABLE": "production_value" }
 }

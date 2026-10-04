@@ -11,6 +11,8 @@ import { PageHeader } from "@/components/admin/page-header";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { Alert } from "@/components/ui/alert";
 import { StagingCard } from "@/components/admin/staging-card";
+import { ShopStatusAlert } from "@/components/admin/shop-status-alert";
+import { getShopReadiness } from "@/lib/shop-status";
 import { buttonClass, cardClass, cn } from "@/lib/ui";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -19,6 +21,7 @@ const settle = <T,>(p: Promise<T>) => p.then((v) => ({ ok: true as const, v })).
 
 export default async function DashboardPage() {
 	const me = await requireAdmin();
+	const shopStatus = await getShopReadiness();
 
 	const [blogs, blogsLive, events, promos, services, recent, upcoming, users] = await Promise.all([
 		settle(adminCount("blogs")),
@@ -54,6 +57,9 @@ export default async function DashboardPage() {
 			/>
 
 			<StagingCard />
+			<div className="mb-6">
+				<ShopStatusAlert status={shopStatus} compact />
+			</div>
 
 			{missingTables && (
 				<div className="mb-6">

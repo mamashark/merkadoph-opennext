@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BriefcaseBusiness, CalendarDays, FileText, Home, LayoutList, Map as MapIcon, RefreshCw, TicketPercent, Zap } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, FileText, Home, LayoutList, Map as MapIcon, RefreshCw, ShoppingBag, TicketPercent, Zap } from "lucide-react";
 import { purgeCache } from "./actions";
 import { requireAdmin } from "@/lib/auth";
 import { CACHE_GROUP_IDS, CACHE_GROUPS, CACHE_TTL, type CacheGroupId } from "@/lib/cache";
@@ -22,6 +22,7 @@ const icons: Record<CacheGroupId, React.ElementType> = {
 	events: CalendarDays,
 	promotions: TicketPercent,
 	services: BriefcaseBusiness,
+	shop: ShoppingBag,
 	sitemap: MapIcon,
 };
 

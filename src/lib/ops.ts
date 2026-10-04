@@ -4,7 +4,7 @@ import { searchTerm } from "@/lib/content";
 
 // Service-role only. Callers must have passed requireAdmin() or the cron secret check.
 
-export type OpsKind = "keepalive" | "cache_purge";
+export type OpsKind = "keepalive" | "cache_purge" | "product_feed";
 export type OpsLog = {
 	id: number;
 	kind: OpsKind;

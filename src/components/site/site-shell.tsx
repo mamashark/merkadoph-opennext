@@ -1,9 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
 import { NavLinks } from "./nav-links";
+import { CartButton } from "@/components/shop/cart-button";
+import { getShopSettings } from "@/lib/shop";
 
 /** Public site chrome (header with section navigation + footer), shared by (site)/* and the homepage. */
-export function SiteShell({ children, contactHref }: { children: React.ReactNode; contactHref?: string }) {
+export async function SiteShell({ children, contactHref }: { children: React.ReactNode; contactHref?: string }) {
+	const shopEnabled = (await getShopSettings().catch(() => null))?.enabled ?? false;
 	return (
 		<div className="flex min-h-dvh flex-col bg-[#fbf7ef] text-stone-900 dark:bg-stone-950 dark:text-stone-100">
 			<a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-stone-900">
@@ -15,7 +18,8 @@ export function SiteShell({ children, contactHref }: { children: React.ReactNode
 						<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" sizes="144px" className="h-auto w-32 sm:w-36" />
 					</Link>
 					<nav aria-label="Main" className="flex items-center gap-2">
-						<NavLinks />
+						<NavLinks shop={shopEnabled} />
+						{shopEnabled && <CartButton />}
 						{contactHref && (
 							<a
 								href={contactHref}

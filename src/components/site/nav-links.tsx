@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/ui";
 
-const links = [
+const baseLinks = [
 	{ href: "/blogs", label: "Blog" },
 	{ href: "/events", label: "Events" },
 	{ href: "/promotions", label: "Promotions" },
@@ -12,8 +12,9 @@ const links = [
 ];
 
 /** Only client piece of the public header: highlights the current section. */
-export function NavLinks() {
+export function NavLinks({ shop = false }: { shop?: boolean }) {
 	const pathname = usePathname();
+	const links = shop ? [{ href: "/shop", label: "Shop" }, ...baseLinks] : baseLinks;
 	return (
 		<ul className="flex items-center gap-1 overflow-x-auto text-sm font-medium">
 			{links.map(({ href, label }) => {

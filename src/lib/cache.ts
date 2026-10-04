@@ -13,9 +13,14 @@ export const CACHE_TTL = 300;
 export const CONTENT_TAGS = ["blogs", "events", "promotions", "services"] as const;
 export type ContentTag = (typeof CONTENT_TAGS)[number];
 
+/** Shop data: "products" (products, categories, tags), "shop" (settings, incl. the on/off switch) and "product-feed" (the XML feed). */
+export const SHOP_TAGS = ["products", "shop", "product-feed"] as const;
+export type ShopTag = (typeof SHOP_TAGS)[number];
+export type CacheTag = ContentTag | ShopTag;
+
 type PathTarget = { path: string; type?: "page" | "layout" };
 
-export type CacheGroupId = "home" | "listings" | ContentTag | "sitemap";
+export type CacheGroupId = "home" | "listings" | ContentTag | "shop" | "sitemap";
 
 export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: string; tags: string[]; paths: PathTarget[] }> = {
 	home: { label: "Homepage", description: "The / page.", tags: [], paths: [{ path: "/" }] },
@@ -39,13 +44,19 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 		tags: ["services"],
 		paths: [{ path: "/services" }, { path: "/services/[slug]", type: "page" }],
 	},
+	shop: {
+		label: "Shop",
+		description: "Products, categories, shop settings, /shop, every category and product page, cart, checkout and /product-feed.xml.",
+		tags: ["products", "shop", "product-feed"],
+		paths: [{ path: "/shop", type: "layout" }, { path: "/product/[slug]", type: "page" }, { path: "/cart" }, { path: "/checkout" }, { path: "/product-feed.xml" }],
+	},
 	sitemap: { label: "Sitemap", description: "/sitemap.xml.", tags: [], paths: [{ path: "/sitemap.xml" }] },
 };
 
 export const CACHE_GROUP_IDS = Object.keys(CACHE_GROUPS) as CacheGroupId[];
 
 /** Wraps a public data loader in Next's data cache, tagged so it can be purged. */
-export function cached<A extends unknown[], R>(fn: (...args: A) => Promise<R>, key: string, tags: ContentTag[]) {
+export function cached<A extends unknown[], R>(fn: (...args: A) => Promise<R>, key: string, tags: CacheTag[]) {
 	return unstable_cache(fn, [key], { revalidate: CACHE_TTL, tags: [...tags] });
 }
 
@@ -66,7 +77,7 @@ export function purgeGroups(ids: CacheGroupId[]) {
 
 /** Everything: all data tags plus every cached page. */
 export function purgeAll() {
-	CONTENT_TAGS.forEach((t) => updateTag(t));
+	[...CONTENT_TAGS, ...SHOP_TAGS].forEach((t) => updateTag(t));
 	revalidatePath("/", "layout");
 }
 
@@ -74,4 +85,10 @@ export function purgeAll() {
 export function purgeContent(tag: ContentTag, slugs: Array<string | null | undefined> = []) {
 	purgeGroups([tag, "home", "sitemap"]);
 	for (const slug of new Set(slugs)) if (slug) revalidatePath(`/${tag}/${slug}`);
+}
+
+/** After saving shop data (products, categories, tags, settings): shop pages, feed, homepage and sitemap. */
+export function purgeShop(productSlugs: Array<string | null | undefined> = []) {
+	purgeGroups(["shop", "home", "sitemap"]);
+	for (const slug of new Set(productSlugs)) if (slug) revalidatePath(`/product/${slug}`);
 }

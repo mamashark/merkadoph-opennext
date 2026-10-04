@@ -4,7 +4,7 @@ export type ContentStatus = "draft" | "published";
 /** Display state: a published row with a future publish date is "scheduled". */
 export type ContentState = "draft" | "scheduled" | "published";
 
-export type ContentTable = "blogs" | "events" | "promotions" | "services";
+export type ContentTable = "blogs" | "events" | "promotions" | "services" | "products" | "product_categories" | "product_tags";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {
 	if (row.status !== "published") return "draft";

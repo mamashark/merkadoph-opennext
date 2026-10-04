@@ -8,6 +8,7 @@ import { checkoutMethods, gatewayConfig } from "@/lib/payments";
 import { paypalCreateOrder, stripeCreateSession } from "@/lib/payment-providers";
 import { markOrderPaymentFailed, reserveStock } from "@/lib/orders";
 import { SITE_URL } from "@/lib/env";
+import { RECAPTCHA_FAILED_MESSAGE, verifyRecaptcha } from "@/lib/recaptcha";
 
 export type CheckoutField = "name" | "email" | "address" | "postal" | "city";
 export type CheckoutState = {
@@ -58,6 +59,9 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 	if (!values.postal_code) errors.postal = "Please enter your postal code.";
 	if (!values.city) errors.city = "Please enter your city.";
 	if (Object.keys(errors).length) return { status: "error", message: "Please check the highlighted fields.", errors, values };
+
+	const human = await verifyRecaptcha(formData.get("recaptcha_token"), "checkout");
+	if (!human.ok) return { status: "error", message: RECAPTCHA_FAILED_MESSAGE, values };
 
 	// Cart lines from the browser: only ids and quantities are used.
 	let requested: Array<{ id: string; quantity: number }> = [];

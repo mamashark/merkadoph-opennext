@@ -4,6 +4,8 @@ import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { placeOrder, type CheckoutState } from "@/app/checkout-actions";
+import { preloadRecaptcha, withRecaptcha } from "@/lib/recaptcha-client";
+import { RecaptchaNotice } from "@/components/ui/recaptcha-notice";
 import { cart, useCart } from "@/lib/cart";
 import { formatMoney, type Currency } from "@/lib/pricing";
 import { cn } from "@/lib/ui";
@@ -16,7 +18,7 @@ type Method = { id: "manual" | "stripe" | "paypal"; title: string; description: 
 
 export function CheckoutForm({ currency, note, methods }: { currency: Currency; note: string; methods: Method[] }) {
 	const { lines, subtotal } = useCart();
-	const [state, action, pending] = useActionState<CheckoutState, FormData>(placeOrder, { status: "idle" });
+	const [state, action, pending] = useActionState<CheckoutState, FormData>(async (prev, fd) => placeOrder(prev, await withRecaptcha(fd, "checkout")), { status: "idle" });
 	const [startedAt] = useState(() => Date.now());
 	const [method, setMethod] = useState<Method["id"] | "">(methods[0]?.id ?? "");
 	const redirecting = state.status === "redirect" && !!state.redirectUrl;
@@ -59,7 +61,7 @@ export function CheckoutForm({ currency, note, methods }: { currency: Currency; 
 	const problem = (id: string) => state.problems?.find((p) => p.id === id)?.message;
 
 	return (
-		<form key={JSON.stringify(v ?? {})} action={action} noValidate className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
+		<form key={JSON.stringify(v ?? {})} action={action} onFocusCapture={() => void preloadRecaptcha()} noValidate className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start">
 			<input type="hidden" name="items" value={JSON.stringify(lines.map((l) => ({ id: l.id, quantity: l.quantity })))} />
 			<input type="hidden" name="started_at" value={startedAt} />
 			<div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
@@ -172,6 +174,7 @@ export function CheckoutForm({ currency, note, methods }: { currency: Currency; 
 									: "Place order"}
 				</button>
 				{method !== "manual" && method && <p className="mt-2 text-center text-xs text-stone-600 dark:text-stone-400">You&apos;ll complete payment securely on {method === "stripe" ? "Stripe" : "PayPal"}.</p>}
+				<RecaptchaNotice className="mt-3 text-center" />
 			</aside>
 		</form>
 	);

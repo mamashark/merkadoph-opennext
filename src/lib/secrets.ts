@@ -6,7 +6,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
  * under `next dev` they come from `.dev.vars` via the Cloudflare context. Secrets are deliberately
  * kept out of .env files, because OpenNext bundles those into the Worker.
  */
-export function secret(name: "SUPABASE_SERVICE_ROLE_KEY" | "CRON_SECRET" | "STAGE_KEY" | "SETTINGS_ENCRYPTION_KEY"): string {
+export function secret(name: "SUPABASE_SERVICE_ROLE_KEY" | "CRON_SECRET" | "STAGE_KEY" | "SETTINGS_ENCRYPTION_KEY" | "RECAPTCHA_SECRET_KEY"): string {
 	let value = process.env[name];
 	if (!value) {
 		try {

@@ -180,3 +180,8 @@ body {
 		border-color: #44403c;
 	}
 }
+
+/* reCAPTCHA v3: the floating badge is hidden; forms show the required attribution text instead (RecaptchaNotice). */
+.grecaptcha-badge {
+	visibility: hidden;
+}

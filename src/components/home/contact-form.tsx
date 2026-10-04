@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { sendContactMessage, type ContactState } from "@/app/contact-actions";
+import { preloadRecaptcha, withRecaptcha } from "@/lib/recaptcha-client";
+import { RecaptchaNotice } from "@/components/ui/recaptcha-notice";
 import { cn } from "@/lib/ui";
 
 const field =
@@ -12,7 +14,8 @@ const errorText = "mt-1 text-xs font-medium text-red-700 dark:text-red-400";
 
 /** The only client piece of the contact section: keeps typed values and shows inline results. */
 export function ContactForm({ topics }: { topics: string[] }) {
-	const [state, action, pending] = useActionState<ContactState, FormData>(sendContactMessage, { status: "idle" });
+	// reCAPTCHA token is added just before the Server Action runs.
+	const [state, action, pending] = useActionState<ContactState, FormData>(async (prev, fd) => sendContactMessage(prev, await withRecaptcha(fd, "contact")), { status: "idle" });
 	const [startedAt] = useState(() => Date.now());
 
 	if (state.status === "success") {
@@ -28,7 +31,7 @@ export function ContactForm({ topics }: { topics: string[] }) {
 	const err = state.errors ?? {};
 	const v = state.values;
 	return (
-		<form key={JSON.stringify(v ?? {})} action={action} noValidate className="space-y-4" aria-describedby={state.status === "error" ? "contact-error" : undefined}>
+		<form key={JSON.stringify(v ?? {})} action={action} onFocusCapture={() => void preloadRecaptcha()} noValidate className="space-y-4" aria-describedby={state.status === "error" ? "contact-error" : undefined}>
 			{/* Spam traps */}
 			<input type="hidden" name="started_at" value={startedAt} />
 			<div aria-hidden className="absolute -left-[9999px] h-px w-px overflow-hidden">
@@ -123,7 +126,10 @@ export function ContactForm({ topics }: { topics: string[] }) {
 			</div>
 
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-				<p className="text-xs text-stone-600 dark:text-stone-400">We only use your details to reply to you.</p>
+				<div className="space-y-1">
+					<p className="text-xs text-stone-600 dark:text-stone-400">We only use your details to reply to you.</p>
+					<RecaptchaNotice />
+				</div>
 				<button
 					type="submit"
 					disabled={pending}

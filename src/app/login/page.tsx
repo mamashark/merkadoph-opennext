@@ -5,6 +5,8 @@ import { Lock, Mail } from "lucide-react";
 import { signIn } from "./actions";
 import { Alert } from "@/components/ui/alert";
 import { SubmitButton } from "@/components/ui/submit-button";
+import { RecaptchaForm } from "@/components/ui/recaptcha-form";
+import { RecaptchaNotice } from "@/components/ui/recaptcha-notice";
 import { inputClass, labelClass } from "@/lib/ui";
 
 export const metadata: Metadata = {
@@ -16,6 +18,7 @@ const errors: Record<string, string> = {
 	missing: "Please enter your email and password.",
 	invalid: "Incorrect email or password.",
 	forbidden: "This account doesn't have access to the admin panel.",
+	captcha: "We couldn't verify that you're human. Please try again.",
 };
 
 const notices: Record<string, string> = {
@@ -53,7 +56,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 						{notice && <Alert>{notice}</Alert>}
 					</div>
 
-					<form action={signIn} className="mt-6 space-y-5">
+					<RecaptchaForm action={signIn} recaptchaAction="login" className="mt-6 space-y-5">
 						<input type="hidden" name="next" value={get("next")} />
 						<div>
 							<label htmlFor="email" className={labelClass}>
@@ -93,7 +96,8 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 						<SubmitButton pendingLabel="Signing in…" className="w-full">
 							Sign in
 						</SubmitButton>
-					</form>
+					</RecaptchaForm>
+					<RecaptchaNotice className="mt-4 text-slate-600 dark:text-slate-400" />
 
 					<p className="mt-10 text-xs text-slate-500 dark:text-slate-400">© {new Date().getFullYear()} Merkado PH. Authorized personnel only.</p>
 				</div>

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { RECAPTCHA_FAILED_MESSAGE, verifyRecaptcha } from "@/lib/recaptcha";
 
 export type ContactState = {
 	status: "idle" | "success" | "error";
@@ -36,6 +37,9 @@ export async function sendContactMessage(_prev: ContactState, formData: FormData
 	if (message.length < 10) errors.message = "Please tell us a bit more (at least 10 characters).";
 	const values = { name, email, phone, topic, message };
 	if (Object.keys(errors).length) return { status: "error", message: "Please check the highlighted fields.", errors, values };
+
+	const human = await verifyRecaptcha(formData.get("recaptcha_token"), "contact");
+	if (!human.ok) return { status: "error", message: RECAPTCHA_FAILED_MESSAGE, values };
 
 	const { error } = await createAdminClient()
 		.from("contact_messages")

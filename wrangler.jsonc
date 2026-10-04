@@ -57,6 +57,7 @@
 	 * - SUPABASE_SERVICE_ROLE_KEY
 	 * - CRON_SECRET
 	 * - STAGE_KEY            (preview key for the gated public site, see src/lib/stage.ts)
+	 * - RECAPTCHA_SECRET_KEY (reCAPTCHA v3 server verification; the site key is NEXT_PUBLIC_RECAPTCHA_SITE_KEY in .env.production)
 	 * - SETTINGS_ENCRYPTION_KEY (encrypts payment gateway keys in the database, see src/lib/secret-box.ts — never rotate without re-entering the keys)
 	 */
 }

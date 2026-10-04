@@ -20,7 +20,7 @@ const ago = (iso?: string | null) => (iso ? formatDate(iso, { dateStyle: "medium
 export default async function SupabasePage({ searchParams }: PageProps<"/admin/supabase">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status") };
+	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
 	let tableError = "";

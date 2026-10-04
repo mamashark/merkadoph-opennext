@@ -27,7 +27,7 @@ const PER_PAGE = 10;
 export default async function ShopAdminPage({ searchParams }: PageProps<"/admin/shop">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status") };
+	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
 	let setupError = "";

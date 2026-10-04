@@ -22,7 +22,7 @@ const PER_PAGE = 20;
 export default async function OrdersPage({ searchParams }: PageProps<"/admin/shop/orders">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), status: param(params, "status"), payment: param(params, "payment"), method: param(params, "method") };
+	const values = { q: param(params, "q").trim(), status: param(params, "status"), payment: param(params, "payment"), method: param(params, "method"), sort: param(params, "sort") };
 	const page = pageParam(params);
 	const { rows, total } = await adminListOrders({ ...values, page, perPage: PER_PAGE });
 	const filtered = !!(values.q || values.status || values.payment || values.method);
@@ -68,6 +68,13 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/sho
 									{ label: "PayPal", value: "paypal" },
 								],
 							},
+						]}
+						sorts={[
+							{ label: "Newest first", value: "" },
+							{ label: "Oldest first", value: "oldest" },
+							{ label: "Order number", value: "number" },
+							{ label: "Total (high first)", value: "total-desc" },
+							{ label: "Total (low first)", value: "total-asc" },
 						]}
 					/>
 					{rows.length === 0 ? (

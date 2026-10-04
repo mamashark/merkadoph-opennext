@@ -22,7 +22,7 @@ const PER_PAGE = 30;
 export default async function TagsPage({ searchParams }: PageProps<"/admin/shop/tags">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), used: param(params, "used") };
+	const values = { q: param(params, "q").trim(), used: param(params, "used"), sort: param(params, "sort") };
 	const page = pageParam(params);
 	const editId = param(params, "edit");
 	const [{ rows, total }, editing] = await Promise.all([adminListTags({ ...values, page, perPage: PER_PAGE }), /^[0-9a-f-]{36}$/i.test(editId) ? adminGetTag(editId) : null]);
@@ -71,10 +71,15 @@ export default async function TagsPage({ searchParams }: PageProps<"/admin/shop/
 										label: "Usage",
 										options: [
 											{ label: "All tags", value: "" },
-											{ label: "Used by live products", value: "used" },
+											{ label: "Used by products", value: "used" },
 											{ label: "Unused", value: "unused" },
 										],
 									},
+								]}
+								sorts={[
+									{ label: "Name A–Z", value: "" },
+									{ label: "Name Z–A", value: "name-desc" },
+									{ label: "Newest", value: "newest" },
 								]}
 							/>
 							{rows.length === 0 ? (

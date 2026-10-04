@@ -14,7 +14,7 @@ type Props = {
 	total: number;
 	page: number;
 	perPage: number;
-	values: { q: string; source: string; status: string };
+	values: { q: string; source: string; status: string; sort: string };
 	scopeLabel?: string;
 };
 
@@ -50,6 +50,11 @@ export function OpsLogTable({ title, basePath, rows, total, page, perPage, value
 								{ label: "Error", value: "error" },
 							],
 						},
+					]}
+					sorts={[
+						{ label: "Newest first", value: "" },
+						{ label: "Oldest first", value: "oldest" },
+						{ label: "Slowest first", value: "slowest" },
 					]}
 				/>
 				{rows.length === 0 ? (

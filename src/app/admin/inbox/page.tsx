@@ -22,7 +22,7 @@ const PER_PAGE = 20;
 export default async function InboxPage({ searchParams }: PageProps<"/admin/inbox">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), status: param(params, "status") };
+	const values = { q: param(params, "q").trim(), status: param(params, "status"), sort: param(params, "sort") };
 	const page = pageParam(params);
 	const returnTo = new URLSearchParams({ ...listParams(values), ...(page > 1 ? { page: String(page) } : {}) }).toString();
 
@@ -58,6 +58,11 @@ export default async function InboxPage({ searchParams }: PageProps<"/admin/inbo
 									{ label: "Archived", value: "archived" },
 								],
 							},
+						]}
+						sorts={[
+							{ label: "Newest first", value: "" },
+							{ label: "Oldest first", value: "oldest" },
+							{ label: "Name A–Z", value: "name" },
 						]}
 					/>
 

@@ -29,7 +29,7 @@ const icons: Record<CacheGroupId, React.ElementType> = {
 export default async function CachePage({ searchParams }: PageProps<"/admin/cache">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status") };
+	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status"), sort: param(params, "sort") };
 	const page = pageParam(params);
 	const logs = await listOps({ kind: "cache_purge", ...values, page, perPage: PER_PAGE }).catch(() => ({ rows: [], total: 0 }));
 

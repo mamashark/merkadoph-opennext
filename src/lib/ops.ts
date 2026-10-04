@@ -23,15 +23,16 @@ export async function logOp(entry: Omit<OpsLog, "id" | "created_at">): Promise<v
 		.insert({ ...entry, message: entry.message?.slice(0, 1000) ?? null });
 }
 
-export async function listOps(opts: { kind: OpsKind; q?: string; source?: string; status?: string; page?: number; perPage?: number }) {
-	const { kind, q, source, status, page = 1, perPage = 20 } = opts;
+export async function listOps(opts: { kind: OpsKind; q?: string; source?: string; status?: string; sort?: string; page?: number; perPage?: number }) {
+	const { kind, q, source, status, sort = "", page = 1, perPage = 20 } = opts;
 	let query = createAdminClient().from("ops_logs").select("*", { count: "exact" }).eq("kind", kind);
 	if (source === "manual" || source === "cron") query = query.eq("source", source);
 	if (status === "success" || status === "error") query = query.eq("status", status);
 	const term = q ? searchTerm(q) : "";
 	if (term) query = query.or(`message.ilike.%${term}%,actor_email.ilike.%${term}%,scope.ilike.%${term}%`);
 	const from = (page - 1) * perPage;
-	const { data, count, error } = await query.order("created_at", { ascending: false }).range(from, from + perPage - 1);
+	const order = sort === "oldest" ? { column: "created_at", ascending: true } : sort === "slowest" ? { column: "duration_ms", ascending: false } : { column: "created_at", ascending: false };
+	const { data, count, error } = await query.order(order.column, { ascending: order.ascending, nullsFirst: false }).range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load logs: ${error.message}`);
 	return { rows: (data ?? []) as OpsLog[], total: count ?? 0 };
 }

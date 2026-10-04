@@ -19,7 +19,7 @@ const PER_PAGE = 20;
 export default async function CategoriesPage({ searchParams }: PageProps<"/admin/shop/categories">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), parent: param(params, "parent") };
+	const values = { q: param(params, "q").trim(), parent: param(params, "parent"), sort: param(params, "sort") };
 	const page = pageParam(params);
 	const [{ rows, total }, all] = await Promise.all([adminListCategories({ ...values, page, perPage: PER_PAGE }), adminAllCategories()]);
 	const nameOf = new Map(all.map((c) => [c.id, c.name]));
@@ -52,6 +52,12 @@ export default async function CategoriesPage({ searchParams }: PageProps<"/admin
 											...all.filter((c) => all.some((x) => x.parent_id === c.id)).map((c) => ({ label: `Inside ${c.name}`, value: c.id })),
 										],
 									},
+								]}
+								sorts={[
+									{ label: "Display order", value: "" },
+									{ label: "Name A–Z", value: "name" },
+									{ label: "Newest", value: "newest" },
+									{ label: "Last updated", value: "updated" },
 								]}
 							/>
 							{rows.length === 0 ? (

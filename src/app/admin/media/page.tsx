@@ -50,12 +50,16 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 	const q = str("q").trim().toLowerCase();
 	const sort = str("sort");
 	const page = pageParam(params);
+	// "Uploaded" filter: within the last 7 or 30 days, or older than 30 days.
+	const uploaded = ["7d", "30d", "older"].includes(str("uploaded")) ? str("uploaded") : "";
+	const ageDays = (iso: string | null) => (iso ? (Date.now() - new Date(iso).getTime()) / 86_400_000 : Infinity);
 	const files = (listing?.files ?? [])
 		.filter((f) => !q || f.name.toLowerCase().includes(q))
+		.filter((f) => (uploaded === "7d" ? ageDays(f.updatedAt) <= 7 : uploaded === "30d" ? ageDays(f.updatedAt) <= 30 : uploaded === "older" ? ageDays(f.updatedAt) > 30 : true))
 		.sort((a, b) => (sort === "name" ? a.name.localeCompare(b.name) : sort === "size" ? b.size - a.size : (b.updatedAt ?? "").localeCompare(a.updatedAt ?? "")));
 	const pagedFiles = files.slice((page - 1) * PER_PAGE, page * PER_PAGE);
-	const folders = page === 1 ? (listing?.folders ?? []).filter((f) => !q || f.toLowerCase().includes(q)) : [];
-	const listParams = Object.fromEntries(Object.entries({ bucket: bucket ?? "", path, q: str("q").trim(), sort }).filter(([, v]) => v));
+	const folders = page === 1 && !uploaded ? (listing?.folders ?? []).filter((f) => !q || f.toLowerCase().includes(q)) : [];
+	const listParams = Object.fromEntries(Object.entries({ bucket: bucket ?? "", path, q: str("q").trim(), uploaded, sort }).filter(([, v]) => v));
 
 	return (
 		<>
@@ -150,6 +154,15 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 							<label htmlFor="media-sort" className="sr-only">
 								Sort by
 							</label>
+							<label htmlFor="media-uploaded" className="sr-only">
+								Uploaded
+							</label>
+							<select id="media-uploaded" name="uploaded" defaultValue={uploaded} className={`${inputClass} h-10 py-0 sm:w-44`}>
+								<option value="">Uploaded: any time</option>
+								<option value="7d">Last 7 days</option>
+								<option value="30d">Last 30 days</option>
+								<option value="older">Older than 30 days</option>
+							</select>
 							<select id="media-sort" name="sort" defaultValue={sort} className={`${inputClass} h-10 py-0 sm:w-44`}>
 								<option value="">Newest first</option>
 								<option value="name">Name A–Z</option>

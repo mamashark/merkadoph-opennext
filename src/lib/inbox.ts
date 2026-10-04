@@ -15,14 +15,15 @@ export type ContactMessage = {
 	created_at: string;
 };
 
-export async function listMessages({ q, status, page = 1, perPage = 20 }: { q?: string; status?: string; page?: number; perPage?: number }) {
+export async function listMessages({ q, status, sort = "", page = 1, perPage = 20 }: { q?: string; status?: string; sort?: string; page?: number; perPage?: number }) {
 	let query = createAdminClient().from("contact_messages").select("*", { count: "exact" });
 	if (status === "new" || status === "read" || status === "archived") query = query.eq("status", status);
 	else query = query.neq("status", "archived");
 	const term = q ? searchTerm(q) : "";
 	if (term) query = query.or(`name.ilike.%${term}%,email.ilike.%${term}%,topic.ilike.%${term}%,message.ilike.%${term}%`);
 	const from = (page - 1) * perPage;
-	const { data, count, error } = await query.order("created_at", { ascending: false }).range(from, from + perPage - 1);
+	const order = sort === "oldest" ? { column: "created_at", ascending: true } : sort === "name" ? { column: "name", ascending: true } : { column: "created_at", ascending: false };
+	const { data, count, error } = await query.order(order.column, { ascending: order.ascending }).range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load messages: ${error.message}`);
 	return { rows: (data ?? []) as ContactMessage[], total: count ?? 0 };
 }

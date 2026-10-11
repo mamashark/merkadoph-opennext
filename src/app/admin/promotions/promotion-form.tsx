@@ -39,7 +39,7 @@ export function PromotionForm({ promotion }: { promotion?: Promotion }) {
 								<input id="cta_label" name="cta_label" maxLength={40} defaultValue={p?.cta_label ?? ""} placeholder="Shop now" className={inputClass} />
 							</Field>
 							<Field id="cta_url" label="Button link">
-								<input id="cta_url" name="cta_url" type="url" maxLength={1000} defaultValue={p?.cta_url ?? ""} placeholder="https://…" className={inputClass} />
+								<input id="cta_url" name="cta_url" inputMode="url" maxLength={1000} defaultValue={p?.cta_url ?? ""} placeholder="/#contact or https://…" className={inputClass} />
 							</Field>
 						</div>
 					</FormCard>
@@ -58,7 +58,7 @@ export function PromotionForm({ promotion }: { promotion?: Promotion }) {
 					<PublishCard row={p} noun="promotion" />
 					<CoverCard row={p} />
 					<TagsCard row={p} placeholder="sale, groceries, weekend" />
-					<SeoCard row={p} />
+					<SeoCard row={p} pathPrefix="/promotions/" />
 				</>
 			}
 		/>

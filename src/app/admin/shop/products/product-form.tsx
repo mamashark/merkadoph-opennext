@@ -1,5 +1,6 @@
 import { saveProduct } from "../actions";
 import type { Category, Product } from "@/lib/shop";
+import type { TaxClass } from "@/server/shop/tax";
 import { toDateTimeInput } from "@/lib/datetime";
 import { BasicsSection, ContentForm, ContentSection, CoverCard, Field, FormCard, PublishCard, SeoCard } from "@/components/admin/form-parts";
 import { GalleryField } from "@/components/media/gallery-field";
@@ -20,7 +21,7 @@ function tree(categories: Category[]) {
 }
 
 /** Server-rendered WooCommerce-style product form. Only the editor, image fields and buttons hydrate. */
-export function ProductForm({ product, categories, currency }: { product?: Product; categories: Category[]; currency: string }) {
+export function ProductForm({ product, categories, currency, tax }: { product?: Product; categories: Category[]; currency: string; tax: { enabled: boolean; defaultClass: string; classes: TaxClass[] } }) {
 	const p = product;
 	// Shared form parts expect tags as plain names.
 	const row = p ? { ...p, tags: p.tags.map((t) => t.name) } : undefined;
@@ -91,6 +92,23 @@ export function ProductForm({ product, categories, currency }: { product?: Produ
 								<input id="height_cm" name="height_cm" type="number" min={0} step="0.01" defaultValue={p?.height_cm ?? ""} className={inputClass} />
 							</Field>
 						</div>
+					</FormCard>
+
+					<FormCard title="VAT (moms)">
+						<Field
+							id="tax_class"
+							label="VAT class"
+							hint={tax.enabled ? "Prices above include this VAT rate." : "VAT is switched off (Shop → Tax). The class is saved for when it's switched on."}
+						>
+							<select id="tax_class" name="tax_class" defaultValue={p?.tax_class ?? ""} className={`${inputClass} sm:w-72`}>
+								<option value="">Default — {tax.classes.find((c) => c.id === tax.defaultClass)?.name ?? "standard"}</option>
+								{tax.classes.map((c) => (
+									<option key={c.id} value={c.id}>
+										{c.name}
+									</option>
+								))}
+							</select>
+						</Field>
 					</FormCard>
 
 					<ContentSection defaultValue={p?.content} label="Description" />
@@ -166,7 +184,7 @@ export function ProductForm({ product, categories, currency }: { product?: Produ
 						</Field>
 					</FormCard>
 
-					<SeoCard row={row} />
+					<SeoCard row={row} pathPrefix="/product/" />
 				</>
 			}
 		/>

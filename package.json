@@ -17,12 +17,13 @@
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.2",
     "lucide-react": "^1.50.0",
-    "next": "16.3.6",
+    "next": "^16.3.8",
     "react": "^19.1.7",
     "react-dom": "^19.1.7",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -31,7 +32,7 @@
     "@types/react": "^19.1.7",
     "@types/react-dom": "^19.1.7",
     "eslint": "^9",
-    "eslint-config-next": "16.3.6",
+    "eslint-config-next": "^16.3.8",
     "tailwindcss": "^4",
     "typescript": "^5.7.4",
     "wrangler": "^4.147.0"

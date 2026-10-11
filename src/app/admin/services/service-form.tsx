@@ -31,8 +31,8 @@ export function ServiceForm({ service, categories }: { service?: Service; catego
 							<Field id="cta_label" label="Button label">
 								<input id="cta_label" name="cta_label" maxLength={40} defaultValue={s?.cta_label ?? ""} placeholder="Inquire now" className={inputClass} />
 							</Field>
-							<Field id="cta_url" label="Button link" hint="A page, form, Messenger or mailto: link.">
-								<input id="cta_url" name="cta_url" type="url" maxLength={1000} defaultValue={s?.cta_url ?? ""} placeholder="https://…" className={inputClass} />
+							<Field id="cta_url" label="Button link" hint="A page on this site (e.g. /#contact) or a full https:// link (form, Messenger…).">
+								<input id="cta_url" name="cta_url" inputMode="url" maxLength={1000} defaultValue={s?.cta_url ?? ""} placeholder="/#contact or https://…" className={inputClass} />
 							</Field>
 						</div>
 					</FormCard>
@@ -57,7 +57,7 @@ export function ServiceForm({ service, categories }: { service?: Service; catego
 					</FormCard>
 					<CoverCard row={s} />
 					<TagsCard row={s} placeholder="delivery, wholesale" />
-					<SeoCard row={s} />
+					<SeoCard row={s} pathPrefix="/services/" />
 				</>
 			}
 		/>

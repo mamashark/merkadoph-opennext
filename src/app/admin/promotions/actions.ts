@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { fromDateTimeInput } from "@/lib/datetime";
-import { commonFields, deleteRow, fetchExisting, optional, optionalUrl, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
+import { commonFields, deleteRow, fetchExisting, optional, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow, optionalLink } from "@/lib/content-server";
 
 export async function savePromotion(formData: FormData) {
 	const user = await requireAdmin();
@@ -33,7 +33,7 @@ export async function savePromotion(formData: FormData) {
 			promo_code: optional(text(formData, "promo_code", 40).toUpperCase()),
 			terms: optional(text(formData, "terms", 4000)),
 			cta_label: optional(text(formData, "cta_label", 40)),
-			cta_url: optionalUrl(formData, "cta_url"),
+			cta_url: optionalLink(formData, "cta_url"),
 		},
 		{ author_id: user.id },
 	);

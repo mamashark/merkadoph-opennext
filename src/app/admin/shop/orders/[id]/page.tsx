@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatOrderNumber } from "@/lib/order-number";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Mail, MapPin, Phone } from "lucide-react";
@@ -11,7 +12,7 @@ import { formatMoney, type Currency } from "@/lib/pricing";
 import { PageHeader } from "@/components/admin/page-header";
 import { UUID } from "@/components/admin/form-parts";
 import { Badge } from "@/components/admin/status-badge";
-import { FlashMessage } from "@/components/ui/alert";
+import { Alert, FlashMessage } from "@/components/ui/alert";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cardClass, inputClass } from "@/lib/ui";
 
@@ -30,18 +31,24 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ad
 	return (
 		<>
 			<PageHeader
-				title={`Order #${order.order_number}`}
+				title={`Order ${formatOrderNumber(order.order_number)}`}
 				description={`Placed ${formatDate(order.created_at, { dateStyle: "full", timeStyle: "short" })}`}
 				breadcrumbs={[
 					{ label: "Admin", href: "/admin" },
 					{ label: "Shop", href: "/admin/shop" },
 					{ label: "Orders", href: "/admin/shop/orders" },
-					{ label: `#${order.order_number}` },
+					{ label: formatOrderNumber(order.order_number) },
 				]}
 				actions={<Badge tone={ORDER_TONES[order.status]}>{ORDER_LABELS[order.status]}</Badge>}
 			/>
 			<div className="space-y-4">
 				<FlashMessage notice={typeof notice === "string" ? notice : undefined} error={typeof error === "string" ? error : undefined} />
+				{order.cancel_requested_at && order.status !== "cancelled" && (
+					<Alert tone="warning">
+						The customer asked to cancel this order on {formatDate(order.cancel_requested_at, { dateStyle: "medium", timeStyle: "short" })}
+						{order.cancel_reason ? <>: &ldquo;{order.cancel_reason}&rdquo;</> : "."} Refund if needed, then set the status to Cancelled.
+					</Alert>
+				)}
 				<div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
 					<section className={`${cardClass} overflow-hidden`}>
 						<h2 className="border-b border-slate-100 px-5 py-3 text-sm font-semibold text-slate-900 dark:border-slate-800 dark:text-white">Items</h2>
@@ -107,6 +114,15 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ad
 									</option>
 								))}
 							</select>
+							<details open={!!order.tracking_number} className="text-sm">
+								<summary className="cursor-pointer font-medium text-slate-700 dark:text-slate-300">Tracking (for “Shipped”)</summary>
+								<div className="mt-2 space-y-2">
+									<input name="carrier" aria-label="Carrier" maxLength={60} defaultValue={order.carrier ?? ""} placeholder="Carrier, e.g. PostNord" className={inputClass} />
+									<input name="tracking_number" aria-label="Tracking number" maxLength={100} defaultValue={order.tracking_number ?? ""} placeholder="Tracking number" className={inputClass} />
+									<input name="tracking_url" aria-label="Tracking link" type="url" maxLength={500} defaultValue={order.tracking_url ?? ""} placeholder="https://… tracking link" className={inputClass} />
+								</div>
+							</details>
+							<p className="text-xs text-slate-600 dark:text-slate-400">Changing to Shipped or Cancelled emails the customer.</p>
 							<SubmitButton pendingLabel="Saving…" className="w-full">
 								Update status
 							</SubmitButton>
@@ -148,7 +164,7 @@ export default async function OrderPage({ params, searchParams }: PageProps<"/ad
 						<section className={`${cardClass} space-y-3 p-5 text-sm`}>
 							<h2 className="font-semibold text-slate-900 dark:text-white">Customer</h2>
 							<p className="font-medium text-slate-900 dark:text-white">{order.customer_name}</p>
-							<a href={`mailto:${order.email}?subject=${encodeURIComponent(`Your order #${order.order_number}`)}`} className="flex items-center gap-2 text-teal-700 hover:underline dark:text-teal-300">
+							<a href={`mailto:${order.email}?subject=${encodeURIComponent(`Your order ${formatOrderNumber(order.order_number)}`)}`} className="flex items-center gap-2 text-teal-700 hover:underline dark:text-teal-300">
 								<Mail className="h-4 w-4" aria-hidden /> {order.email}
 							</a>
 							{order.phone && (

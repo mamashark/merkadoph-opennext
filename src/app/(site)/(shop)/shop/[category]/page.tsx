@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { categoryTrail, getCategories, getCategoryBySlug, getShopSettings } from "@/lib/shop";
+import { categoryTrail, getCategories, getCategoryBySlug, getShopProducts, getShopSettings } from "@/lib/shop";
 import { pageParam, param } from "@/lib/content";
 import { pageMetadata } from "@/lib/seo";
 import { Catalog } from "@/components/shop/catalog";
@@ -13,14 +13,16 @@ export async function generateMetadata({ params, searchParams }: PageProps<"/sho
 	if (!category) return { title: "Category not found", robots: { index: false } };
 	const page = pageParam(query);
 	const filtered = !!(param(query, "q") || param(query, "tag") || param(query, "sort"));
+	// Empty categories are thin content: keep them out of the index until they have products.
+	const empty = !filtered && (await getShopProducts({ category: category.slug, perPage: 1 }).catch(() => ({ total: 1 }))).total === 0;
 	return {
-		...pageMetadata({
+		...(await pageMetadata({
 			title: `${category.meta_title || category.name}${page > 1 ? ` — Page ${page}` : ""}`,
 			description: category.meta_description || category.description || `Shop ${category.name} at Merkado PH.`,
 			path: page > 1 ? `/shop/${category.slug}?page=${page}` : `/shop/${category.slug}`,
 			image: category.image_url ? { url: category.image_url, alt: category.name } : null,
-		}),
-		...(filtered ? { robots: { index: false, follow: true } } : {}),
+		})),
+		...(filtered || empty ? { robots: { index: false, follow: true } } : {}),
 	};
 }
 

@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Clock } from "lucide-react";
-import { getOrderForCustomer } from "@/lib/orders";
+import { getOrderForViewer } from "@/lib/orders";
+import { formatOrderNumber } from "@/lib/order-number";
+import { getCustomer } from "@/server/shop/context";
 import { formatMoney, type Currency } from "@/lib/pricing";
 import { param } from "@/lib/content";
 import { ClearCart } from "@/components/shop/clear-cart";
@@ -12,7 +14,8 @@ export const metadata: Metadata = { title: "Order confirmation", robots: { index
 /** Where customers land after paying (or placing a pay-later order via redirect flows). */
 export default async function CheckoutCompletePage({ searchParams }: PageProps<"/checkout/complete">) {
 	const params = await searchParams;
-	const order = await getOrderForCustomer(param(params, "order"));
+	// Private link (D21): the order's token, or the signed-in customer who owns it.
+	const order = await getOrderForViewer(param(params, "order"), param(params, "t") || null, (await getCustomer())?.id ?? null);
 	if (!order) notFound();
 	const state = param(params, "state");
 	const paid = order.payment_status === "paid";
@@ -34,11 +37,11 @@ export default async function CheckoutCompletePage({ searchParams }: PageProps<"
 			>
 				{paid ? <CheckCircle2 className="mx-auto h-10 w-10" aria-hidden /> : failed ? <AlertTriangle className="mx-auto h-10 w-10" aria-hidden /> : <Clock className="mx-auto h-10 w-10" aria-hidden />}
 				<h1 className="mt-4 text-2xl font-semibold sm:text-3xl">
-					{paid ? `Salamat! Order #${order.order_number} is paid.` : failed ? "We couldn't confirm your payment" : `Order #${order.order_number} received`}
+					{paid ? `Salamat! Order ${formatOrderNumber(order.order_number)} is paid.` : failed ? "We couldn't confirm your payment" : `Order ${formatOrderNumber(order.order_number)} received`}
 				</h1>
 				<p className="mt-3">
 					{paid
-						? `We've received ${formatMoney(order.subtotal, currency)}. A confirmation will be sent to ${order.email}, and we'll be in touch about delivery.`
+						? `We've received ${formatMoney(order.total, currency)}. A confirmation will be sent to ${order.email}, and we'll be in touch about delivery.`
 						: failed
 							? "No money was taken. Your cart is still saved — you can try again or pick another payment method."
 							: `Your payment is being confirmed. We'll email ${order.email} as soon as it's through — no need to pay again.`}

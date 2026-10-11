@@ -15,11 +15,11 @@ export async function generateMetadata({ searchParams }: PageProps<"/shop">): Pr
 	const page = pageParam(params);
 	const filtered = !!(param(params, "q") || param(params, "tag") || param(params, "sort"));
 	return {
-		...pageMetadata({
+		...(await pageMetadata({
 			title: `${settings.title || "Shop"}${page > 1 ? ` — Page ${page}` : ""}`,
 			description: settings.description || fallbackDescription,
 			path: page > 1 ? `/shop?page=${page}` : "/shop",
-		}),
+		})),
 		// Search/filter/sort variations shouldn't compete with the main listing in search results.
 		...(filtered ? { robots: { index: false, follow: true } } : {}),
 	};

@@ -5,6 +5,7 @@ import { getPromotionSlugs } from "@/lib/promotions";
 import { getServiceSlugs } from "@/lib/services";
 import { SITE_URL } from "@/lib/env";
 import { stageGateEnabled } from "@/lib/stage";
+import { getLegalPages, LEGAL_PAGE_IDS, LEGAL_PAGES } from "@/lib/site-settings";
 import { getAllLiveProducts, getCategories, getShopSettings, type Category, type Product } from "@/lib/shop";
 
 export const revalidate = 3600;
@@ -17,7 +18,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	// While the site is behind the staging gate only the "coming soon" homepage is public.
 	if (stageGateEnabled()) return [{ url: SITE_URL, changeFrequency: "weekly", priority: 1 }];
 
-	const [blogs, events, promotions, services] = await Promise.all([safe(getAllPublishedSlugs()), safe(getEventSlugs()), safe(getPromotionSlugs()), safe(getServiceSlugs())]);
+	const [blogs, events, promotions, services, legal] = await Promise.all([
+		safe(getAllPublishedSlugs()),
+		safe(getEventSlugs()),
+		safe(getPromotionSlugs()),
+		safe(getServiceSlugs()),
+		getLegalPages().catch(() => null),
+	]);
 
 	// Shop: only while the shop is switched on (Admin → Shop).
 	const settings = await getShopSettings().catch(() => null);
@@ -54,5 +61,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		...section("/promotions", promotions, "daily"),
 		...section("/services", services, "monthly"),
 		...shop,
+		...LEGAL_PAGE_IDS.map((id) => ({
+			url: `${SITE_URL}${LEGAL_PAGES[id].path}`,
+			...(legal?.[id].updated_at ? { lastModified: legal[id].updated_at } : {}),
+			changeFrequency: "yearly" as const,
+			priority: 0.2,
+		})),
 	];
 }

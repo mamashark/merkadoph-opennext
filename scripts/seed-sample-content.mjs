@@ -50,7 +50,7 @@ const services = [
 		content:
 			"## What's included\n\n- Free on-site inspection and a written quote\n- Removal and disposal of the old roof\n- New underlay, battens and your choice of covering\n- Flashings around chimneys, vents and skylights\n- Final walkthrough with photos of the finished work\n\n## How long it takes\n\nMost detached houses take one to two weeks, depending on size, weather and material.\n\n## Good to know\n\nRoof work counts as renovation, so you may be able to use the **ROT deduction** on the labour cost. We put the details you need on the invoice.",
 		cta_label: "Book a free inspection",
-		cta_url: "https://merkadoph-opennext.merkado-ph.workers.dev/#contact",
+		cta_url: "/#contact",
 		tags: ["roofing", TAG],
 	},
 	{
@@ -64,7 +64,7 @@ const services = [
 		content:
 			"## Common jobs\n\n- Replacing cracked or slipped tiles\n- Re-sealing chimney and vent flashings\n- Fixing storm damage\n- Moss removal and treatment\n\nWe'll show you photos of what we found and explain the options — repair now, or plan for a replacement later.",
 		cta_label: "Report a leak",
-		cta_url: "https://merkadoph-opennext.merkado-ph.workers.dev/#contact",
+		cta_url: "/#contact",
 		tags: ["roofing", "repair", TAG],
 	},
 	{
@@ -121,7 +121,7 @@ const promotions = [
 		ends_at: at(45, 23, 59),
 		terms: "- Detached and semi-detached houses\n- One inspection per household\n- Booking required",
 		cta_label: "Book an inspection",
-		cta_url: "https://merkadoph-opennext.merkado-ph.workers.dev/#contact",
+		cta_url: "/#contact",
 		tags: ["roofing", TAG],
 	},
 	{
@@ -135,7 +135,7 @@ const promotions = [
 		ends_at: at(90, 23, 59),
 		terms: "- Applies to labour, not materials\n- Cannot be combined with other offers\n- Mention the code when requesting a quote",
 		cta_label: "Ask for a quote",
-		cta_url: "https://merkadoph-opennext.merkado-ph.workers.dev/#contact",
+		cta_url: "/#contact",
 		tags: ["community", TAG],
 	},
 	{

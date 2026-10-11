@@ -44,9 +44,16 @@
 			"database_id": "1974e60a-64d9-4e8d-9a26-264edceec683"
 		}
 	],
+	// Rate limiting (security.md §6) — Cloudflare Workers Rate Limiting API, used by src/lib/rate-limit.ts.
+	// Limits are per key (IP + action, or email), per Cloudflare location.
+	"ratelimits": [
+		{ "name": "RL_AUTH", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
+		{ "name": "RL_FORMS", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },
+		{ "name": "RL_CART", "namespace_id": "1003", "simple": { "limit": 60, "period": 60 } }
+	],
 	// Supabase keep-alive: 03:00 UTC (11:00 PH) every Monday and Thursday. Keep in sync with src/lib/keepalive.ts.
 	"triggers": {
-		"crons": ["0 3 * * 1,4"]
+		"crons": ["0 3 * * 1,4", "*/15 * * * *"]
 	},
 	"observability": {
 		"enabled": true
@@ -58,6 +65,7 @@
 	 * - CRON_SECRET
 	 * - STAGE_KEY            (preview key for the gated public site, see src/lib/stage.ts)
 	 * - RECAPTCHA_SECRET_KEY (reCAPTCHA v3 server verification; the site key is NEXT_PUBLIC_RECAPTCHA_SITE_KEY in .env.production)
+	 * - RESEND_API_KEY (transactional email via Resend; without it emails are only logged)
 	 * - SETTINGS_ENCRYPTION_KEY (encrypts payment gateway keys in the database, see src/lib/secret-box.ts — never rotate without re-entering the keys)
 	 */
 }

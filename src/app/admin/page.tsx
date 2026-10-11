@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, BriefcaseBusiness, CalendarDays, FilePen, FileText, Images, Plus, TicketPercent, Upload, Users } from "lucide-react";
-import { requireAdmin } from "@/lib/auth";
+import { getMfaState, requireAdmin } from "@/lib/auth";
 import { adminListBlogs } from "@/lib/blogs";
 import { adminCount } from "@/lib/content-server";
 import { adminListEvents } from "@/lib/events";
@@ -21,7 +21,7 @@ const settle = <T,>(p: Promise<T>) => p.then((v) => ({ ok: true as const, v })).
 
 export default async function DashboardPage() {
 	const me = await requireAdmin();
-	const shopStatus = await getShopReadiness();
+	const [shopStatus, mfa] = await Promise.all([getShopReadiness(), getMfaState()]);
 
 	const [blogs, blogsLive, events, promos, services, recent, upcoming, users] = await Promise.all([
 		settle(adminCount("blogs")),
@@ -57,6 +57,17 @@ export default async function DashboardPage() {
 			/>
 
 			<StagingCard />
+			{!mfa.enrolled && (
+				<div className="mb-6">
+					<Alert tone="warning">
+						Two-factor authentication is off for your account.{" "}
+						<Link href="/admin/security" className="font-medium underline underline-offset-2">
+							Turn it on
+						</Link>{" "}
+						so a leaked password alone can&apos;t open the admin.
+					</Alert>
+				</div>
+			)}
 			<div className="mb-6">
 				<ShopStatusAlert status={shopStatus} compact />
 			</div>

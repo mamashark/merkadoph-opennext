@@ -5,7 +5,7 @@ import { secret } from "@/lib/secrets";
 /** Minimum reCAPTCHA v3 score (0 = bot, 1 = human). Google recommends 0.5 as a starting point. */
 export const RECAPTCHA_MIN_SCORE = 0.5;
 
-export type RecaptchaAction = "contact" | "checkout" | "login";
+export type RecaptchaAction = "contact" | "checkout" | "login" | "register" | "shop_login" | "password_reset" | "resend_verification";
 export type RecaptchaResult = { ok: true; score: number | null } | { ok: false; reason: "missing-token" | "invalid" | "action-mismatch" | "low-score" | "unavailable"; score?: number };
 
 /**

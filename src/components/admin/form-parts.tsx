@@ -6,6 +6,8 @@ import { MediaField } from "@/components/media/media-field";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "./status-badge";
+import { SeoFields } from "./seo-fields";
+import { SITE_URL } from "@/lib/env";
 import { cardClass, cn, hintClass, inputClass, labelClass } from "@/lib/ui";
 
 /* Server-rendered building blocks shared by every content form (blogs, events, promotions, services).
@@ -184,15 +186,11 @@ export function TagsCard({ row, placeholder }: { row?: Base; placeholder: string
 	);
 }
 
-export function SeoCard({ row }: { row?: Base }) {
+/** `pathPrefix` is the public URL before the slug, e.g. "/blogs/" — used by the search preview. */
+export function SeoCard({ row, pathPrefix }: { row?: Pick<Base, "meta_title" | "meta_description">; pathPrefix: string }) {
 	return (
 		<FormCard title="Search engine (SEO)">
-			<Field id="meta_title" label="Meta title" hint="Up to 70 characters. Defaults to the title.">
-				<input id="meta_title" name="meta_title" maxLength={70} defaultValue={row?.meta_title ?? ""} className={inputClass} />
-			</Field>
-			<Field id="meta_description" label="Meta description" hint="Up to 170 characters. Defaults to the summary. Shown in Google results.">
-				<textarea id="meta_description" name="meta_description" rows={3} maxLength={170} defaultValue={row?.meta_description ?? ""} className={inputClass} />
-			</Field>
+			<SeoFields metaTitle={row?.meta_title ?? ""} metaDescription={row?.meta_description ?? ""} pathPrefix={pathPrefix} origin={SITE_URL} />
 		</FormCard>
 	);
 }

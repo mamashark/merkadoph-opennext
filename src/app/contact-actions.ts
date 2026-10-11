@@ -3,16 +3,18 @@
 import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { RECAPTCHA_FAILED_MESSAGE, verifyRecaptcha } from "@/lib/recaptcha";
+import { RATE_LIMITED_MESSAGE, clientIp, rateLimit } from "@/lib/rate-limit";
+import { securityEvent } from "@/lib/audit";
+import { contactSchema, fieldErrors, formFields } from "@/lib/validation";
 
 export type ContactState = {
 	status: "idle" | "success" | "error";
 	message?: string;
-	errors?: Partial<Record<"name" | "email" | "message", string>>;
+	errors?: Partial<Record<string, string>>;
 	/** Echoed back on error so the form keeps what the visitor typed. */
 	values?: Record<"name" | "email" | "phone" | "topic" | "message", string>;
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_FILL_MS = 3000;
 
 /** Public contact form. Stored in contact_messages (service role), read in Admin → Inbox. */
@@ -25,21 +27,25 @@ export async function sendContactMessage(_prev: ContactState, formData: FormData
 		return { status: "success", message: "Thanks! We'll get back to you soon." };
 	}
 
-	const name = field("name", 120);
-	const email = field("email", 254).toLowerCase();
-	const phone = field("phone", 40);
-	const topic = field("topic", 120);
-	const message = field("message", 5000);
+	const raw = formFields(formData, ["name", "email", "phone", "topic", "message"]);
+	const values = { name: raw.name.slice(0, 120), email: raw.email.slice(0, 254), phone: raw.phone.slice(0, 40), topic: raw.topic.slice(0, 120), message: raw.message.slice(0, 5000) };
+	const parsed = contactSchema.safeParse(raw);
+	if (!parsed.success) {
+		const errors = fieldErrors(parsed);
+		return { status: "error", message: errors.phone ?? errors.topic ?? "Please check the highlighted fields.", errors, values };
+	}
+	const { name, email, phone, topic, message } = parsed.data;
 
-	const errors: ContactState["errors"] = {};
-	if (!name) errors.name = "Please enter your name.";
-	if (!EMAIL.test(email)) errors.email = "Please enter a valid email address.";
-	if (message.length < 10) errors.message = "Please tell us a bit more (at least 10 characters).";
-	const values = { name, email, phone, topic, message };
-	if (Object.keys(errors).length) return { status: "error", message: "Please check the highlighted fields.", errors, values };
+	if (!(await rateLimit("forms", "contact", [await clientIp()]))) {
+		await securityEvent("forms.rate_limited", "Contact form rate limit hit", { email });
+		return { status: "error", message: RATE_LIMITED_MESSAGE, values };
+	}
 
 	const human = await verifyRecaptcha(formData.get("recaptcha_token"), "contact");
-	if (!human.ok) return { status: "error", message: RECAPTCHA_FAILED_MESSAGE, values };
+	if (!human.ok) {
+		await securityEvent("forms.captcha_failed", "Contact form reCAPTCHA check failed", { email });
+		return { status: "error", message: RECAPTCHA_FAILED_MESSAGE, values };
+	}
 
 	const { error } = await createAdminClient()
 		.from("contact_messages")

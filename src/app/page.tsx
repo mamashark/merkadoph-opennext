@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { HomePage, homeMetadata } from "@/components/home/home-page";
 
 /**
@@ -9,7 +8,7 @@ import { HomePage, homeMetadata } from "@/components/home/home-page";
 // ISR: cached and refreshed every 5 minutes or when content is saved / purged in Admin → Cache.
 export const revalidate = 300;
 
-export const metadata: Metadata = homeMetadata;
+export const generateMetadata = homeMetadata;
 
 export default function Page() {
 	return <HomePage />;

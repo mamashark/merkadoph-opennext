@@ -13,6 +13,9 @@ import { getProductFeed, PRODUCT_FEED_PATH } from "@/lib/product-feed";
 import { logOp } from "@/lib/ops";
 import { DEFAULT_SHOP_SETTINGS, type GalleryImage, type ShopSettings } from "@/lib/shop";
 import { getShopReadiness } from "@/lib/shop-status";
+import { audit } from "@/lib/audit";
+import { releaseOrderStock, reserveStock } from "@/lib/orders";
+import { notifyOrderLater } from "@/lib/email/notify";
 
 const qs = (o: Record<string, string>) => new URLSearchParams(o).toString();
 
@@ -77,6 +80,15 @@ function revalidateShopAdmin() {
 
 /* ------------------------------ Products ------------------------------ */
 
+/** A VAT class id that exists, or null (= the default class). */
+async function validTaxClass(value: FormDataEntryValue | null): Promise<string | null> {
+	const id = String(value ?? "").trim();
+	if (!id) return null;
+	const { data } = await createAdminClient().from("tax_classes").select("id").eq("id", id).maybeSingle();
+	if (!data) throw new Error("Unknown VAT class.");
+	return id;
+}
+
 export async function saveProduct(formData: FormData) {
 	const user = await requireAdmin();
 	const id = text(formData, "id", 64) || undefined;
@@ -119,6 +131,7 @@ export async function saveProduct(formData: FormData) {
 		stock_quantity: manage_stock ? (int(formData, "stock_quantity", 0) ?? 0) : null,
 		stock_status: ["instock", "outofstock", "onbackorder"].includes(stockStatus) ? stockStatus : "instock",
 		weight_kg: money(formData, "weight_kg", "Weight"),
+		tax_class: await validTaxClass(formData.get("tax_class")),
 		length_cm: money(formData, "length_cm", "Length"),
 		width_cm: money(formData, "width_cm", "Width"),
 		height_cm: money(formData, "height_cm", "Height"),
@@ -155,6 +168,7 @@ export async function deleteProduct(formData: FormData) {
 	const { error } = await db.from("products").delete().eq("id", id);
 	if (error) redirect(`/admin/shop/products?${qs({ error: error.message })}`);
 	purgeShop([data?.slug as string | undefined]);
+	await audit({ kind: "admin", action: "products.delete", entity: "products", entityId: id, summary: String(data?.slug ?? "") });
 	revalidateShopAdmin();
 	redirect("/admin/shop/products?notice=deleted");
 }
@@ -194,6 +208,7 @@ export async function deleteCategory(formData: FormData) {
 		.eq("id", text(formData, "id", 64));
 	purgeShop();
 	revalidateShopAdmin();
+	if (!error) await audit({ kind: "admin", action: "product_categories.delete", entity: "product_categories", entityId: text(formData, "id", 64) });
 	redirect(`/admin/shop/categories?${qs(error ? { error: error.message } : { notice: "Category deleted. Its products are kept; sub-categories moved to the top level." })}`);
 }
 
@@ -219,6 +234,7 @@ export async function deleteTag(formData: FormData) {
 		.eq("id", text(formData, "id", 64));
 	purgeShop();
 	revalidateShopAdmin();
+	if (!error) await audit({ kind: "admin", action: "product_tags.delete", entity: "product_tags", entityId: text(formData, "id", 64) });
 	redirect(`/admin/shop/tags?${qs(error ? { error: error.message } : { notice: "Tag deleted." })}`);
 }
 
@@ -228,13 +244,39 @@ export async function updateOrderStatus(formData: FormData) {
 	await requireAdmin();
 	const id = text(formData, "id", 64);
 	const status = text(formData, "status", 20);
-	if (!["pending", "processing", "completed", "cancelled"].includes(status)) throw new Error("Unknown order status.");
-	const { error } = await createAdminClient().from("orders").update({ status }).eq("id", id);
+	if (!["pending", "processing", "shipped", "completed", "cancelled"].includes(status)) throw new Error("Unknown order status.");
+	const db = createAdminClient();
+	const { data: before } = await db.from("orders").select("status").eq("id", id).maybeSingle();
+	const tracking = {
+		carrier: optional(text(formData, "carrier", 60)),
+		tracking_number: optional(text(formData, "tracking_number", 100)),
+		tracking_url: optionalUrl(formData, "tracking_url"),
+	};
+	const { error } = await db
+		.from("orders")
+		.update({ status, ...tracking, ...(status === "shipped" && before?.status !== "shipped" ? { shipped_at: new Date().toISOString() } : {}) })
+		.eq("id", id);
+	if (!error && before && before.status !== status) {
+		// Stock follows the order: cancelling gives it back, reopening a cancelled order takes it again.
+		const slugs = status === "cancelled" ? await releaseOrderStock(id) : before.status === "cancelled" ? await reserveStock(id) : [];
+		if (slugs.length) purgeShop(slugs);
+		// Customer emails (A9): sent once per order.
+		if (status === "shipped") notifyOrderLater(id, "shipped");
+		if (status === "cancelled") notifyOrderLater(id, "cancelled");
+	}
 	revalidateShopAdmin();
+	if (!error) await audit({ kind: "admin", action: "orders.status", entity: "orders", entityId: id, summary: `Status → ${status}` });
 	redirect(`/admin/shop/orders/${id}?${qs(error ? { error: error.message } : { notice: "Order status updated." })}`);
 }
 
 /* ------------------------------ Settings ------------------------------ */
+
+/** "" or a valid email address (throws a friendly error otherwise). */
+function optionalEmail(formData: FormData, key: string, label: string): string {
+	const value = text(formData, key, 254).toLowerCase();
+	if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error(`${label}: enter a valid email address.`);
+	return value;
+}
 
 export async function saveShopSettings(formData: FormData) {
 	await requireAdmin();
@@ -248,6 +290,9 @@ export async function saveShopSettings(formData: FormData) {
 		checkout_note: text(formData, "checkout_note", 1000),
 		brand: text(formData, "brand", 80),
 		google_product_category: text(formData, "google_product_category", 200),
+		email_from_name: text(formData, "email_from_name", 60) || "Merkado PH",
+		email_from_address: optionalEmail(formData, "email_from_address", "Sender email"),
+		order_alert_email: optionalEmail(formData, "order_alert_email", "New-order alerts email"),
 	};
 	// The shop can only go live with at least one working payment method.
 	const blocked = value.enabled && (await getShopReadiness()).usable.length === 0;
@@ -255,6 +300,7 @@ export async function saveShopSettings(formData: FormData) {
 
 	const { error } = await createAdminClient().from("site_settings").upsert({ key: "shop", value });
 	if (error) redirect(`/admin/shop?${qs({ error: error.message })}`);
+	await audit({ kind: "admin", action: "shop.settings", entity: "site_settings", entityId: "shop", summary: value.enabled ? "Shop switched ON" : "Shop OFF / settings saved", details: { currency: value.currency } });
 	purgeShop();
 	// The public header shows/hides the Shop link, so every public page is affected.
 	revalidatePath("/", "layout");

@@ -166,6 +166,23 @@ export default async function ShopAdminPage({ searchParams }: PageProps<"/admin/
 					</div>
 
 					<div className="space-y-6">
+						<FormCard title="Emails">
+							<p className="text-sm text-slate-600 dark:text-slate-400">
+								Order emails are sent with Resend (Worker secret <code>RESEND_API_KEY</code>). Without the key they're only logged.
+							</p>
+							<div className="grid gap-4 sm:grid-cols-2">
+								<Field id="email_from_name" label="Sender name">
+									<input id="email_from_name" name="email_from_name" maxLength={60} defaultValue={settings.email_from_name} className={inputClass} />
+								</Field>
+								<Field id="email_from_address" label="Sender email" hint="Must be on the domain verified in Resend, e.g. order@mail.yourdomain.se.">
+									<input id="email_from_address" name="email_from_address" type="email" maxLength={254} defaultValue={settings.email_from_address} className={inputClass} />
+								</Field>
+							</div>
+							<Field id="order_alert_email" label="New-order alerts to" hint="Gets an email for every new or paid order. Leave empty to turn alerts off.">
+								<input id="order_alert_email" name="order_alert_email" type="email" maxLength={254} defaultValue={settings.order_alert_email} className={`${inputClass} sm:w-96`} />
+							</Field>
+						</FormCard>
+
 						<FormCard title="Product feed defaults">
 							<Field id="brand" label="Default brand" hint="Used when a product has no brand.">
 								<input id="brand" name="brand" maxLength={80} defaultValue={settings.brand} className={inputClass} />

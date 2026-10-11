@@ -83,6 +83,18 @@ export function Facts({ facts, children }: { facts: Fact[]; children?: React.Rea
 
 export function CtaLink({ href, children, variant = "primary" }: { href: string; children: React.ReactNode; variant?: "primary" | "secondary" }) {
 	const external = /^https?:\/\//.test(href);
+	const className =
+		variant === "primary"
+			? "inline-flex items-center gap-1.5 rounded-lg bg-teal-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 dark:bg-teal-500 dark:text-stone-950 dark:hover:bg-teal-400"
+			: "inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-800 hover:bg-stone-50 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800";
+	// Paths on this site stay on the current deployment's domain (NEXT_PUBLIC_SITE_URL).
+	if (href.startsWith("/")) {
+		return (
+			<Link href={href} className={className}>
+				{children}
+			</Link>
+		);
+	}
 	return (
 		<a
 			href={href}

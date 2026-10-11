@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
+import { getSeoSettings } from "@/lib/site-settings";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -21,10 +22,9 @@ export const viewport: Viewport = {
 	],
 };
 
-export const metadata: Metadata = {
+const baseMetadata: Metadata = {
 	metadataBase: new URL(SITE_URL),
 	title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
-	description: "Merkado PH: Bagong Yugto, coming soon! Abangan!",
 	applicationName: SITE_NAME,
 	openGraph: { siteName: SITE_NAME, locale: "en_PH", type: "website" },
 	icons: {
@@ -37,6 +37,21 @@ export const metadata: Metadata = {
 	},
 	manifest: "/site.webmanifest",
 };
+
+/** Site-wide defaults; description, share image and search-engine verification come from Admin → SEO. */
+export async function generateMetadata(): Promise<Metadata> {
+	const seo = await getSeoSettings();
+	return {
+		...baseMetadata,
+		description: seo.site_description,
+		openGraph: { ...baseMetadata.openGraph, images: seo.default_og_image ? [{ url: seo.default_og_image, alt: seo.default_og_alt || SITE_NAME }] : undefined },
+		verification: {
+			...(seo.google_verification ? { google: seo.google_verification } : {}),
+			...(seo.bing_verification ? { other: { "msvalidate.01": seo.bing_verification } } : {}),
+		},
+		alternates: { types: { "application/rss+xml": [{ url: "/blogs/rss.xml", title: `${SITE_NAME} blog` }] } },
+	};
+}
 
 export default function RootLayout({
 	children,

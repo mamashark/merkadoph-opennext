@@ -7,21 +7,22 @@ import { getPublicEvents } from "@/lib/events";
 import { getPublicPromotions } from "@/lib/promotions";
 import { getPublicServices } from "@/lib/services";
 import { formatDate, formatDayRange } from "@/lib/datetime";
-import { organization, pageMetadata } from "@/lib/seo";
+import { pageMetadata } from "@/lib/seo";
+import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
 import { SITE_URL } from "@/lib/env";
 import { SiteShell } from "@/components/site/site-shell";
 import { JsonLd } from "@/components/site/json-ld";
 import { ContactForm } from "./contact-form";
 
-export const homeMetadata: Metadata = {
-	...pageMetadata({
+export const homeMetadata = async (): Promise<Metadata> => ({
+	...(await pageMetadata({
 		title: "Merkado PH — Roofing & construction in Sweden, built on community",
 		description:
 			"Merkado PH began as a Filipino store in Sweden and grew into a community. Today we carry that trust into roofing, renovation and construction work. Get a free quote.",
 		path: "/",
-	}),
+	})),
 	title: { absolute: "Merkado PH — Roofing & construction in Sweden, built on community" },
-};
+});
 
 /** Never let one missing table take the whole homepage down. */
 const safe = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
@@ -54,11 +55,12 @@ const promises = [
 ];
 
 export async function HomePage() {
-	const [services, promotions, events, blogs] = await Promise.all([
+	const [services, promotions, events, blogs, seo] = await Promise.all([
 		safe(getPublicServices(undefined, 1, 6), { services: [], total: 0 }),
 		safe(getPublicPromotions("current", 1, 3), { promotions: [], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, 3), { events: [], total: 0 }),
 		safe(getPublishedBlogs(1, 3), { blogs: [], total: 0 }),
+		getSeoSettings(),
 	]);
 	const topics = services.services.map((s) => s.title);
 
@@ -67,11 +69,14 @@ export async function HomePage() {
 			<JsonLd
 				data={{
 					"@context": "https://schema.org",
-					...organization,
 					"@type": ["LocalBusiness", "RoofingContractor"],
 					"@id": `${SITE_URL}/#business`,
-					description: "Roofing, renovation and construction in Sweden, from the family behind the Merkado PH Filipino store.",
-					areaServed: { "@type": "Country", name: "Sweden" },
+					name: seo.business_name,
+					url: SITE_URL,
+					logo: `${SITE_URL}/android-chrome-512x512.png`,
+					description: seo.site_description,
+					parentOrganization: { "@id": `${SITE_URL}/#organization` },
+					...localBusinessDetails(seo),
 					knowsAbout: services.services.map((s) => s.title),
 				}}
 			/>

@@ -1,0 +1,48 @@
+# Nightly encrypted database backup (security.md §11).
+# Needs two repository secrets (Settings → Secrets and variables → Actions):
+#   SUPABASE_DB_URL     Session pooler connection string from Supabase → Connect (includes the DB password)
+#   BACKUP_PASSPHRASE   Long random passphrase; keep a copy somewhere safe, it's needed to restore
+# Restore: gpg -d backup.sql.gz.gpg | gunzip | psql "$DB_URL"
+name: Database backup
+
+on:
+  schedule:
+    - cron: "15 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - name: Check secrets
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::warning::Backup skipped: set SUPABASE_DB_URL and BACKUP_PASSPHRASE repository secrets."
+            echo "SKIP=1" >> "$GITHUB_ENV"
+          fi
+      - uses: supabase/setup-cli@v1
+        if: env.SKIP != '1'
+        with:
+          version: latest
+      - name: Dump schema, data and roles
+        if: env.SKIP != '1'
+        run: |
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f roles.sql --role-only
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f schema.sql
+          supabase db dump --db-url "$SUPABASE_DB_URL" -f data.sql --data-only --use-copy
+          cat roles.sql schema.sql data.sql | gzip -9 > backup.sql.gz
+          gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" --symmetric --cipher-algo AES256 -o backup.sql.gz.gpg backup.sql.gz
+          rm -f roles.sql schema.sql data.sql backup.sql.gz
+      - uses: actions/upload-artifact@v4
+        if: env.SKIP != '1'
+        with:
+          name: db-backup-${{ github.run_id }}
+          path: backup.sql.gz.gpg
+          retention-days: 30

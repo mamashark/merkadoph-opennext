@@ -32,12 +32,25 @@ export const getCurrentUser = cache(async (): Promise<User | null> => {
 });
 
 /**
+ * MFA state of the current session (security.md §1.4). `pending` = the user has a verified
+ * authenticator but this session hasn't passed the second step yet. Cached per request.
+ */
+export const getMfaState = cache(async (): Promise<{ enrolled: boolean; pending: boolean }> => {
+	const supabase = await createClient();
+	const { data } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+	const enrolled = data?.nextLevel === "aal2";
+	return { enrolled, pending: enrolled && data?.currentLevel !== "aal2" };
+});
+
+/**
  * Gate for every admin page and Server Action. The proxy already redirects anonymous
  * visitors, but actions can be invoked directly, so each one must call this too.
+ * Admins with an authenticator must complete the second step (aal2) first.
  */
 export async function requireAdmin(): Promise<SessionUser> {
 	const user = await getCurrentUser();
 	if (!user) redirect("/login");
 	if (!isAdmin(user)) redirect("/login?error=forbidden");
+	if ((await getMfaState()).pending) redirect("/login/mfa");
 	return toSessionUser(user);
 }

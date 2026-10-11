@@ -18,6 +18,10 @@ export type ShopSettings = {
 	checkout_note: string;
 	brand: string;
 	google_product_category: string;
+	/** Transactional emails (A9): sender (must be on the domain verified in Resend) and where new-order alerts go. */
+	email_from_name: string;
+	email_from_address: string;
+	order_alert_email: string;
 };
 
 export const DEFAULT_SHOP_SETTINGS: ShopSettings = {
@@ -28,6 +32,9 @@ export const DEFAULT_SHOP_SETTINGS: ShopSettings = {
 	checkout_note: "",
 	brand: "Merkado PH",
 	google_product_category: "",
+	email_from_name: "Merkado PH",
+	email_from_address: "",
+	order_alert_email: "",
 };
 
 export type TaxonomyRef = { id: string; name: string; slug: string };
@@ -48,6 +55,8 @@ export type Product = {
 	stock_quantity: number | null;
 	stock_status: StockStatus;
 	weight_kg: number | null;
+	/** VAT class id (Admin → Shop → Tax); null = the default class. */
+	tax_class: string | null;
 	length_cm: number | null;
 	width_cm: number | null;
 	height_cm: number | null;
@@ -205,10 +214,10 @@ export const getAllLiveProducts = cached(async (): Promise<Product[]> => {
 export async function getProductsForCheckout(ids: string[]) {
 	if (!ids.length) return [];
 	const { data, error } = await onlyLive(
-		createPublicClient().from("products").select("id,title,slug,sku,regular_price,sale_price,sale_starts_at,sale_ends_at,manage_stock,stock_quantity,stock_status,cover_image_url"),
+		createPublicClient().from("products").select("id,title,slug,sku,regular_price,sale_price,sale_starts_at,sale_ends_at,manage_stock,stock_quantity,stock_status,cover_image_url,weight_kg,tax_class"),
 	).in("id", ids);
 	if (error) throw new Error(`Failed to load products: ${error.message}`);
-	return data as Array<Pick<Product, "id" | "title" | "slug" | "sku" | "regular_price" | "sale_price" | "sale_starts_at" | "sale_ends_at" | "manage_stock" | "stock_quantity" | "stock_status" | "cover_image_url">>;
+	return data as Array<Pick<Product, "id" | "title" | "slug" | "sku" | "regular_price" | "sale_price" | "sale_starts_at" | "sale_ends_at" | "manage_stock" | "stock_quantity" | "stock_status" | "cover_image_url" | "weight_kg" | "tax_class">>;
 }
 
 /** Breadcrumb trail for a category (root → leaf). */

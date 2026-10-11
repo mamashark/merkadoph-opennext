@@ -3,7 +3,17 @@ import "server-only";
 /* Minimal Stripe and PayPal REST clients (fetch only — no SDKs, so they run on Cloudflare Workers). */
 
 export type PayItem = { name: string; unitAmount: number; quantity: number };
-export type CreatePayment = { orderId: string; orderNumber: number; currency: string; email: string; items: PayItem[]; returnUrl: string; cancelUrl: string };
+export type CreatePayment = {
+	orderId: string;
+	orderNumber: number;
+	currency: string;
+	email: string;
+	items: PayItem[];
+	returnUrl: string;
+	cancelUrl: string;
+	/** Unix seconds after which the payment page stops accepting payment (Stripe: ≥ 30 min ahead). */
+	expiresAt?: number;
+};
 
 /** Minor units (öre/cents). All supported currencies (SEK, EUR, USD, PHP) use 2 decimals. */
 const minor = (amount: number) => Math.round(amount * 100);
@@ -32,7 +42,8 @@ export async function stripeCreateSession(secretKey: string, p: CreatePayment): 
 		"metadata[order_id]": p.orderId,
 		"metadata[order_number]": String(p.orderNumber),
 		"payment_intent_data[metadata][order_id]": p.orderId,
-		"payment_intent_data[description]": `Merkado PH order #${p.orderNumber}`,
+		"payment_intent_data[description]": `Merkado PH order MPH-${p.orderNumber}`,
+		...(p.expiresAt ? { expires_at: String(p.expiresAt) } : {}),
 	};
 	p.items.forEach((item, i) => {
 		form[`line_items[${i}][quantity]`] = String(item.quantity);
@@ -113,7 +124,7 @@ export async function paypalCreateOrder(mode: "test" | "live", clientId: string,
 					reference_id: p.orderId,
 					custom_id: p.orderId,
 					invoice_id: `MPH-${p.orderNumber}`,
-					description: `Merkado PH order #${p.orderNumber}`,
+					description: `Merkado PH order MPH-${p.orderNumber}`,
 					amount: { currency_code: p.currency, value: money(total), breakdown: { item_total: { currency_code: p.currency, value: money(total) } } },
 					items: p.items.map((i) => ({ name: i.name.slice(0, 127), quantity: String(i.quantity), unit_amount: { currency_code: p.currency, value: money(i.unitAmount) } })),
 				},
@@ -129,7 +140,7 @@ export async function paypalCreateOrder(mode: "test" | "live", clientId: string,
 	return { id: order.id, url: approve.href };
 }
 
-export type PaypalCapture = { id: string; status: string; purchase_units: Array<{ custom_id?: string; reference_id?: string; payments?: { captures?: Array<{ id: string; status: string; custom_id?: string }> } }> };
+export type PaypalCapture = { id: string; status: string; purchase_units: Array<{ custom_id?: string; reference_id?: string; payments?: { captures?: Array<{ id: string; status: string; custom_id?: string; amount?: { currency_code: string; value: string } }> } }> };
 
 export function paypalCapture(mode: "test" | "live", clientId: string, clientSecret: string, paypalOrderId: string) {
 	return paypal<PaypalCapture>(mode, clientId, clientSecret, `/v2/checkout/orders/${encodeURIComponent(paypalOrderId)}/capture`, {}, `capture-${paypalOrderId}`);

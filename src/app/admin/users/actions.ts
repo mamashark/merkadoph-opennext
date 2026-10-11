@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin, ADMIN_ROLE } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { audit } from "@/lib/audit";
 
 const MIN_PASSWORD = 8;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -37,6 +38,7 @@ export async function createUser(formData: FormData) {
 	if (error) fail(/already/i.test(error.message) ? "A user with this email already exists." : error.message);
 
 	revalidatePath("/admin/users");
+	await audit({ kind: "admin", action: "users.create", entity: "users", entityId: data.user!.id, summary: email, details: { adminAccess: hasAccess } });
 	redirect(`/admin/users/${data.user!.id}?notice=created`);
 }
 
@@ -61,6 +63,7 @@ export async function updateUser(formData: FormData) {
 
 	revalidatePath("/admin/users");
 	revalidatePath("/admin", "layout");
+	await audit({ kind: "admin", action: "users.update", entity: "users", entityId: id, summary: email, details: { adminAccess: hasAccess, passwordChanged: !!password } });
 	redirect(`/admin/users/${id}?notice=${password ? "password" : "saved"}`);
 }
 
@@ -73,5 +76,6 @@ export async function deleteUser(formData: FormData) {
 	if (error) redirect(`/admin/users?${qs({ error: error.message })}`);
 
 	revalidatePath("/admin/users");
+	await audit({ kind: "admin", action: "users.delete", entity: "users", entityId: id });
 	redirect("/admin/users?notice=deleted");
 }

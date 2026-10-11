@@ -60,7 +60,7 @@ export function EventForm({ event }: { event?: EventItem }) {
 					<PublishCard row={event} noun="event" />
 					<CoverCard row={event} />
 					<TagsCard row={event} placeholder="night market, food, family" />
-					<SeoCard row={event} />
+					<SeoCard row={event} pathPrefix="/events/" />
 				</>
 			}
 		/>

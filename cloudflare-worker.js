@@ -16,7 +16,8 @@ export default {
 	async scheduled(controller, env, ctx) {
 		ctx.waitUntil(
 			(async () => {
-				const res = await env.WORKER_SELF_REFERENCE.fetch("https://merkadoph-opennext.workers.dev/api/cron/keepalive", {
+				// Service bindings call this Worker directly; the hostname is ignored, so no real domain is needed.
+				const res = await env.WORKER_SELF_REFERENCE.fetch("https://worker.internal/api/cron/keepalive", {
 					method: "POST",
 					headers: { authorization: `Bearer ${env.CRON_SECRET}`, "x-cron": controller.cron },
 				});

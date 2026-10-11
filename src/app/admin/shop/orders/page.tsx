@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { formatOrderNumber } from "@/lib/order-number";
 import Link from "next/link";
 import { ShoppingCart } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
@@ -40,12 +41,16 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/sho
 					<ListToolbar
 						basePath="/admin/shop/orders"
 						values={values}
-						searchPlaceholder="Search name, email or order #…"
+						searchPlaceholder="Search name, email or order number (MPH-1001)…"
 						filters={[
 							{
 								name: "status",
 								label: "Status",
-								options: [{ label: "All statuses", value: "" }, ...(Object.keys(ORDER_LABELS) as OrderStatus[]).map((s) => ({ label: ORDER_LABELS[s], value: s }))],
+								options: [
+									{ label: "All statuses", value: "" },
+									...(Object.keys(ORDER_LABELS) as OrderStatus[]).map((s) => ({ label: ORDER_LABELS[s], value: s })),
+									{ label: "Cancellation requested", value: "cancel_requested" },
+								],
 							},
 							{
 								name: "payment",
@@ -106,7 +111,7 @@ export default async function OrdersPage({ searchParams }: PageProps<"/admin/sho
 										<tr key={o.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
 											<td className="px-4 py-3">
 												<Link href={`/admin/shop/orders/${o.id}`} className="font-semibold text-teal-700 hover:underline dark:text-teal-300">
-													#{o.order_number}
+													{formatOrderNumber(o.order_number)}
 												</Link>
 												<p className="text-xs text-slate-600 dark:text-slate-400">
 													{o.items.reduce((n, i) => n + i.quantity, 0)} item{o.items.reduce((n, i) => n + i.quantity, 0) === 1 ? "" : "s"}

@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { gatewayConfig } from "@/lib/payments";
 import { paypalCapture, stripeGetSession } from "@/lib/payment-providers";
-import { markOrderPaid } from "@/lib/orders";
+import { getOrderForViewer, markOrderPaid, paidAmountMatches } from "@/lib/orders";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { siteUrl } from "@/lib/env";
 
 /**
  * Customers land here after paying on Stripe Checkout or approving on PayPal.
@@ -13,9 +14,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function GET(request: NextRequest) {
 	const url = request.nextUrl;
 	const orderId = url.searchParams.get("order") ?? "";
+	const token = url.searchParams.get("t") ?? "";
 	const gateway = url.searchParams.get("gateway");
-	const done = (state?: string) => NextResponse.redirect(new URL(`/checkout/complete?order=${encodeURIComponent(orderId)}${state ? `&state=${state}` : ""}`, request.url));
-	if (!/^[0-9a-f-]{36}$/i.test(orderId)) return NextResponse.redirect(new URL("/cart", request.url));
+	// The order's private token (D21) travels in the return URL we gave the gateway; without it, nothing happens.
+	if (!(await getOrderForViewer(orderId, token, null))) return NextResponse.redirect(siteUrl("/cart"));
+	const done = (state?: string) =>
+		NextResponse.redirect(siteUrl(`/checkout/complete?${new URLSearchParams({ order: orderId, t: token, ...(state ? { state } : {}) })}`));
 
 	try {
 		let result: { paid: boolean; slugs: string[] } = { paid: false, slugs: [] };
@@ -26,6 +30,7 @@ export async function GET(request: NextRequest) {
 			if (session.client_reference_id !== orderId) return done("mismatch");
 			// Some methods (bank debits, some wallets) confirm later; the webhook finishes those.
 			if (session.payment_status !== "paid") return done("processing");
+			if (!(await paidAmountMatches(orderId, session.amount_total, session.currency, "stripe"))) return done("mismatch");
 			result = await markOrderPaid(orderId, session.payment_intent ?? session.id);
 		} else if (gateway === "paypal") {
 			const config = await gatewayConfig("paypal");
@@ -38,6 +43,8 @@ export async function GET(request: NextRequest) {
 			const unit = capture.purchase_units?.[0];
 			const cap = unit?.payments?.captures?.[0];
 			if (capture.status !== "COMPLETED" || (unit?.custom_id ?? cap?.custom_id) !== orderId) return done("processing");
+			const paidMinor = cap?.amount ? Math.round(Number(cap.amount.value) * 100) : null;
+			if (!(await paidAmountMatches(orderId, paidMinor, cap?.amount?.currency_code, "paypal"))) return done("mismatch");
 			result = await markOrderPaid(orderId, cap?.id ?? capture.id);
 		} else {
 			return done();

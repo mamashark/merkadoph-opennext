@@ -1,4 +1,5 @@
 import "server-only";
+import { parseOrderNumber } from "@/lib/order-number";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState } from "@/lib/content-server";
 import { searchTerm } from "@/lib/content";
@@ -120,7 +121,7 @@ export async function adminGetTag(id: string): Promise<Tag | null> {
 /* ------------------------------- Orders ------------------------------- */
 
 export type OrderItem = { product_id: string; title: string; slug: string; sku: string | null; unit_price: number; quantity: number; line_total: number };
-export type OrderStatus = "pending" | "processing" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "processing" | "shipped" | "completed" | "cancelled";
 export type Order = {
 	id: string;
 	order_number: number;
@@ -142,6 +143,13 @@ export type Order = {
 	payment_reference: string | null;
 	paid_at: string | null;
 	stock_reserved: boolean;
+	/** Customer asked to cancel (D22). */
+	cancel_requested_at?: string | null;
+	carrier?: string | null;
+	tracking_number?: string | null;
+	tracking_url?: string | null;
+	shipped_at?: string | null;
+	cancel_reason?: string | null;
 	created_at: string;
 	updated_at: string;
 };
@@ -157,13 +165,15 @@ export const ORDER_SORTS = {
 export async function adminListOrders(opts: { q?: string; status?: string; payment?: string; method?: string; sort?: string; page?: number; perPage?: number }) {
 	const { q, status, payment, method, sort = "", page = 1, perPage = 20 } = opts;
 	let query = createAdminClient().from("orders").select("*", { count: "exact" });
-	if (["pending", "processing", "completed", "cancelled"].includes(status ?? "")) query = query.eq("status", status);
+	if (["pending", "processing", "shipped", "completed", "cancelled"].includes(status ?? "")) query = query.eq("status", status);
+	// Customer asked to cancel a paid/processing order (D22) and it's still open.
+	if (status === "cancel_requested") query = query.not("cancel_requested_at", "is", null).neq("status", "cancelled");
 	if (["unpaid", "paid", "failed", "refunded"].includes(payment ?? "")) query = query.eq("payment_status", payment);
 	if (["manual", "stripe", "paypal"].includes(method ?? "")) query = query.eq("payment_method", method);
 	const t = term(q);
 	if (t) {
-		const asNumber = Number(t.replace(/^#/, ""));
-		query = query.or([`customer_name.ilike.%${t}%`, `email.ilike.%${t}%`, ...(Number.isInteger(asNumber) && asNumber > 0 ? [`order_number.eq.${asNumber}`] : [])].join(","));
+		const asNumber = parseOrderNumber(q ?? "");
+		query = query.or([`customer_name.ilike.%${t}%`, `email.ilike.%${t}%`, ...(asNumber ? [`order_number.eq.${asNumber}`] : [])].join(","));
 	}
 	const from = (page - 1) * perPage;
 	const order = ORDER_SORTS[sort as keyof typeof ORDER_SORTS] ?? ORDER_SORTS[""];

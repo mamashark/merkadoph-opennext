@@ -1,0 +1,33 @@
+# Checks every push and pull request: types, production dependency audit, and a full build.
+# Deploys still happen with `npm run deploy` (or Cloudflare Workers Builds), not from here.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Type-check
+        run: npx next typegen && npx tsc --noEmit -p .
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Build (OpenNext for Cloudflare)
+        run: npx opennextjs-cloudflare build

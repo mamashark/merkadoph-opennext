@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
+import { audit } from "@/lib/audit";
 import { assertBucket, cleanFolder, createFolder, deleteFile, listBuckets, listFolder, uploadImages, type MediaFile, type MediaListing } from "@/lib/media";
 
 function mediaUrl(bucket: string, path: string, flash: Record<string, string> = {}) {
@@ -35,6 +36,7 @@ export async function uploadMediaAction(formData: FormData) {
 		flash = { error: message(err) };
 	}
 	revalidatePath("/admin/media");
+	if (flash.notice) await audit({ kind: "admin", action: "media.upload", entity: "media", entityId: `${bucket}/${path}`, summary: flash.notice });
 	redirect(mediaUrl(bucket, path, flash));
 }
 
@@ -52,6 +54,7 @@ export async function deleteMediaAction(formData: FormData) {
 		flash = { error: message(err) };
 	}
 	revalidatePath("/admin/media");
+	if (flash.notice) await audit({ kind: "admin", action: "media.delete", entity: "media", entityId: `${bucket}/${file}` });
 	redirect(mediaUrl(bucket, path, flash));
 }
 

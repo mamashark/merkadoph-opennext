@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { runKeepAlive } from "@/lib/keepalive";
 import { secret } from "@/lib/secrets";
+import { runMaintenance } from "@/lib/maintenance";
+import { releaseExpiredHolds } from "@/lib/orders";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
  * Called by the Worker's scheduled (cron) handler in cloudflare-worker.js.
@@ -17,8 +20,19 @@ export async function POST(request: Request) {
 	const given = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
 	if (!safeEqual(given, expected)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
+	// Every 15 minutes: only release expired stock holds (D18). The twice-weekly run does the rest.
+	if (request.headers.get("x-cron") === "*/15 * * * *") {
+		const holds = await releaseExpiredHolds();
+		if (holds.slugs.length) {
+			revalidateTag("products", { expire: 0 });
+			holds.slugs.forEach((s) => revalidatePath(`/product/${s}`));
+		}
+		return NextResponse.json({ ok: true, holds }, { headers: { "Cache-Control": "no-store" } });
+	}
+
 	const result = await runKeepAlive("cron", null);
-	return NextResponse.json(result, { status: result.ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
+	const maintenance = await runMaintenance().catch((err) => ({ error: err instanceof Error ? err.message : "failed" }));
+	return NextResponse.json({ ...result, maintenance }, { status: result.ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
 }
 
 /** Constant-time string comparison. */

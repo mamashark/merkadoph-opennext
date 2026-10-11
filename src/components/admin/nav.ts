@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, CalendarDays, Database, FileText, Images, Inbox, LayoutDashboard, ShoppingBag, TicketPercent, Users, Zap, type LucideIcon } from "lucide-react";
+import { BriefcaseBusiness, CalendarDays, Database, FileText, Globe, Images, Inbox, LayoutDashboard, ScrollText, ShieldCheck, ShoppingBag, TicketPercent, Users, Zap, type LucideIcon } from "lucide-react";
 
 export type NavLeaf = { label: string; href: string };
 export type NavItem = { label: string; icon: LucideIcon; href?: string; children?: NavLeaf[] };
@@ -64,6 +64,8 @@ export const adminNav: NavSection[] = [
 					{ label: "Tags", href: "/admin/shop/tags" },
 					{ label: "Orders", href: "/admin/shop/orders" },
 					{ label: "Payments", href: "/admin/shop/payments" },
+						{ label: "Shipping", href: "/admin/shop/shipping" },
+						{ label: "Tax (VAT)", href: "/admin/shop/tax" },
 				],
 			},
 		],
@@ -79,6 +81,17 @@ export const adminNav: NavSection[] = [
 					{ label: "Add user", href: "/admin/users/new" },
 				],
 			},
+			{
+				label: "SEO",
+				icon: Globe,
+				children: [
+					{ label: "Site & search", href: "/admin/seo" },
+					{ label: "Redirects", href: "/admin/seo/redirects" },
+					{ label: "Legal pages", href: "/admin/seo/legal" },
+				],
+			},
+			{ label: "Security", icon: ShieldCheck, href: "/admin/security" },
+			{ label: "Audit log", icon: ScrollText, href: "/admin/audit" },
 			{ label: "Supabase", icon: Database, href: "/admin/supabase" },
 			{ label: "Cache", icon: Zap, href: "/admin/cache" },
 		],

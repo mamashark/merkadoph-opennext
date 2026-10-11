@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { DangerZone, saveNotices, UUID } from "@/components/admin/form-parts";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass } from "@/lib/ui";
+import { productTaxProps } from "@/app/admin/shop/tax/data";
 
 export const metadata: Metadata = { title: "Edit product" };
 
@@ -43,7 +44,7 @@ export default async function EditProductPage({ params, searchParams }: PageProp
 			<div className="mb-6">
 				<FlashMessage notice={typeof notice === "string" ? saveNotices[notice] : undefined} />
 			</div>
-			<ProductForm key={product.updated_at} product={product} categories={categories} currency={settings.currency} />
+			<ProductForm key={product.updated_at} product={product} categories={categories} currency={settings.currency} tax={await productTaxProps()} />
 			<DangerZone
 				title="Delete this product"
 				description="Removes the product page. Past orders keep their own copy of the item details."

@@ -19,6 +19,7 @@ const errors: Record<string, string> = {
 	invalid: "Incorrect email or password.",
 	forbidden: "This account doesn't have access to the admin panel.",
 	captcha: "We couldn't verify that you're human. Please try again.",
+	rate: "Too many attempts. Please wait a minute and try again.",
 };
 
 const notices: Record<string, string> = {

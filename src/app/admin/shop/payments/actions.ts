@@ -8,6 +8,7 @@ import { seal } from "@/lib/secret-box";
 import { gatewayConfig, GATEWAY_IDS, GATEWAY_NAMES, GATEWAY_SECRETS, missingFor, type GatewayId, type GatewayMode, type GatewaySettings } from "@/lib/payments";
 import { paypalTest, stripeTest } from "@/lib/payment-providers";
 import { getShopReadiness } from "@/lib/shop-status";
+import { audit } from "@/lib/audit";
 
 const back = (flash: Record<string, string>): never => redirect(`/admin/shop/payments?${new URLSearchParams(flash)}`);
 const str = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? "").trim().slice(0, max);
@@ -75,6 +76,7 @@ export async function savePaymentGateway(formData: FormData) {
 
 	revalidatePath("/admin/shop/payments");
 	revalidatePath("/checkout");
+	await audit({ kind: "admin", action: "payments.save", entity: "payment_gateways", entityId: id, summary: `${GATEWAY_NAMES[id]} ${enabled ? "ON" : "OFF"} (${mode})`, details: { keysChanged: Object.keys(newSecrets), keysRemoved: GATEWAY_SECRETS[id].filter((n) => formData.get(`clear_${n}`) === "on") } });
 	back({ notice: `${GATEWAY_NAMES[id]} saved${enabled ? ` and ON${id !== "manual" ? ` (${mode} mode)` : ""}` : " (off)"}.` });
 }
 

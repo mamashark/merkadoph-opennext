@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
-import { commonFields, deleteRow, fetchExisting, optional, optionalUrl, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
+import { commonFields, deleteRow, fetchExisting, optional, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow, optionalLink } from "@/lib/content-server";
 
 export async function saveService(formData: FormData) {
 	const user = await requireAdmin();
@@ -26,7 +26,7 @@ export async function saveService(formData: FormData) {
 			category: optional(text(formData, "category", 60)),
 			price_label: optional(text(formData, "price_label", 80)),
 			cta_label: optional(text(formData, "cta_label", 40)),
-			cta_url: optionalUrl(formData, "cta_url"),
+			cta_url: optionalLink(formData, "cta_url"),
 			is_featured: formData.get("is_featured") === "on",
 			sort_order: Number.isFinite(sortOrder) ? Math.max(-9999, Math.min(9999, sortOrder)) : 0,
 		},

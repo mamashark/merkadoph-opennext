@@ -1,6 +1,9 @@
 import "server-only";
+import { toSitePath } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { purgeContent, type ContentTag } from "@/lib/cache";
+import { audit } from "@/lib/audit";
+import { onSlugChange } from "@/lib/redirects";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fromDateTimeInput } from "@/lib/datetime";
 import { isHttpUrl, slugify, type ContentStatus, type ContentTable } from "@/lib/content";
@@ -15,6 +18,17 @@ export function text(formData: FormData, key: string, max: number): string {
 
 export function optional(value: string): string | null {
 	return value || null;
+}
+
+/**
+ * Button/CTA links: an http(s) URL or a path on this site ("/#contact"). Links to our own site are
+ * stored as paths, so content never carries a domain (reference.md: NEXT_PUBLIC_SITE_URL only).
+ */
+export function optionalLink(formData: FormData, key: string): string | null {
+	const value = toSitePath(text(formData, key, 1000));
+	if (!value) return null;
+	if (value.startsWith("/") && !value.startsWith("//") && !/\s/.test(value)) return value;
+	return isHttpUrl(value) ? value : null;
 }
 
 export function optionalUrl(formData: FormData, key: string): string | null {
@@ -143,11 +157,19 @@ export async function fetchExisting(table: ContentTable, id: string | undefined)
 }
 
 /** Insert or update, returning the row id. */
+/** Insert or update, returning the row id. Also writes the audit log and slug-change redirects. */
 export async function upsertRow(table: ContentTable, id: string | undefined, values: Record<string, unknown>, insertExtra: Record<string, unknown>) {
 	const db = createAdminClient();
 	if (id) {
+		const { data: before } = await db.from(table).select("*").eq("id", id).maybeSingle();
 		const { error } = await db.from(table).update(values).eq("id", id);
 		if (error) throw new Error(`Couldn't save: ${error.message}`);
+		// Published pages (and categories, which have no status) keep their old URL working.
+		const wasLive = before && (!("status" in before) || before.status === "published");
+		if (wasLive && typeof values.slug === "string" && before.slug !== values.slug) {
+			await onSlugChange(table, before.slug as string, values.slug).catch((e) => console.error("redirect create failed:", e));
+		}
+		await audit({ kind: "admin", action: `${table}.update`, entity: table, entityId: id, summary: String(values.title ?? values.name ?? before?.title ?? before?.name ?? "") });
 		return id;
 	}
 	const { data, error } = await db
@@ -156,12 +178,14 @@ export async function upsertRow(table: ContentTable, id: string | undefined, val
 		.select("id")
 		.single();
 	if (error) throw new Error(`Couldn't create: ${error.message}`);
+	await audit({ kind: "admin", action: `${table}.create`, entity: table, entityId: data.id as string, summary: String(values.title ?? values.name ?? "") });
 	return data.id as string;
 }
 
 export async function deleteRow(table: ContentTable, id: string): Promise<{ slug?: string; error?: string }> {
 	const db = createAdminClient();
-	const { data } = await db.from(table).select("slug").eq("id", id).maybeSingle();
+	const { data } = await db.from(table).select("*").eq("id", id).maybeSingle();
 	const { error } = await db.from(table).delete().eq("id", id);
+	if (!error) await audit({ kind: "admin", action: `${table}.delete`, entity: table, entityId: id, summary: String(data?.title ?? data?.name ?? "") });
 	return { slug: data?.slug as string | undefined, error: error?.message };
 }

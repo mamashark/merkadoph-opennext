@@ -16,11 +16,14 @@ export type ContentTag = (typeof CONTENT_TAGS)[number];
 /** Shop data: "products" (products, categories, tags), "shop" (settings, incl. the on/off switch) and "product-feed" (the XML feed). */
 export const SHOP_TAGS = ["products", "shop", "product-feed"] as const;
 export type ShopTag = (typeof SHOP_TAGS)[number];
-export type CacheTag = ContentTag | ShopTag;
+/** Site-wide settings: "seo" (business info, defaults, verification) and "legal" (privacy/terms/cookies). */
+export const SITE_TAGS = ["seo", "legal"] as const;
+export type SiteTag = (typeof SITE_TAGS)[number];
+export type CacheTag = ContentTag | ShopTag | SiteTag;
 
 type PathTarget = { path: string; type?: "page" | "layout" };
 
-export type CacheGroupId = "home" | "listings" | ContentTag | "shop" | "sitemap";
+export type CacheGroupId = "home" | "listings" | ContentTag | "shop" | "site" | "sitemap";
 
 export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: string; tags: string[]; paths: PathTarget[] }> = {
 	home: { label: "Homepage", description: "The / page.", tags: [], paths: [{ path: "/" }] },
@@ -30,7 +33,12 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 		tags: [],
 		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }],
 	},
-	blogs: { label: "Blogs", description: "Blog data, the blog list and every post page.", tags: ["blogs"], paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }] },
+	blogs: {
+		label: "Blogs",
+		description: "Blog data, the blog list, every post page and the RSS feed.",
+		tags: ["blogs"],
+		paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }, { path: "/blogs/rss.xml" }],
+	},
 	events: { label: "Events", description: "Event data, the events list and every event page.", tags: ["events"], paths: [{ path: "/events" }, { path: "/events/[slug]", type: "page" }] },
 	promotions: {
 		label: "Promotions",
@@ -49,6 +57,12 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 		description: "Products, categories, shop settings, /shop, every category and product page, cart, checkout and /product-feed.xml.",
 		tags: ["products", "shop", "product-feed"],
 		paths: [{ path: "/shop", type: "layout" }, { path: "/product/[slug]", type: "page" }, { path: "/cart" }, { path: "/checkout" }, { path: "/product-feed.xml" }],
+	},
+	site: {
+		label: "Site settings & legal",
+		description: "SEO settings (business info, footer, structured data), /privacy, /terms, /cookies and /blogs/rss.xml. Refreshes every public page.",
+		tags: ["seo", "legal"],
+		paths: [{ path: "/", type: "layout" }],
 	},
 	sitemap: { label: "Sitemap", description: "/sitemap.xml.", tags: [], paths: [{ path: "/sitemap.xml" }] },
 };
@@ -77,7 +91,7 @@ export function purgeGroups(ids: CacheGroupId[]) {
 
 /** Everything: all data tags plus every cached page. */
 export function purgeAll() {
-	[...CONTENT_TAGS, ...SHOP_TAGS].forEach((t) => updateTag(t));
+	[...CONTENT_TAGS, ...SHOP_TAGS, ...SITE_TAGS].forEach((t) => updateTag(t));
 	revalidatePath("/", "layout");
 }
 

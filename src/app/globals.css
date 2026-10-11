@@ -130,6 +130,13 @@ body {
 	border-collapse: collapse;
 	font-size: 0.9375rem;
 }
+/* Wide tables scroll inside themselves on phones instead of widening the page. */
+@media (max-width: 640px) {
+	.prose-blog table {
+		display: block;
+		overflow-x: auto;
+	}
+}
 .prose-blog th,
 .prose-blog td {
 	border-bottom: 1px solid #e2e8f0;

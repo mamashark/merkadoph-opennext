@@ -9,6 +9,9 @@ import { paypalCreateOrder, stripeCreateSession } from "@/lib/payment-providers"
 import { markOrderPaymentFailed, reserveStock } from "@/lib/orders";
 import { SITE_URL } from "@/lib/env";
 import { RECAPTCHA_FAILED_MESSAGE, verifyRecaptcha } from "@/lib/recaptcha";
+import { RATE_LIMITED_MESSAGE, clientIp, rateLimit } from "@/lib/rate-limit";
+import { securityEvent } from "@/lib/audit";
+import { checkoutSchema, fieldErrors, formFields } from "@/lib/validation";
 
 export type CheckoutField = "name" | "email" | "address" | "postal" | "city";
 export type CheckoutState = {
@@ -23,7 +26,6 @@ export type CheckoutState = {
 	order?: { number: number; total: number; currency: string; email: string };
 };
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_FILL_MS = 3000;
 
 /**
@@ -34,34 +36,33 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 	const settings = await getShopSettings();
 	if (!settings.enabled) return { status: "error", message: "The shop is closed right now." };
 
-	const field = (k: string, max: number) => String(formData.get(k) ?? "").trim().slice(0, max);
-	const values = {
-		name: field("name", 120),
-		email: field("email", 254).toLowerCase(),
-		phone: field("phone", 40),
-		address_line1: field("address_line1", 200),
-		address_line2: field("address_line2", 200),
-		postal_code: field("postal_code", 20),
-		city: field("city", 100),
-		notes: field("notes", 2000),
-	};
+	const raw = formFields(formData, ["name", "email", "phone", "address_line1", "address_line2", "postal_code", "city", "notes"]);
+	const echo = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, v.slice(0, 2000)]));
 
 	// Spam traps.
 	const startedAt = Number(formData.get("started_at"));
-	if (field("company", 200) || (Number.isFinite(startedAt) && Date.now() - startedAt < MIN_FILL_MS)) {
-		return { status: "error", message: "Something went wrong. Please try again.", values };
+	if (String(formData.get("company") ?? "") || (Number.isFinite(startedAt) && Date.now() - startedAt < MIN_FILL_MS)) {
+		return { status: "error", message: "Something went wrong. Please try again.", values: echo };
 	}
 
-	const errors: CheckoutState["errors"] = {};
-	if (!values.name) errors.name = "Please enter your name.";
-	if (!EMAIL.test(values.email)) errors.email = "Please enter a valid email address.";
-	if (!values.address_line1) errors.address = "Please enter your street address.";
-	if (!values.postal_code) errors.postal = "Please enter your postal code.";
-	if (!values.city) errors.city = "Please enter your city.";
-	if (Object.keys(errors).length) return { status: "error", message: "Please check the highlighted fields.", errors, values };
+	const parsed = checkoutSchema.safeParse(raw);
+	if (!parsed.success) {
+		const e = fieldErrors(parsed);
+		const errors: CheckoutState["errors"] = { name: e.name, email: e.email, address: e.address_line1, postal: e.postal_code, city: e.city };
+		return { status: "error", message: e.phone ?? e.address_line2 ?? e.notes ?? "Please check the highlighted fields.", errors, values: echo };
+	}
+	const values = parsed.data;
+
+	if (!(await rateLimit("forms", "checkout", [await clientIp(), values.email]))) {
+		await securityEvent("forms.rate_limited", "Checkout rate limit hit", { email: values.email });
+		return { status: "error", message: RATE_LIMITED_MESSAGE, values };
+	}
 
 	const human = await verifyRecaptcha(formData.get("recaptcha_token"), "checkout");
-	if (!human.ok) return { status: "error", message: RECAPTCHA_FAILED_MESSAGE, values };
+	if (!human.ok) {
+		await securityEvent("forms.captcha_failed", "Checkout reCAPTCHA check failed", { email: values.email });
+		return { status: "error", message: RECAPTCHA_FAILED_MESSAGE, values };
+	}
 
 	// Cart lines from the browser: only ids and quantities are used.
 	let requested: Array<{ id: string; quantity: number }> = [];
@@ -114,7 +115,7 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 			payment_method: method.id,
 			payment_status: "unpaid",
 		})
-		.select("id,order_number")
+		.select("id,order_number,access_token")
 		.single();
 	if (error || !order) return { status: "error", message: "Sorry, we couldn't place your order. Please try again in a moment.", values };
 	revalidatePath("/admin/shop", "layout");
@@ -136,8 +137,8 @@ export async function placeOrder(_prev: CheckoutState, formData: FormData): Prom
 		currency: settings.currency,
 		email: values.email,
 		items: items.map((i) => ({ name: i.title, unitAmount: i.unit_price, quantity: i.quantity })),
-		returnUrl: `${SITE_URL}/api/checkout/return?gateway=${method.id}&order=${order.id}${method.id === "stripe" ? "&session_id={CHECKOUT_SESSION_ID}" : ""}`,
-		cancelUrl: `${SITE_URL}/api/checkout/cancel?order=${order.id}`,
+		returnUrl: `${SITE_URL}/api/checkout/return?gateway=${method.id}&order=${order.id}&t=${order.access_token}${method.id === "stripe" ? "&session_id={CHECKOUT_SESSION_ID}" : ""}`,
+		cancelUrl: `${SITE_URL}/api/checkout/cancel?order=${order.id}&t=${order.access_token}`,
 	};
 	try {
 		const config = await gatewayConfig(method.id);

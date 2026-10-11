@@ -24,7 +24,7 @@ export function BlogForm({ blog, defaultAuthor }: { blog?: Blog; defaultAuthor?:
 					<PublishCard row={blog} noun="post" />
 					<CoverCard row={blog} />
 					<TagsCard row={blog} placeholder="market, local food, events" />
-					<SeoCard row={blog} />
+					<SeoCard row={blog} pathPrefix="/blogs/" />
 				</>
 			}
 		/>

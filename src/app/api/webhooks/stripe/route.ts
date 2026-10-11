@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { gatewayConfig } from "@/lib/payments";
 import { stripeVerifyWebhook } from "@/lib/payment-providers";
-import { markOrderPaid, markOrderPaymentFailed } from "@/lib/orders";
+import { markOrderPaid, markOrderPaymentFailed, paidAmountMatches } from "@/lib/orders";
+import { clientIp } from "@/lib/rate-limit";
+import { securityEvent } from "@/lib/audit";
 
 /**
  * Stripe webhook: [site]/api/webhooks/stripe
@@ -16,10 +18,14 @@ export async function POST(request: Request) {
 
 	const raw = await request.text();
 	if (!(await stripeVerifyWebhook(raw, request.headers.get("stripe-signature"), webhookSecret))) {
+		await securityEvent("payments.webhook_invalid", "Stripe webhook with an invalid signature", { gateway: "stripe", ip: await clientIp() });
 		return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
 	}
 
-	const event = JSON.parse(raw) as { type: string; data: { object: { id: string; client_reference_id?: string | null; payment_status?: string; payment_intent?: string | null } } };
+	const event = JSON.parse(raw) as {
+		type: string;
+		data: { object: { id: string; client_reference_id?: string | null; payment_status?: string; payment_intent?: string | null; amount_total?: number | null; currency?: string | null } };
+	};
 	const session = event.data.object;
 	const orderId = session.client_reference_id ?? "";
 	if (!/^[0-9a-f-]{36}$/i.test(orderId)) return NextResponse.json({ received: true, ignored: "no order" });
@@ -27,6 +33,8 @@ export async function POST(request: Request) {
 	if (event.type === "checkout.session.async_payment_failed") {
 		await markOrderPaymentFailed(orderId, false);
 	} else if ((event.type === "checkout.session.completed" && session.payment_status === "paid") || event.type === "checkout.session.async_payment_succeeded") {
+		// Acknowledge a mismatch (so Stripe stops retrying) but leave the order unpaid for review.
+		if (!(await paidAmountMatches(orderId, session.amount_total, session.currency, "stripe"))) return NextResponse.json({ received: true, ignored: "amount mismatch" });
 		const { slugs } = await markOrderPaid(orderId, session.payment_intent ?? session.id);
 		if (slugs.length) {
 			revalidateTag("products", { expire: 0 });

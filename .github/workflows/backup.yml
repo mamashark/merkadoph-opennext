@@ -27,7 +27,7 @@ jobs:
             echo "::warning::Backup skipped: set SUPABASE_DB_URL and BACKUP_PASSPHRASE repository secrets."
             echo "SKIP=1" >> "$GITHUB_ENV"
           fi
-      - uses: supabase/setup-cli@v1
+      - uses: supabase/setup-cli@v3
         if: env.SKIP != '1'
         with:
           version: latest

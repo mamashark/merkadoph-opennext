@@ -77,7 +77,6 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/portfo
 									image={cover?.url}
 									imageAlt={cover?.alt}
 									priority={i === 0}
-									imageFit="contain"
 									eyebrow={p.location ?? undefined}
 									meta={
 										<p>

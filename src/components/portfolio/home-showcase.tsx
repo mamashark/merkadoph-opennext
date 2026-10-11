@@ -32,7 +32,7 @@ export function PortfolioHomeShowcase({ projects }: { projects: PortfolioSummary
 					View project<span className="sr-only">: {p.title}</span> <ArrowRight className="h-4 w-4" aria-hidden />
 				</Link>
 			</div>
-			<PortfolioImageGrid images={p.images.slice(0, HOME_IMAGES)} title={p.title} />
+			<PortfolioImageGrid images={p.images.slice(0, HOME_IMAGES)} viewerImages={p.images} title={p.title} />
 			{p.images.length > HOME_IMAGES && (
 				<p className="mt-4 text-sm">
 					<Link href={`/portfolio/${p.slug}`} className="font-semibold text-teal-800 hover:underline dark:text-teal-300">

@@ -41,15 +41,36 @@ export const BLOGS_PER_PAGE = 9;
 
 /* ----------------------------- Public (RLS) ----------------------------- */
 
-export const getPublishedBlogs = cached(async (page: number = 1, perPage: number = BLOGS_PER_PAGE) => {
+/** Pinned post: shown first on the homepage and /blogs, whatever gets published after it. */
+export const PINNED_BLOG_TITLE = "Bagong yugto: the next chapter for Merkado PH";
+
+/** `tag` filters (the /blogs?tag= filter); `excludeId` leaves out a post shown separately (the pinned one). */
+export const getPublishedBlogs = cached(async (page: number = 1, perPage: number = BLOGS_PER_PAGE, opts: { tag?: string; excludeId?: string } = {}) => {
 	const from = (page - 1) * perPage;
-	const { data, count, error } = await onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS, { count: "exact" }))
+	let query = onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS, { count: "exact" }));
+	if (opts.tag) query = query.contains("tags", [opts.tag]);
+	if (opts.excludeId) query = query.neq("id", opts.excludeId);
+	const { data, count, error } = await query
 		.order("published_at", { ascending: false })
 		.range(from, from + perPage - 1);
 
 	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
 	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
 }, "blogs:getPublishedBlogs", ["blogs"]);
+
+/** Distinct tags of live posts, for the tag filter. */
+export const getBlogTags = cached(async (): Promise<string[]> => {
+	const { data } = await onlyLive(createPublicClient().from("blogs").select("tags")).limit(2000);
+	return Array.from(new Set((data ?? []).flatMap((r) => (r.tags as string[] | null) ?? []))).sort((a, b) => a.localeCompare(b));
+}, "blogs:getBlogTags", ["blogs"]);
+
+/** A live post by its exact title (case-insensitive), e.g. one pinned on the homepage. */
+export const getPublishedBlogByTitle = cached(async (title: string): Promise<BlogSummary | null> => {
+	const pattern = title.replace(/[\\%_]/g, (c) => `\\${c}`);
+	const { data, error } = await onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS)).ilike("title", pattern).limit(1).maybeSingle();
+	if (error) throw new Error(`Failed to load blog: ${error.message}`);
+	return data as BlogSummary | null;
+}, "blogs:getPublishedBlogByTitle", ["blogs"]);
 
 /** Deduplicated per request so `generateMetadata` and the page share one query. */
 export const getPublishedBlogBySlug = cache(cached(async (slug: string): Promise<Blog | null> => {

@@ -8,7 +8,7 @@ export default function GlobalError({ error, retry }: { error: Error & { digest?
 				<title>Something went wrong | Merkado PH</title>
 				<meta name="robots" content="noindex" />
 			</head>
-			<body style={{ margin: 0, minHeight: "100dvh", display: "grid", placeItems: "center", fontFamily: "system-ui, sans-serif", background: "#fbf7ef", color: "#1c1917" }}>
+			<body style={{ margin: 0, minHeight: "100dvh", display: "grid", placeItems: "center", fontFamily: "system-ui, sans-serif", background: "#faf9f6", color: "#1c1917" }}>
 				<main style={{ maxWidth: 480, padding: 24, textAlign: "center" }}>
 					<h1 style={{ fontSize: 28, margin: 0 }}>Pasensya na, may problema.</h1>
 					<p style={{ marginTop: 12, lineHeight: 1.5 }}>The site couldn&apos;t load right now. Please try again in a moment.</p>

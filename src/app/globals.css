@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-	--background: #ffffff;
+	--background: #faf9f6;
 	--foreground: #171717;
 }
 
@@ -10,6 +10,73 @@
 	--color-foreground: var(--foreground);
 	--font-sans: var(--font-geist-sans);
 	--font-mono: var(--font-geist-mono);
+	--font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
+	--font-body: var(--font-atkinson), "Segoe UI", system-ui, sans-serif;
+
+	/* Homepage palette: theme-aware tokens (bg-home-surface, text-home-muted…) */
+	--color-home-bg: var(--home-bg);
+	--color-home-surface: var(--home-surface);
+	--color-home-text: var(--home-text);
+	--color-home-muted: var(--home-muted);
+	--color-home-line: var(--home-line);
+	--color-home-ink: var(--home-ink);
+	--color-home-tint-teal: var(--home-tint-teal);
+	--color-home-tint-orange: var(--home-tint-orange);
+	--color-home-highlight: var(--home-highlight);
+	/* …and fixed brand colors, the same in both themes (dark text on all of them). */
+	--color-brand-teal: #19b796;
+	--color-brand-orange: #f47e20;
+	--color-brand-yellow: #ffcc3f;
+	--color-brand-promo: #f05d22;
+	--color-brand-red: #e10606;
+	--color-brand-olive: #33331e;
+	--color-brand-on: #22220f;
+}
+
+:root {
+	--home-bg: #faf9f6;
+	--home-surface: #ffffff;
+	--home-text: #33331e;
+	--home-muted: #6b6a55;
+	--home-line: #e7e5dc;
+	--home-ink: #06705c;
+	--home-tint-teal: #e0f7ef;
+	--home-tint-orange: #fde9da;
+	--home-highlight: #ffcc3f;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--background: #0c0a09;
+		--home-bg: #1b1b12;
+		--home-surface: #26261a;
+		--home-text: #f1efe4;
+		--home-muted: #b5b39c;
+		--home-line: #3a3a29;
+		--home-ink: #4fd6b6;
+		--home-tint-teal: #15382f;
+		--home-tint-orange: #3d2616;
+		--home-highlight: #6b5410;
+	}
+}
+
+/* Woven banig band: the homepage's one Filipino flourish. */
+.banig {
+	height: 12px;
+	background:
+		repeating-linear-gradient(45deg, #19b796 0 8px, transparent 8px 16px),
+		repeating-linear-gradient(-45deg, #ffcc3f 0 8px, #f47e20 8px 16px);
+}
+
+@keyframes parol-glow {
+	50% {
+		opacity: 0.55;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.parol-rays {
+		animation: parol-glow 4s ease-in-out infinite;
+	}
 }
 
 body {

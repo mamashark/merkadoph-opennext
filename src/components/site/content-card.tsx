@@ -64,7 +64,7 @@ export function Pill({ children, tone = "light" }: { children: React.ReactNode; 
 		<span
 			className={cn(
 				"inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm",
-				tone === "accent" && "bg-orange-600 text-white",
+				tone === "accent" && "bg-orange-700 text-white",
 				tone === "light" && "bg-white/95 text-stone-900",
 				tone === "muted" && "bg-stone-800/90 text-white",
 			)}
@@ -101,6 +101,32 @@ export function LinkTabs({ tabs, current, label }: { tabs: Array<{ label: string
 							)}
 						>
 							{t.label}
+						</Link>
+					</li>
+				))}
+			</ul>
+		</nav>
+	);
+}
+
+/** URL-based chip filter (e.g. /events?tag=…): the first chip ("" value) clears it. */
+export function ChipFilter({ label, allLabel, items, current, href }: { label: string; allLabel: string; items: string[]; current: string; href: (value: string) => string }) {
+	return (
+		<nav aria-label={label} className="mb-8">
+			<ul className="flex flex-wrap gap-2 text-sm font-medium">
+				{["", ...items].map((v) => (
+					<li key={v || "all"}>
+						<Link
+							href={href(v)}
+							aria-current={v === current ? "page" : undefined}
+							className={cn(
+								"inline-flex min-h-11 items-center rounded-full border px-4",
+								v === current
+									? "border-stone-900 bg-stone-900 text-white dark:border-white dark:bg-white dark:text-stone-900"
+									: "border-amber-900/15 text-stone-700 hover:bg-white hover:text-stone-950 dark:border-white/15 dark:text-stone-300 dark:hover:bg-stone-900 dark:hover:text-white",
+							)}
+						>
+							{v || allLabel}
 						</Link>
 					</li>
 				))}

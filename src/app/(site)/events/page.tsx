@@ -1,24 +1,26 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarDays, MapPin } from "lucide-react";
-import { EVENTS_PER_PAGE, getPublicEvents } from "@/lib/events";
+import { EVENTS_PER_PAGE, getEventTags, getPublicEvents } from "@/lib/events";
 import { pageParam, param } from "@/lib/content";
 import { formatDate } from "@/lib/datetime";
 import { pageMetadata } from "@/lib/seo";
-import { ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
+import { ChipFilter, ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 
-// Renders per request (it reads the tab/page from the URL); the data itself comes from the cache.
+// Renders per request (it reads the tab/tag/page from the URL); the data itself comes from the cache.
 
 const description = "Gatherings, celebrations and home-improvement workshops from the Merkado PH Filipino-Swedish community. See what's coming up and join us.";
 
 export async function generateMetadata({ searchParams }: PageProps<"/events">): Promise<Metadata> {
 	const params = await searchParams;
 	const past = param(params, "when") === "past";
+	const tags = await getEventTags(past ? "past" : "upcoming").catch((): string[] => []);
+	const tag = tags.includes(param(params, "tag")) ? param(params, "tag") : "";
 	const page = pageParam(params);
-	const qs = new URLSearchParams({ ...(past ? { when: "past" } : {}), ...(page > 1 ? { page: String(page) } : {}) }).toString();
+	const qs = new URLSearchParams({ ...(past ? { when: "past" } : {}), ...(tag ? { tag } : {}), ...(page > 1 ? { page: String(page) } : {}) }).toString();
 	return pageMetadata({
-		title: `${past ? "Past events" : "Events"}${page > 1 ? ` — Page ${page}` : ""}`,
+		title: `${past ? "Past events" : "Events"}${tag ? `: ${tag}` : ""}${page > 1 ? ` — Page ${page}` : ""}`,
 		description,
 		path: qs ? `/events?${qs}` : "/events",
 	});
@@ -27,9 +29,13 @@ export async function generateMetadata({ searchParams }: PageProps<"/events">): 
 export default async function EventsPage({ searchParams }: PageProps<"/events">) {
 	const params = await searchParams;
 	const when = param(params, "when") === "past" ? "past" : "upcoming";
+	const tags = await getEventTags(when);
+	// Unknown tags are ignored rather than shown as an empty list.
+	const tag = tags.includes(param(params, "tag")) ? param(params, "tag") : "";
 	const page = pageParam(params);
-	const { events, total } = await getPublicEvents(when, page);
+	const { events, total } = await getPublicEvents(when, page, EVENTS_PER_PAGE, tag || undefined);
 	if (page > 1 && events.length === 0) notFound();
+	const filterParams = { ...(when === "past" ? { when } : {}), ...(tag ? { tag } : {}) };
 
 	return (
 		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
@@ -44,9 +50,22 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 				]}
 			/>
 
+			{tags.length > 0 && (
+				<ChipFilter
+					label="Filter events by tag"
+					allLabel="All tags"
+					items={tags}
+					current={tag}
+					href={(t) => {
+						const qs = new URLSearchParams({ ...(when === "past" ? { when } : {}), ...(t ? { tag: t } : {}) }).toString();
+						return qs ? `/events?${qs}` : "/events";
+					}}
+				/>
+			)}
+
 			{events.length === 0 ? (
 				<EmptyNotice
-					title={when === "upcoming" ? "No upcoming events right now." : "No past events yet."}
+					title={tag ? `No ${when} events tagged “${tag}”.` : when === "upcoming" ? "No upcoming events right now." : "No past events yet."}
 					description={when === "upcoming" ? "New events are announced here first — abangan!" : "Check back after our first gathering."}
 				/>
 			) : (
@@ -86,10 +105,11 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 						))}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={EVENTS_PER_PAGE} total={total} basePath="/events" params={when === "past" ? { when } : {}} />
+						<Pagination page={page} perPage={EVENTS_PER_PAGE} total={total} basePath="/events" params={filterParams} />
 					</div>
 				</>
 			)}
 		</main>
 	);
 }
+

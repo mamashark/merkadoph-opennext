@@ -90,7 +90,7 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 		.toUpperCase();
 
 	return (
-		<div className="min-h-dvh bg-[#F8FAFC] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+		<div className="min-h-dvh bg-[#faf9f6] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
 			{/* Backdrop for drawer / overlay modes */}
 			<div
 				aria-hidden

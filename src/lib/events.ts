@@ -32,10 +32,10 @@ export type EventItem = {
 
 export type EventSummary = Pick<
 	EventItem,
-	"id" | "title" | "slug" | "excerpt" | "cover_image_url" | "cover_image_alt" | "tags" | "starts_at" | "ends_at" | "venue_name" | "status" | "published_at" | "updated_at"
+	"id" | "title" | "slug" | "excerpt" | "cover_image_url" | "cover_image_alt" | "tags" | "starts_at" | "ends_at" | "venue_name" | "organizer" | "price_info" | "status" | "published_at" | "updated_at"
 >;
 
-const SUMMARY = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,starts_at,ends_at,venue_name,status,published_at,updated_at";
+const SUMMARY = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,starts_at,ends_at,venue_name,organizer,price_info,status,published_at,updated_at";
 export const EVENTS_PER_PAGE = 9;
 
 /** An event is upcoming until it ends (or, with no end time, until it starts). */
@@ -44,15 +44,23 @@ function timeFilter(when: "upcoming" | "past") {
 	return when === "upcoming" ? `ends_at.gte.${now},and(ends_at.is.null,starts_at.gte.${now})` : `ends_at.lt.${now},and(ends_at.is.null,starts_at.lt.${now})`;
 }
 
-export const getPublicEvents = cached(async (when: "upcoming" | "past", page: number = 1, perPage: number = EVENTS_PER_PAGE) => {
+/** `tag` narrows the list to events carrying that tag (the /events?tag= filter). */
+export const getPublicEvents = cached(async (when: "upcoming" | "past", page: number = 1, perPage: number = EVENTS_PER_PAGE, tag?: string) => {
 	const from = (page - 1) * perPage;
-	const { data, count, error } = await onlyLive(createPublicClient().from("events").select(SUMMARY, { count: "exact" }))
-		.or(timeFilter(when))
+	let query = onlyLive(createPublicClient().from("events").select(SUMMARY, { count: "exact" })).or(timeFilter(when));
+	if (tag) query = query.contains("tags", [tag]);
+	const { data, count, error } = await query
 		.order("starts_at", { ascending: when === "upcoming" })
 		.range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load events: ${error.message}`);
 	return { events: (data ?? []) as EventSummary[], total: count ?? 0 };
 }, "events:getPublicEvents", ["events"]);
+
+/** Distinct tags of live upcoming or past events, for the tag filter. */
+export const getEventTags = cached(async (when: "upcoming" | "past"): Promise<string[]> => {
+	const { data } = await onlyLive(createPublicClient().from("events").select("tags")).or(timeFilter(when)).limit(1000);
+	return Array.from(new Set((data ?? []).flatMap((r) => (r.tags as string[] | null) ?? []))).sort((a, b) => a.localeCompare(b));
+}, "events:getEventTags", ["events"]);
 
 export const getPublicEventBySlug = cache(cached(async (slug: string): Promise<EventItem | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("events").select("*").eq("slug", slug)).maybeSingle();

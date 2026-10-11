@@ -33,7 +33,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 	const notice = notices[get("notice")];
 
 	return (
-		<main className="grid min-h-dvh bg-slate-50 dark:bg-slate-950 lg:grid-cols-2">
+		<main className="grid min-h-dvh bg-[#faf9f6] dark:bg-slate-950 lg:grid-cols-2">
 			<section className="relative hidden overflow-hidden bg-[#f4ebd9] lg:block" aria-hidden>
 				<Image src="/underconstruction-site.jpg" alt="" fill fetchPriority="high" sizes="50vw" className="object-cover object-center" />
 				<div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-slate-950/10 to-transparent" />

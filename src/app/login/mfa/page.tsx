@@ -27,7 +27,7 @@ export default async function MfaPage({ searchParams }: PageProps<"/login/mfa">)
 	const error = errors[param(params, "error")];
 
 	return (
-		<main className="flex min-h-dvh items-center justify-center bg-slate-50 px-4 py-12 dark:bg-slate-950">
+		<main className="flex min-h-dvh items-center justify-center bg-[#faf9f6] px-4 py-12 dark:bg-slate-950">
 			<div className="w-full max-w-sm">
 				<div className="mb-8 inline-block rounded-xl dark:bg-white dark:px-3 dark:py-2">
 					<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" className="h-auto w-40" />

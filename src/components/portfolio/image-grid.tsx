@@ -38,7 +38,7 @@ export function PortfolioImageGrid({ images, title, priorityFirst = false, class
 								sizes={sizes}
 								loading={priorityFirst && i === 0 ? "eager" : "lazy"}
 								fetchPriority={priorityFirst && i === 0 ? "high" : undefined}
-								className="object-cover transition duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+								className="object-contain transition duration-700 ease-out group-hover:scale-[1.04] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
 							/>
 							{hasText && (
 								<figcaption

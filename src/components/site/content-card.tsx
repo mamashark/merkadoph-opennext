@@ -15,10 +15,12 @@ type Props = {
 	/** Mark the first visible image as LCP so it isn't lazy-loaded. */
 	priority?: boolean;
 	headingLevel?: "h2" | "h3";
+	/** "contain" shows the whole image (letterboxed), e.g. portfolio photos. */
+	imageFit?: "cover" | "contain";
 };
 
 /** Public listing card used by blogs, events, promotions and services. The whole card is clickable. */
-export function ContentCard({ href, title, excerpt, image, imageAlt, eyebrow, meta, badge, featured = false, priority = false, headingLevel = "h2" }: Props) {
+export function ContentCard({ href, title, excerpt, image, imageAlt, eyebrow, meta, badge, featured = false, priority = false, headingLevel = "h2", imageFit = "cover" }: Props) {
 	const Heading = headingLevel;
 	return (
 		<article
@@ -34,7 +36,7 @@ export function ContentCard({ href, title, excerpt, image, imageAlt, eyebrow, me
 						alt={imageAlt ?? ""}
 						fill
 						sizes={featured ? "(min-width: 768px) 60vw, 100vw" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
-						className="object-cover transition duration-500 group-hover:scale-[1.03]"
+						className={cn(imageFit === "contain" ? "object-contain" : "object-cover", "transition duration-500 group-hover:scale-[1.03]")}
 						loading={priority ? "eager" : "lazy"}
 						fetchPriority={priority ? "high" : undefined}
 					/>

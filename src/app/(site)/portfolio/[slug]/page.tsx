@@ -95,7 +95,7 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/portf
 					<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 						{related.map((p) => {
 							const cover = portfolioCover(p);
-							return <ContentCard key={p.id} href={`/portfolio/${p.slug}`} title={p.title} excerpt={p.excerpt} image={cover?.url} imageAlt={cover?.alt} eyebrow={p.location ?? undefined} headingLevel="h3" />;
+							return <ContentCard key={p.id} href={`/portfolio/${p.slug}`} title={p.title} excerpt={p.excerpt} image={cover?.url} imageAlt={cover?.alt} eyebrow={p.location ?? undefined} headingLevel="h3" imageFit="contain" />;
 						})}
 					</div>
 				</section>

@@ -40,7 +40,7 @@ jobs:
           cat roles.sql schema.sql data.sql | gzip -9 > backup.sql.gz
           gpg --batch --yes --pinentry-mode loopback --passphrase "$BACKUP_PASSPHRASE" --symmetric --cipher-algo AES256 -o backup.sql.gz.gpg backup.sql.gz
           rm -f roles.sql schema.sql data.sql backup.sql.gz
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: env.SKIP != '1'
         with:
           name: db-backup-${{ github.run_id }}

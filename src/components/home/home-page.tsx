@@ -6,6 +6,8 @@ import { getPublishedBlogs } from "@/lib/blogs";
 import { getPublicEvents } from "@/lib/events";
 import { getPublicPromotions } from "@/lib/promotions";
 import { getPublicServices } from "@/lib/services";
+import { getPublicPortfolios } from "@/lib/portfolio";
+import { PortfolioHomeShowcase } from "@/components/portfolio/home-showcase";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { pageMetadata } from "@/lib/seo";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -55,11 +57,13 @@ const promises = [
 ];
 
 export async function HomePage() {
-	const [services, promotions, events, blogs, seo] = await Promise.all([
+	const [services, promotions, events, blogs, portfolio, seo] = await Promise.all([
 		safe(getPublicServices(undefined, 1, 6), { services: [], total: 0 }),
 		safe(getPublicPromotions("current", 1, 3), { promotions: [], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, 3), { events: [], total: 0 }),
 		safe(getPublishedBlogs(1, 3), { blogs: [], total: 0 }),
+		// Newest first → the newest project is the default tab.
+		safe(getPublicPortfolios(undefined, 1, 8), { portfolios: [], total: 0 }),
 		getSeoSettings(),
 	]);
 	const topics = services.services.map((s) => s.title);
@@ -176,6 +180,18 @@ export async function HomePage() {
 								</li>
 							))}
 						</ul>
+					</section>
+				)}
+
+				{/* Portfolio */}
+				{portfolio.portfolios.length > 0 && (
+					<section aria-labelledby="portfolio-title" className="border-t border-amber-900/10 dark:border-white/10">
+						<div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+							<SectionHead id="portfolio-title" eyebrow="Portfolio" title="Our latest work" href="/portfolio" linkLabel="All projects" />
+							<div className="mt-8">
+								<PortfolioHomeShowcase projects={portfolio.portfolios} />
+							</div>
+						</div>
 					</section>
 				)}
 

@@ -5,13 +5,29 @@ import { ArrowDown, ArrowUp, ImagePlus, Trash2 } from "lucide-react";
 import { MediaPicker } from "./media-picker";
 import { buttonClass, dangerIconClass, inputClass } from "@/lib/ui";
 
-type Item = { url: string; alt: string };
+type Item = { url: string; alt: string; description?: string };
 
 /**
- * Multi-image field (e.g. a product gallery). Pick images from the media library, give each
- * alt text and reorder them. Submits as JSON in one hidden input, so it works in server forms.
+ * Multi-image field (product gallery, portfolio images). Pick images from the media library, give each
+ * alt text (and optionally a description) and reorder them. Submits as JSON in one hidden input, so it
+ * works in server forms.
  */
-export function GalleryField({ name, defaultValue = [], max = 12 }: { name: string; defaultValue?: Item[]; max?: number }) {
+export function GalleryField({
+	name,
+	defaultValue = [],
+	max = 12,
+	withDescription = false,
+	hint = "Shown under the main image on the product page.",
+	addLabel = "Add gallery image",
+}: {
+	name: string;
+	defaultValue?: Item[];
+	max?: number;
+	/** Adds a per-image description (e.g. shown on hover in the portfolio grid). */
+	withDescription?: boolean;
+	hint?: string;
+	addLabel?: string;
+}) {
 	const [items, setItems] = useState<Item[]>(defaultValue);
 	const [open, setOpen] = useState(false);
 	const close = useCallback(() => setOpen(false), []);
@@ -31,21 +47,39 @@ export function GalleryField({ name, defaultValue = [], max = 12 }: { name: stri
 			{items.length > 0 && (
 				<ul className="space-y-2">
 					{items.map((it, i) => (
-						<li key={`${it.url}-${i}`} className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-800">
+						<li key={`${it.url}-${i}`} className="flex items-start gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-800">
 							{/* eslint-disable-next-line @next/next/no-img-element -- preview of an arbitrary storage URL */}
-							<img src={it.url} alt="" className="h-12 w-12 shrink-0 rounded object-cover" />
-							<label className="sr-only" htmlFor={`${name}-alt-${i}`}>
-								Alt text for image {i + 1}
-							</label>
-							<input
-								id={`${name}-alt-${i}`}
-								value={it.alt}
-								maxLength={200}
-								onChange={(e) => update(i, { alt: e.target.value })}
-								placeholder="Describe the image"
-								className={`${inputClass} h-9 min-w-0 flex-1 py-1`}
-							/>
-							<div className="flex shrink-0 gap-1">
+							<img src={it.url} alt="" className={`${withDescription ? "h-20 w-20" : "h-12 w-12"} shrink-0 rounded object-cover`} />
+							<div className="min-w-0 flex-1 space-y-1.5">
+								<label className="sr-only" htmlFor={`${name}-alt-${i}`}>
+									Alt text for image {i + 1}
+								</label>
+								<input
+									id={`${name}-alt-${i}`}
+									value={it.alt}
+									maxLength={200}
+									onChange={(e) => update(i, { alt: e.target.value })}
+									placeholder="Alt text: what's in the image"
+									className={`${inputClass} h-9 py-1`}
+								/>
+								{withDescription && (
+									<>
+										<label className="sr-only" htmlFor={`${name}-desc-${i}`}>
+											Description for image {i + 1}
+										</label>
+										<textarea
+											id={`${name}-desc-${i}`}
+											value={it.description ?? ""}
+											maxLength={500}
+											rows={2}
+											onChange={(e) => update(i, { description: e.target.value })}
+											placeholder="Description shown on hover, e.g. “New standing-seam roof, Täby”"
+											className={`${inputClass} py-1.5 text-sm`}
+										/>
+									</>
+								)}
+							</div>
+							<div className="flex shrink-0 flex-col gap-1 sm:flex-row">
 								<button type="button" onClick={() => move(i, -1)} disabled={i === 0} className={buttonClass("ghost", "icon")} aria-label={`Move image ${i + 1} up`}>
 									<ArrowUp className="h-4 w-4" aria-hidden />
 								</button>
@@ -62,18 +96,18 @@ export function GalleryField({ name, defaultValue = [], max = 12 }: { name: stri
 			)}
 			{items.length < max && (
 				<button type="button" onClick={() => setOpen(true)} className={buttonClass("secondary", "sm")}>
-					<ImagePlus className="h-4 w-4" aria-hidden /> Add gallery image
+					<ImagePlus className="h-4 w-4" aria-hidden /> {addLabel}
 				</button>
 			)}
 			<p className="text-xs text-slate-600 dark:text-slate-400">
-				{items.length}/{max} images. Shown under the main image on the product page.
+				{items.length}/{max} images. {hint}
 			</p>
 			{open && (
 				<MediaPicker
-					title="Add gallery image"
+					title={addLabel}
 					onClose={close}
 					onSelect={(media) => {
-						setItems((list) => [...list, { url: media.url, alt: "" }]);
+						setItems((list) => [...list, { url: media.url, alt: "", ...(withDescription ? { description: "" } : {}) }]);
 						setOpen(false);
 					}}
 				/>

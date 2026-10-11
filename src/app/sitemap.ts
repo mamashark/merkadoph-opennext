@@ -3,6 +3,7 @@ import { getAllPublishedSlugs } from "@/lib/blogs";
 import { getEventSlugs } from "@/lib/events";
 import { getPromotionSlugs } from "@/lib/promotions";
 import { getServiceSlugs } from "@/lib/services";
+import { getPortfolioSlugs } from "@/lib/portfolio";
 import { SITE_URL } from "@/lib/env";
 import { stageGateEnabled } from "@/lib/stage";
 import { getLegalPages, LEGAL_PAGE_IDS, LEGAL_PAGES } from "@/lib/site-settings";
@@ -18,11 +19,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	// While the site is behind the staging gate only the "coming soon" homepage is public.
 	if (stageGateEnabled()) return [{ url: SITE_URL, changeFrequency: "weekly", priority: 1 }];
 
-	const [blogs, events, promotions, services, legal] = await Promise.all([
+	const [blogs, events, promotions, services, portfolio, legal] = await Promise.all([
 		safe(getAllPublishedSlugs()),
 		safe(getEventSlugs()),
 		safe(getPromotionSlugs()),
 		safe(getServiceSlugs()),
+		safe(getPortfolioSlugs()),
 		getLegalPages().catch(() => null),
 	]);
 
@@ -56,10 +58,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${SITE_URL}/events`, changeFrequency: "daily", priority: 0.8 },
 		{ url: `${SITE_URL}/promotions`, changeFrequency: "daily", priority: 0.8 },
 		{ url: `${SITE_URL}/services`, changeFrequency: "weekly", priority: 0.8 },
+		{ url: `${SITE_URL}/portfolio`, changeFrequency: "weekly", priority: 0.8 },
 		...section("/blogs", blogs, "weekly"),
 		...section("/events", events, "weekly"),
 		...section("/promotions", promotions, "daily"),
 		...section("/services", services, "monthly"),
+		...section("/portfolio", portfolio, "monthly"),
 		...shop,
 		...LEGAL_PAGE_IDS.map((id) => ({
 			url: `${SITE_URL}${LEGAL_PAGES[id].path}`,

@@ -9,6 +9,7 @@ const baseLinks = [
 	{ href: "/events", label: "Events" },
 	{ href: "/promotions", label: "Promotions" },
 	{ href: "/services", label: "Services" },
+	{ href: "/portfolio", label: "Portfolio" },
 ];
 
 /** Only client piece of the public header: highlights the current section. */

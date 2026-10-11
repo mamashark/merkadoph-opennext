@@ -59,8 +59,8 @@ export function GalleryField({
 									value={it.alt}
 									maxLength={200}
 									onChange={(e) => update(i, { alt: e.target.value })}
-									placeholder="Alt text: what's in the image"
-									className={`${inputClass} h-9 py-1`}
+									placeholder={withDescription ? "Alt text — required to publish: what's in the image" : "Alt text: what's in the image"}
+									className={`${inputClass} h-9 py-1 ${withDescription && !it.alt.trim() ? "border-amber-400 dark:border-amber-600" : ""}`}
 								/>
 								{withDescription && (
 									<>

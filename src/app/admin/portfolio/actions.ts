@@ -42,9 +42,21 @@ export async function savePortfolio(formData: FormData) {
 	const images = readImages(formData.get("images"));
 	const existing = await fetchExisting("portfolios", id);
 	const slug = await uniqueSlug("portfolios", text(formData, "slug", 80) || fields.title, id);
-	const { status, published_at, notice } = resolvePublishing(formData, existing);
-	if (status === "published" && images.length === 0) throw new Error("Add at least one image before publishing a project.");
-	if (status === "published" && images.some((img) => !img.alt)) throw new Error("Every image needs alt text before publishing (it describes the image for screen readers and Google).");
+	const resolved = resolvePublishing(formData, existing);
+	// Publish rules. If one isn't met we still save (as a draft, or keeping the current status) so nothing
+	// typed is lost, and show what to fix — a thrown error would only show "Something went wrong" in production.
+	const missingAlt = images.filter((img) => !img.alt).length;
+	const problem =
+		resolved.status !== "published"
+			? null
+			: images.length === 0
+				? "Add at least one image before publishing."
+				: missingAlt
+					? `Add alt text to ${missingAlt === 1 ? "1 image" : `${missingAlt} images`} before publishing — it describes the photo for screen readers and Google.`
+					: null;
+	const status = problem ? (existing?.status ?? "draft") : resolved.status;
+	const published_at = problem ? (existing?.published_at ?? null) : resolved.published_at;
+	const notice = problem ? null : resolved.notice;
 
 	const savedId = await upsertRow(
 		"portfolios",
@@ -62,7 +74,7 @@ export async function savePortfolio(formData: FormData) {
 	);
 
 	revalidateContent("/portfolio", "/admin/portfolio", [slug, existing?.slug]);
-	redirect(`/admin/portfolio/${savedId}/edit?notice=${notice}`);
+	redirect(`/admin/portfolio/${savedId}/edit?${new URLSearchParams(problem ? { error: `Saved, but not published. ${problem}` } : { notice: notice ?? "saved" })}`);
 }
 
 export async function deletePortfolio(formData: FormData) {

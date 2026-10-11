@@ -183,18 +183,6 @@ export async function HomePage() {
 					</section>
 				)}
 
-				{/* Portfolio */}
-				{portfolio.portfolios.length > 0 && (
-					<section aria-labelledby="portfolio-title" className="border-t border-amber-900/10 dark:border-white/10">
-						<div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-							<SectionHead id="portfolio-title" eyebrow="Portfolio" title="Our latest work" href="/portfolio" linkLabel="All projects" />
-							<div className="mt-8">
-								<PortfolioHomeShowcase projects={portfolio.portfolios} />
-							</div>
-						</div>
-					</section>
-				)}
-
 				{/* Promise */}
 				<section aria-label="Why work with us" className="bg-stone-950 text-stone-100 dark:bg-black">
 					<div className="mx-auto grid max-w-6xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
@@ -292,6 +280,18 @@ export async function HomePage() {
 									</ul>
 								</div>
 							)}
+						</div>
+					</section>
+				)}
+
+				{/* Portfolio */}
+				{portfolio.portfolios.length > 0 && (
+					<section aria-labelledby="portfolio-title" className="border-t border-amber-900/10 dark:border-white/10">
+						<div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
+							<SectionHead id="portfolio-title" eyebrow="Portfolio" title="Our latest work" href="/portfolio" linkLabel="All projects" />
+							<div className="mt-8">
+								<PortfolioHomeShowcase projects={portfolio.portfolios} />
+							</div>
 						</div>
 					</section>
 				)}

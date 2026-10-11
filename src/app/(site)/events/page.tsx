@@ -63,7 +63,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 								priority={i === 0}
 								badge={
 									<Pill tone={when === "past" ? "muted" : "light"}>
-										{formatDate(event.starts_at, { month: "short", day: "numeric" })}
+										<span className="font-display font-bold">{formatDate(event.starts_at, { month: "short", day: "numeric" })}</span>
 										{when === "past" && " · Ended"}
 									</Pill>
 								}

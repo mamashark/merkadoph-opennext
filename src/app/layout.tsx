@@ -1,12 +1,24 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Atkinson_Hyperlegible, Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
 import { getSeoSettings } from "@/lib/site-settings";
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+/** Display text: logo text, headings, event date numbers, price tags. */
+const bricolage = Bricolage_Grotesque({
+	variable: "--font-bricolage",
 	subsets: ["latin"],
+	weight: ["500", "700", "800"],
+	display: "swap",
+});
+
+/** Body text: paragraphs, navigation, buttons, labels, form fields (designed for low-vision readers). */
+const atkinson = Atkinson_Hyperlegible({
+	variable: "--font-atkinson",
+	subsets: ["latin"],
+	weight: ["400", "700"],
+	style: ["normal", "italic"],
+	display: "swap",
 });
 
 const geistMono = Geist_Mono({
@@ -60,7 +72,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>{children}</body>
+			<body className={`${atkinson.variable} ${bricolage.variable} ${geistMono.variable} antialiased`}>{children}</body>
 		</html>
 	);
 }

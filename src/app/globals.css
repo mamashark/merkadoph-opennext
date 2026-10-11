@@ -8,7 +8,9 @@
 @theme inline {
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
-	--font-sans: var(--font-geist-sans);
+	/* Body + display fonts (loaded in src/app/layout.tsx). Fallback: Segoe UI, then the system sans-serif. */
+	--font-sans: var(--font-atkinson), "Segoe UI", system-ui, sans-serif;
+	--font-display: var(--font-bricolage), "Segoe UI", system-ui, sans-serif;
 	--font-mono: var(--font-geist-mono);
 }
 
@@ -29,7 +31,14 @@
 body {
 	background: var(--background);
 	color: var(--foreground);
-	font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+	font-family: var(--font-sans);
+}
+
+/* Headings use the display font; utilities (e.g. font-sans) can still override. */
+@layer base {
+	h1, h2, h3, h4, h5, h6 {
+		font-family: var(--font-display);
+	}
 }
 
 /* Blog article body (rendered from Markdown). */

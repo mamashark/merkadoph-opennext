@@ -206,7 +206,7 @@ export async function HomePage() {
 							{promotions.promotions.map((p) => (
 								<li key={p.id} className="group relative flex flex-col rounded-2xl border border-amber-900/10 bg-white p-6 shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-stone-900">
 									{p.discount_label && (
-										<span className="w-fit rounded-full bg-orange-600 px-3 py-1 text-xs font-bold uppercase tracking-wide text-white">{p.discount_label}</span>
+										<span className="w-fit rounded-full bg-orange-600 px-3 py-1 font-display text-xs font-bold uppercase tracking-wide text-white">{p.discount_label}</span>
 									)}
 									<h3 className="mt-4 text-lg font-semibold text-stone-950 dark:text-white">
 										<Link href={`/promotions/${p.slug}`} className="after:absolute after:inset-0 focus:outline-none focus-visible:underline">
@@ -233,7 +233,7 @@ export async function HomePage() {
 											<li key={e.id} className="group relative flex gap-4 py-4">
 												<div className="flex w-14 shrink-0 flex-col items-center rounded-xl border border-amber-900/10 bg-white py-2 dark:border-white/10 dark:bg-stone-900" aria-hidden>
 													<span className="text-[11px] font-semibold uppercase text-orange-700 dark:text-orange-400">{formatDate(e.starts_at, { month: "short" })}</span>
-													<span className="text-xl font-semibold leading-none text-stone-950 dark:text-white">{formatDate(e.starts_at, { day: "numeric" })}</span>
+													<span className="font-display text-xl font-bold leading-none text-stone-950 dark:text-white">{formatDate(e.starts_at, { day: "numeric" })}</span>
 												</div>
 												<div className="min-w-0">
 													<h3 className="font-semibold text-stone-950 dark:text-white">

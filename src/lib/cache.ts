@@ -10,7 +10,7 @@ import { revalidatePath, unstable_cache, updateTag } from "next/cache";
  */
 export const CACHE_TTL = 300;
 
-export const CONTENT_TAGS = ["blogs", "events", "promotions", "services"] as const;
+export const CONTENT_TAGS = ["blogs", "events", "promotions", "services", "portfolio"] as const;
 export type ContentTag = (typeof CONTENT_TAGS)[number];
 
 /** Shop data: "products" (products, categories, tags), "shop" (settings, incl. the on/off switch) and "product-feed" (the XML feed). */
@@ -29,9 +29,9 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	home: { label: "Homepage", description: "The / page.", tags: [], paths: [{ path: "/" }] },
 	listings: {
 		label: "Listing pages",
-		description: "/blogs, /events, /promotions and /services (all tabs and pages).",
+		description: "/blogs, /events, /promotions, /services and /portfolio (all tabs and pages).",
 		tags: [],
-		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }],
+		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/portfolio" }],
 	},
 	blogs: {
 		label: "Blogs",
@@ -51,6 +51,12 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 		description: "Service data, the services list and every service page.",
 		tags: ["services"],
 		paths: [{ path: "/services" }, { path: "/services/[slug]", type: "page" }],
+	},
+	portfolio: {
+		label: "Portfolio",
+		description: "Project data, the /portfolio list, every project page and the homepage showcase.",
+		tags: ["portfolio"],
+		paths: [{ path: "/portfolio" }, { path: "/portfolio/[slug]", type: "page" }, { path: "/" }],
 	},
 	shop: {
 		label: "Shop",

@@ -6,6 +6,8 @@ import { getPublishedBlogByTitle, getPublishedBlogs, PINNED_BLOG_TITLE } from "@
 import { getEventTags, getPublicEvents } from "@/lib/events";
 import { getPublicPromotions } from "@/lib/promotions";
 import { getPublicServices } from "@/lib/services";
+import { getPublicPortfolios } from "@/lib/portfolio";
+import { PortfolioHomeShowcase } from "@/components/portfolio/home-showcase";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { pageMetadata } from "@/lib/seo";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -14,7 +16,6 @@ import { cn } from "@/lib/ui";
 import { SiteShell } from "@/components/site/site-shell";
 import { JsonLd } from "@/components/site/json-ld";
 import { ContactForm } from "./contact-form";
-import { bodyFont, displayFont } from "./fonts";
 
 const DESCRIPTION = "Discover Filipino stories, community events, Filipino-owned businesses and special offers across Sweden. Mabuhay! Välkommen!";
 
@@ -61,19 +62,21 @@ const initials = (name: string) =>
 const stretched = "after:absolute after:inset-0 after:rounded-xl focus:outline-none focus-visible:underline";
 
 export async function HomePage() {
-	const [services, promotions, events, eventTags, latestBlogs, pinnedBlog, seo] = await Promise.all([
+	const [services, promotions, events, eventTags, latestBlogs, pinnedBlog, portfolio, seo] = await Promise.all([
 		safe(getPublicServices(undefined, 1, 4), { services: [], total: 0 }),
 		safe(getPublicPromotions("current", 1, 2), { promotions: [], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, 4), { events: [], total: 0 }),
 		safe(getEventTags("upcoming"), []),
 		safe(getPublishedBlogs(1, 4), { blogs: [], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
+		// Newest first → the newest project is the default tab.
+		safe(getPublicPortfolios(undefined, 1, 8), { portfolios: [], total: 0 }),
 		getSeoSettings(),
 	]);
 	const blogs = { blogs: (pinnedBlog ? [pinnedBlog, ...latestBlogs.blogs.filter((b) => b.id !== pinnedBlog.id)] : latestBlogs.blogs).slice(0, 4) };
 	const brand = seo.business_name || SITE_NAME;
 	// Each data section brings its own spacing; without any, the sections below need top padding.
-	const hasContent = blogs.blogs.length + events.events.length + services.services.length + promotions.promotions.length > 0;
+	const hasContent = blogs.blogs.length + events.events.length + portfolio.portfolios.length + services.services.length + promotions.promotions.length > 0;
 	const nextEvent = events.events[0];
 	const stats = [
 		{ n: events.total, one: "upcoming event", many: "upcoming events" },
@@ -98,7 +101,7 @@ export async function HomePage() {
 				}}
 			/>
 
-			<main className={cn(displayFont.variable, bodyFont.variable, "bg-home-bg font-body text-[17px] leading-relaxed text-home-text [&_h1]:font-display [&_h2]:font-display [&_h3]:font-display")}>
+			<main className={cn("bg-home-bg font-sans text-[17px] leading-relaxed text-home-text [&_h1]:font-display [&_h2]:font-display [&_h3]:font-display")}>
 				{nextEvent && (
 					<p className="bg-brand-red px-4 py-2 text-center text-[0.92rem] text-white">
 						Next up: {nextEvent.title}, {formatDate(nextEvent.starts_at, { weekday: "short", month: "long", day: "numeric" })}.{" "}
@@ -279,6 +282,16 @@ export async function HomePage() {
 					</section>
 				)}
 
+				{/* Portfolio */}
+				{portfolio.portfolios.length > 0 && (
+					<section aria-labelledby="portfolio-title" className={cn("pt-12 sm:pt-20", services.services.length === 0 && "pb-12 sm:pb-20")}>
+						<div className="mx-auto max-w-6xl px-4 sm:px-6">
+							<SectionHead id="portfolio-title" eyebrow="Portfolio" title="Our latest work" href="/portfolio" linkLabel="All projects" />
+							<PortfolioHomeShowcase projects={portfolio.portfolios} />
+						</div>
+					</section>
+				)}
+
 				{/* Services */}
 				{services.services.length > 0 && (
 					<section aria-labelledby="services-title" className="py-12 sm:py-20">
@@ -321,7 +334,7 @@ export async function HomePage() {
 
 				{/* Promotions */}
 				{promotions.promotions.length > 0 && (
-					<section aria-labelledby="promos-title" className={cn("pb-12 sm:pb-20", !(blogs.blogs.length || events.events.length || services.services.length) && "pt-12 sm:pt-20")}>
+					<section aria-labelledby="promos-title" className={cn("pb-12 sm:pb-20", !(blogs.blogs.length || events.events.length || portfolio.portfolios.length || services.services.length) && "pt-12 sm:pt-20")}>
 						<div className="mx-auto max-w-6xl px-4 sm:px-6">
 							<SectionHead
 								id="promos-title"

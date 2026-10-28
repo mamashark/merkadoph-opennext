@@ -44,7 +44,7 @@ export function ProductCard({ product, currency, priority = false, headingLevel 
 					</div>
 				)}
 				<div className="absolute left-2 top-2 flex flex-col items-start gap-1">
-					{onSale && percentOff > 0 && <span className="rounded-full bg-orange-600 px-2 py-0.5 text-xs font-bold text-white">−{percentOff}%</span>}
+					{onSale && percentOff > 0 && <span className="rounded-full bg-orange-600 px-2 py-0.5 font-display text-xs font-bold text-white">−{percentOff}%</span>}
 					{soldOut && <span className="rounded-full bg-stone-900/85 px-2 py-0.5 text-xs font-semibold text-white">Sold out</span>}
 				</div>
 			</div>

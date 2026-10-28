@@ -8,6 +8,7 @@ export const PUBLIC_BASE: Partial<Record<ContentTable, string>> = {
 	events: "/events",
 	promotions: "/promotions",
 	services: "/services",
+	portfolios: "/portfolio",
 	products: "/product",
 	product_categories: "/shop",
 };

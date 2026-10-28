@@ -66,7 +66,11 @@ export default async function PromotionsPage({ searchParams }: PageProps<"/promo
 									badge={
 										p.discount_label || validity !== "active" ? (
 											<span className="flex gap-1.5">
-												{p.discount_label && <Pill tone="accent">{p.discount_label}</Pill>}
+												{p.discount_label && (
+													<Pill tone="accent">
+														<span className="font-display font-bold">{p.discount_label}</span>
+													</Pill>
+												)}
 												{validity === "upcoming" && <Pill>Starts soon</Pill>}
 												{validity === "ended" && <Pill tone="muted">Ended</Pill>}
 											</span>

@@ -124,7 +124,7 @@ export default async function ProductPage({ params }: PageProps<"/product/[slug]
 								MERKADO PH
 							</div>
 						)}
-						{onSale && percentOff > 0 && <span className="absolute left-3 top-3 rounded-full bg-orange-600 px-3 py-1 text-sm font-bold text-white">−{percentOff}%</span>}
+						{onSale && percentOff > 0 && <span className="absolute left-3 top-3 rounded-full bg-orange-600 px-3 py-1 font-display text-sm font-bold text-white">−{percentOff}%</span>}
 					</div>
 					{images.length > 1 && (
 						<ul className="grid grid-cols-4 gap-3" aria-label="More images">

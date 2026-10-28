@@ -26,6 +26,7 @@ const AREAS = [
 	["events", "Events"],
 	["promotions", "Promotions"],
 	["services", "Services"],
+	["portfolios", "Portfolio"],
 	["products", "Products"],
 	["product_categories", "Categories"],
 	["product_tags", "Tags"],

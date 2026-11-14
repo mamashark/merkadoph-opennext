@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarDays, FileText, MapPin, Store, Tag, UserRound } from "lucide-react";
+import { ArrowDown, ArrowRight, CalendarDays, FileText, MapPin, Store, Tag, UserRound } from "lucide-react";
 import { getPublishedBlogByTitle, getPublishedBlogs, PINNED_BLOG_TITLE } from "@/lib/blogs";
 import { getEventTags, getPublicEvents } from "@/lib/events";
 import { getPublicPromotions } from "@/lib/promotions";
@@ -25,6 +25,13 @@ export const homeMetadata = async (): Promise<Metadata> => {
 	const title = `${seo.business_name || SITE_NAME} — Connecting Filipinos, celebrating community in Sweden`;
 	return { ...(await pageMetadata({ title, description: DESCRIPTION, path: "/" })), title: { absolute: title } };
 };
+
+/**
+ * Hero switch. false: the interactive constellation is the hero (h1 + CTAs) with a "See more" button below.
+ * true: the original illustrated hero comes back and the constellation moves down to its own section.
+ * The original hero is kept in the code on purpose (hidden, not deleted).
+ */
+const SHOW_CLASSIC_HERO = false;
 
 /** Never let one missing table take the whole homepage down. */
 const safe = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
@@ -113,7 +120,24 @@ export async function HomePage() {
 				)}
 				<div className="banig" aria-hidden />
 
-				{/* Hero */}
+				{/* Hero: interactive constellation (see SHOW_CLASSIC_HERO) */}
+				{!SHOW_CLASSIC_HERO && (
+					<>
+						<HomeConstellation hero />
+						<div className="flex justify-center px-4 pt-6 sm:pt-8">
+							<a
+								href="#explore"
+								className="group inline-flex min-h-12 items-center gap-2 rounded-full border-2 border-home-text px-6 font-bold text-home-text hover:bg-home-text hover:text-home-bg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-home-ink"
+							>
+								See more
+								<ArrowDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5 motion-reduce:transition-none" aria-hidden />
+							</a>
+						</div>
+					</>
+				)}
+
+				{/* Classic hero: hidden while the constellation is the hero (kept for SHOW_CLASSIC_HERO) */}
+				{SHOW_CLASSIC_HERO && (
 				<section aria-labelledby="hero-title" className="overflow-hidden bg-home-tint-teal pb-20 pt-12 sm:pb-28 sm:pt-20 lg:pb-32">
 					<div className="mx-auto grid max-w-6xl items-center gap-6 px-4 sm:px-6 md:grid-cols-[1.3fr_1fr] md:gap-12">
 						<div>
@@ -149,9 +173,10 @@ export async function HomePage() {
 						<Parol />
 					</div>
 				</section>
+				)}
 
 				{/* Category shortcuts */}
-				<nav aria-labelledby="explore-title" className="relative z-10 mx-auto -mt-10 max-w-6xl px-4 sm:px-6">
+				<nav id="explore" aria-labelledby="explore-title" className={cn("relative z-10 mx-auto max-w-6xl scroll-mt-24 px-4 sm:px-6", SHOW_CLASSIC_HERO ? "-mt-10" : "mt-10 sm:mt-14")}>
 					<h2 id="explore-title" className="sr-only">
 						Explore the site
 					</h2>
@@ -178,9 +203,11 @@ export async function HomePage() {
 				</nav>
 
 				{/* Constellation: every content type and the tags that connect them (loads its graph on scroll) */}
-				<div className="mt-12 sm:mt-20">
-					<HomeConstellation />
-				</div>
+				{SHOW_CLASSIC_HERO && (
+					<div className="mt-12 sm:mt-20">
+						<HomeConstellation />
+					</div>
+				)}
 
 				{/* Blogs */}
 				{blogs.blogs.length > 0 && (

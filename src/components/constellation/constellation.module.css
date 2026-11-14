@@ -50,6 +50,10 @@
 .section {
 	height: clamp(520px, 82vh, 760px);
 }
+/* Above the fold: nearly a full screen, but the next section still peeks in. */
+.hero {
+	height: clamp(600px, 88svh, 920px);
+}
 .folded {
 	cursor: pointer;
 }
@@ -90,14 +94,15 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	padding-left: max(24px, env(safe-area-inset-left, 0px));
+	/* The graph is full-bleed; the text lines up with the site's 72rem content column on wide screens. */
+	padding-left: max(24px, env(safe-area-inset-left, 0px), calc((100% - 72rem) / 2 + 24px));
 	padding-right: max(24px, env(safe-area-inset-right, 0px));
 	padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
 	pointer-events: none;
 	display: flex;
 	flex-direction: column;
 	gap: 10px;
-	max-width: 34rem;
+	max-width: calc(36rem + max(24px, (100% - 72rem) / 2 + 24px));
 }
 .eyebrow {
 	font-family: var(--font-mono);
@@ -217,4 +222,57 @@
 
 .section .title {
 	font-size: clamp(2rem, 5vw, 3.4rem);
+}
+.hero .title {
+	font-size: clamp(2.4rem, 6vw, 4.4rem);
+	line-height: 1.02;
+}
+.hero .lede {
+	font-size: 1.15rem;
+	color: var(--ink);
+	opacity: 0.85;
+}
+
+.actions {
+	pointer-events: auto;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 10px;
+}
+.cta {
+	display: inline-flex;
+	align-items: center;
+	min-height: 48px;
+	padding: 0 22px;
+	border-radius: 12px;
+	font-weight: 700;
+	font-size: 1rem;
+	text-decoration: none;
+	border: 2px solid var(--ink);
+	color: var(--ink);
+	background: color-mix(in srgb, var(--night) 60%, transparent);
+	transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+}
+.cta:hover {
+	background: var(--ink);
+	color: var(--night);
+}
+.cta:focus-visible {
+	outline: 2px solid var(--sun);
+	outline-offset: 3px;
+}
+.ctaPrimary {
+	border-color: var(--sun);
+	background: var(--sun);
+	color: var(--night);
+}
+.ctaPrimary:hover {
+	border-color: var(--ink);
+	background: var(--ink);
+}
+@media (prefers-reduced-motion: reduce) {
+	.cta {
+		transition: none;
+	}
 }

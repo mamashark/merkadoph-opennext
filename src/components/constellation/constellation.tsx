@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { IBM_Plex_Mono } from "next/font/google";
 import type { ConstellationHub, ConstellationItem, ConstellationLine } from "./types";
@@ -29,8 +30,8 @@ export const DEFAULT_LINES: ConstellationLine[] = [
 type Props = {
 	hubs: ConstellationHub[];
 	items: ConstellationItem[];
-	/** "page" fills the viewport; "section" is a band inside a page. */
-	variant: "page" | "section";
+	/** "page" fills the viewport; "hero" is a homepage hero; "section" is a band inside a page. */
+	variant: "page" | "hero" | "section";
 	title: string;
 	titleAs?: "h1" | "h2";
 	titleId?: string;
@@ -39,6 +40,8 @@ type Props = {
 	label: string;
 	lines?: ConstellationLine[];
 	randomThreads?: boolean;
+	/** Call-to-action links under the text; the first one is the primary. */
+	actions?: { href: string; label: string }[];
 };
 
 type Engine = { setFolded: (next: boolean) => void; destroy: () => void };
@@ -47,7 +50,7 @@ type Engine = { setFolded: (next: boolean) => void; destroy: () => void };
  * A folded "sun" that bursts into a constellation of categories and their items on click.
  * The D3 engine is loaded only when the stage nears the viewport, so it never weighs on first paint.
  */
-export function Constellation({ hubs, items, variant, title, titleAs: Title = "h2", titleId, eyebrow, lede, label, lines = DEFAULT_LINES, randomThreads }: Props) {
+export function Constellation({ hubs, items, variant, title, titleAs: Title = "h2", titleId, eyebrow, lede, label, lines = DEFAULT_LINES, randomThreads, actions }: Props) {
 	const router = useRouter();
 	const stageRef = useRef<HTMLElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -75,7 +78,8 @@ export function Constellation({ hubs, items, variant, title, titleAs: Title = "h
 		};
 
 		let io: IntersectionObserver | undefined;
-		if (variant === "page" || typeof IntersectionObserver === "undefined") void start();
+		// Above-the-fold variants mount right away; a section waits until it nears the viewport.
+		if (variant !== "section" || typeof IntersectionObserver === "undefined") void start();
 		else {
 			io = new IntersectionObserver((entries) => {
 				if (entries.some((e) => e.isIntersecting)) {
@@ -119,6 +123,15 @@ export function Constellation({ hubs, items, variant, title, titleAs: Title = "h
 					{title}
 				</Title>
 				{lede && <p className={styles.lede}>{lede}</p>}
+				{actions && actions.length > 0 && (
+					<div className={styles.actions}>
+						{actions.map((a, i) => (
+							<Link key={a.href} href={a.href} className={`${styles.cta} ${i === 0 ? styles.ctaPrimary : ""}`}>
+								{a.label}
+							</Link>
+						))}
+					</div>
+				)}
 			</div>
 			<div ref={tipRef} className={styles.tip} hidden />
 		</Tag>

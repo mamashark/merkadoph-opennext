@@ -29,7 +29,7 @@ const TYPES: Record<TypeKey, { label: string; one: string; many: string; list: s
  * Categories are the content types, tiles are real posts/events/projects/services/offers (title, cover,
  * a short detail line, link), and items that share a tag are joined by faint threads.
  */
-export async function HomeConstellation() {
+export async function HomeConstellation({ hero = false }: { hero?: boolean }) {
 	const [blogs, upcoming, past, portfolio, services, promotions] = await Promise.all([
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [], total: 0 }),
@@ -69,7 +69,8 @@ export async function HomeConstellation() {
 			tags: p.tags,
 		})),
 	];
-	if (entries.length === 0) return null;
+	// As the hero it always renders (it holds the page h1); as a section it hides when there is nothing to show.
+	if (entries.length === 0 && !hero) return null;
 
 	// Items that share a tag are joined by a faint thread (one per pair, however many tags they share).
 	const items: ConstellationItem[] = entries.map((e, i) => {
@@ -94,12 +95,25 @@ export async function HomeConstellation() {
 
 	return (
 		<Constellation
-			variant="section"
+			variant={hero ? "hero" : "section"}
 			hubs={hubs}
 			items={items}
-			titleId="constellation-title"
-			title="Everything, connected"
-			lede="Stories, events, projects, services and offers from our community, linked by the tags they share. Open it, then hover a category."
+			titleAs={hero ? "h1" : "h2"}
+			titleId={hero ? "hero-title" : "constellation-title"}
+			title={hero ? "Connecting Filipinos, Celebrating Community" : "Everything, connected"}
+			lede={
+				hero
+					? "Discover stories, events, projects, promotions and services from the community. Open it, then hover a category."
+					: "Stories, events, projects, services and offers from our community, linked by the tags they share. Open it, then hover a category."
+			}
+			actions={
+				hero
+					? [
+							{ href: "/services", label: "Explore services" },
+							{ href: "/events", label: "Upcoming events" },
+						]
+					: undefined
+			}
 			label={`Map of Merkado PH content: ${hubs.map((h) => `${h.label} (${h.count})`).join(", ")}`}
 		/>
 	);

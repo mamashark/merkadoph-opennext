@@ -9,8 +9,6 @@ import type { ConstellationHub, ConstellationItem } from "@/components/constella
 
 /** Newest items per content type drawn as tiles; the totals still show next to each category. */
 const PER_TYPE = 10;
-/** Most-used tags drawn as stars that every tagged item threads to. */
-const MAX_TAGS = 24;
 
 const safe = <T,>(p: Promise<T>, fallback: T) => p.catch(() => fallback);
 
@@ -29,7 +27,7 @@ const TYPES: Record<TypeKey, { label: string; one: string; many: string; list: s
 /**
  * Homepage section: the constellation from the coming-soon page, built from live content.
  * Categories are the content types, tiles are real posts/events/projects/services/offers (title, cover,
- * a short detail line, link), and shared tags are stars that tie items of different types together.
+ * a short detail line, link), and items that share a tag are joined by faint threads.
  */
 export async function HomeConstellation() {
 	const [blogs, upcoming, past, portfolio, services, promotions] = await Promise.all([
@@ -73,36 +71,14 @@ export async function HomeConstellation() {
 	];
 	if (entries.length === 0) return null;
 
-	// Tag stars: the most-used tags among the shown items, each linking to the list where it's used most.
-	const usage = new Map<string, Map<TypeKey, number>>();
-	for (const e of entries) {
-		for (const t of e.tags) {
-			const byType = usage.get(t) ?? new Map<TypeKey, number>();
-			byType.set(e.hub, (byType.get(e.hub) ?? 0) + 1);
-			usage.set(t, byType);
-		}
-	}
-	const total = (m: Map<TypeKey, number>) => [...m.values()].reduce((a, b) => a + b, 0);
-	const topTags = [...usage.entries()].sort((a, b) => total(b[1]) - total(a[1]) || a[0].localeCompare(b[0])).slice(0, MAX_TAGS);
-	const shownTags = new Set(topTags.map(([t]) => t));
-
-	const tagItems: ConstellationItem[] = topTags.map(([tag, byType]) => {
-		const ranked = [...byType.entries()].sort((a, b) => b[1] - a[1]);
-		const [mainType] = ranked[0];
-		return {
-			id: `tag:${tag}`,
-			hub: "tags",
-			shape: "dot",
-			title: `#${tag}`,
-			note: ranked.map(([k, n]) => `${n} ${n === 1 ? TYPES[k].one : TYPES[k].many}`).join(" · "),
-			href: `${TYPES[mainType].list}?${new URLSearchParams({ tag })}`,
-		};
+	// Items that share a tag are joined by a faint thread (one per pair, however many tags they share).
+	const items: ConstellationItem[] = entries.map((e, i) => {
+		const mine = new Set(e.tags.map((t) => t.toLowerCase()));
+		const links = entries
+			.map((other, j) => (j > i && other.tags.some((t) => mine.has(t.toLowerCase())) ? `e${j}` : null))
+			.filter((id): id is string => id !== null);
+		return { ...e, id: `e${i}`, links };
 	});
-
-	const items: ConstellationItem[] = [
-		...entries.map((e) => ({ ...e, links: e.tags.filter((t) => shownTags.has(t)).map((t) => `tag:${t}`) })),
-		...tagItems,
-	];
 
 	const totals: Record<TypeKey, number> = {
 		blogs: blogs.total,
@@ -115,7 +91,6 @@ export async function HomeConstellation() {
 	const hubs: ConstellationHub[] = (Object.keys(TYPES) as TypeKey[])
 		.filter((k) => entries.some((e) => e.hub === k))
 		.map((k) => ({ id: k, label: TYPES[k].label, color: colors[k], count: totals[k] }));
-	if (tagItems.length) hubs.push({ id: "tags", label: "Tags", color: "violet", count: tagItems.length });
 
 	return (
 		<Constellation
@@ -124,7 +99,7 @@ export async function HomeConstellation() {
 			items={items}
 			titleId="constellation-title"
 			title="Everything, connected"
-			lede="Stories, events, projects, services and offers from our community, linked by the tags they share. Open it, then hover a category or a tag."
+			lede="Stories, events, projects, services and offers from our community, linked by the tags they share. Open it, then hover a category."
 			label={`Map of Merkado PH content: ${hubs.map((h) => `${h.label} (${h.count})`).join(", ")}`}
 		/>
 	);

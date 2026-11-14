@@ -159,7 +159,7 @@ export function mountConstellation(o: MountOptions) {
 		const s = forceSimulation<GNode, GLink>(nodes)
 			.force("link", forceLink<GNode, GLink>(links).id((d) => d.id)
 				.distance((l) => (l.kind === "spoke" ? (tgt(l).len ?? 0) : 0))
-				.strength((l) => (l.kind === "spoke" ? 0.7 : l.kind === "cross" && !o.randomThreads ? 0.012 : 0)))
+				.strength((l) => (l.kind === "spoke" ? 0.7 : 0)))
 			.force("hubX", forceX<GNode>((d) => d.tx ?? cx).strength((d) => (d.kind === "hub" ? 0.18 : 0)))
 			.force("hubY", forceY<GNode>((d) => d.ty ?? cy).strength((d) => (d.kind === "hub" ? 0.18 : 0)))
 			.force("charge", forceManyBody<GNode>().strength((d) => (d.kind === "hub" ? -260 : d.tile ? -70 : d.item ? -45 : -34)))

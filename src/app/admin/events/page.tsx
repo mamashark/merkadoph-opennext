@@ -12,6 +12,7 @@ import { ListToolbar, listParams } from "@/components/admin/list-toolbar";
 import { EmptyState, RowActions, Thumb } from "@/components/admin/row-actions";
 import { Badge, StatusBadge } from "@/components/admin/status-badge";
 import { STATE_FILTER } from "@/components/admin/filters";
+import { allTagNames, tagFilter } from "@/lib/tags";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass, cardClass } from "@/lib/ui";
 
@@ -22,11 +23,11 @@ const PER_PAGE = 20;
 export default async function EventsAdminPage({ searchParams }: PageProps<"/admin/events">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), status: param(params, "status"), when: param(params, "when"), sort: param(params, "sort") };
+	const values = { q: param(params, "q").trim(), status: param(params, "status"), when: param(params, "when"), tag: param(params, "tag"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
-	const { rows, total } = await adminListEvents({ ...values, page, perPage: PER_PAGE });
-	const filtered = !!(values.q || values.status || values.when);
+	const [{ rows, total }, tags] = await Promise.all([adminListEvents({ ...values, page, perPage: PER_PAGE }), allTagNames()]);
+	const filtered = !!(values.q || values.status || values.when || values.tag);
 
 	return (
 		<>
@@ -51,6 +52,7 @@ export default async function EventsAdminPage({ searchParams }: PageProps<"/admi
 						searchPlaceholder="Search title or venue…"
 						filters={[
 							STATE_FILTER,
+							tagFilter(tags),
 							{
 								name: "when",
 								label: "When",

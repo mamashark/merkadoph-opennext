@@ -12,6 +12,7 @@ import { ListToolbar, listParams } from "@/components/admin/list-toolbar";
 import { EmptyState, RowActions, Thumb } from "@/components/admin/row-actions";
 import { StatusBadge } from "@/components/admin/status-badge";
 import { STATE_FILTER } from "@/components/admin/filters";
+import { allTagNames, tagFilter } from "@/lib/tags";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass, cardClass } from "@/lib/ui";
 
@@ -22,11 +23,11 @@ const PER_PAGE = 20;
 export default async function BlogsAdminPage({ searchParams }: PageProps<"/admin/blogs">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), status: param(params, "status"), sort: param(params, "sort") };
+	const values = { q: param(params, "q").trim(), status: param(params, "status"), tag: param(params, "tag"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
-	const { blogs, total } = await adminListBlogs({ ...values, page, perPage: PER_PAGE });
-	const filtered = !!(values.q || values.status);
+	const [{ blogs, total }, tags] = await Promise.all([adminListBlogs({ ...values, page, perPage: PER_PAGE }), allTagNames()]);
+	const filtered = !!(values.q || values.status || values.tag);
 
 	return (
 		<>
@@ -49,7 +50,7 @@ export default async function BlogsAdminPage({ searchParams }: PageProps<"/admin
 						basePath="/admin/blogs"
 						values={values}
 						searchPlaceholder="Search title or author…"
-						filters={[STATE_FILTER]}
+						filters={[STATE_FILTER, tagFilter(tags)]}
 						sorts={[
 							{ label: "Last updated", value: "" },
 							{ label: "Publish date", value: "published" },

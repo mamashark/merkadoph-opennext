@@ -85,7 +85,7 @@ export const EVENT_SORTS = {
 	title: { column: "title", ascending: true },
 } as const;
 
-export function adminListEvents(opts: { q?: string; status?: string; when?: string; sort?: string; page?: number; perPage?: number }) {
+export function adminListEvents(opts: { q?: string; status?: string; when?: string; tag?: string; sort?: string; page?: number; perPage?: number }) {
 	return adminList<EventSummary>("events", {
 		columns: SUMMARY,
 		q: opts.q,
@@ -94,7 +94,10 @@ export function adminListEvents(opts: { q?: string; status?: string; when?: stri
 		page: opts.page,
 		perPage: opts.perPage,
 		order: EVENT_SORTS[opts.sort as keyof typeof EVENT_SORTS] ?? EVENT_SORTS.start,
-		refine: (query) => (opts.when === "upcoming" || opts.when === "past" ? query.or(timeFilter(opts.when)) : query),
+		refine: (query) => {
+			const q = opts.when === "upcoming" || opts.when === "past" ? query.or(timeFilter(opts.when)) : query;
+			return opts.tag ? q.contains("tags", [opts.tag]) : q;
+		},
 	});
 }
 

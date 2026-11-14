@@ -100,12 +100,14 @@ export const BLOG_SORTS = {
 export async function adminListBlogs({
 	q,
 	status,
+	tag,
 	sort = "updated",
 	page = 1,
 	perPage = 20,
 }: {
 	q?: string;
 	status?: string;
+	tag?: string;
 	sort?: string;
 	page?: number;
 	perPage?: number;
@@ -115,6 +117,7 @@ export async function adminListBlogs({
 
 	const term = q ? searchTerm(q) : "";
 	if (term) query = query.or(`title.ilike.%${term}%,author_name.ilike.%${term}%`);
+	if (tag) query = query.contains("tags", [tag]);
 
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await query.order(order.column, { ascending: order.ascending, nullsFirst: false }).range(from, from + perPage - 1);

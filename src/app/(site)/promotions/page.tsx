@@ -1,34 +1,44 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CalendarRange } from "lucide-react";
-import { getPublicPromotions, promotionValidity, PROMOTIONS_PER_PAGE } from "@/lib/promotions";
+import { getPromotionTags, getPublicPromotions, promotionValidity, PROMOTIONS_PER_PAGE } from "@/lib/promotions";
 import { pageParam, param } from "@/lib/content";
 import { formatDayRange } from "@/lib/datetime";
 import { pageMetadata } from "@/lib/seo";
-import { ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
+import { ChipFilter, ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 
-// Renders per request (it reads the tab/page from the URL); the data itself comes from the cache.
+// Renders per request (it reads the tab/tag/page from the URL); the data itself comes from the cache.
 
 const description = "Current offers on roofing and renovation work from Merkado PH, including community discounts. Limited time only.";
 
-export async function generateMetadata({ searchParams }: PageProps<"/promotions">): Promise<Metadata> {
+type Show = "current" | "ended";
+
+/** Only known tags filter the list; anything else shows every promotion. */
+async function readFilters(searchParams: PageProps<"/promotions">["searchParams"]) {
 	const params = await searchParams;
-	const ended = param(params, "show") === "ended";
-	const page = pageParam(params);
-	const qs = new URLSearchParams({ ...(ended ? { show: "ended" } : {}), ...(page > 1 ? { page: String(page) } : {}) }).toString();
+	const show: Show = param(params, "show") === "ended" ? "ended" : "current";
+	const tags = await getPromotionTags(show).catch((): string[] => []);
+	return { show, tags, tag: tags.includes(param(params, "tag")) ? param(params, "tag") : "", page: pageParam(params) };
+}
+
+const listHref = (show: Show, tag: string, page = 1) => {
+	const qs = new URLSearchParams({ ...(show === "ended" ? { show } : {}), ...(tag ? { tag } : {}), ...(page > 1 ? { page: String(page) } : {}) }).toString();
+	return qs ? `/promotions?${qs}` : "/promotions";
+};
+
+export async function generateMetadata({ searchParams }: PageProps<"/promotions">): Promise<Metadata> {
+	const { show, tag, page } = await readFilters(searchParams);
 	return pageMetadata({
-		title: `${ended ? "Past promotions" : "Promotions"}${page > 1 ? ` — Page ${page}` : ""}`,
+		title: `${show === "ended" ? "Past promotions" : "Promotions"}${tag ? `: ${tag}` : ""}${page > 1 ? ` — Page ${page}` : ""}`,
 		description,
-		path: qs ? `/promotions?${qs}` : "/promotions",
+		path: listHref(show, tag, page),
 	});
 }
 
 export default async function PromotionsPage({ searchParams }: PageProps<"/promotions">) {
-	const params = await searchParams;
-	const show = param(params, "show") === "ended" ? "ended" : "current";
-	const page = pageParam(params);
-	const { promotions, total } = await getPublicPromotions(show, page);
+	const { show, tags, tag, page } = await readFilters(searchParams);
+	const { promotions, total } = await getPublicPromotions(show, page, PROMOTIONS_PER_PAGE, tag || undefined);
 	if (page > 1 && promotions.length === 0) notFound();
 
 	return (
@@ -44,10 +54,12 @@ export default async function PromotionsPage({ searchParams }: PageProps<"/promo
 				]}
 			/>
 
+			{tags.length > 0 && <ChipFilter label="Filter promotions by tag" allLabel="All promotions" items={tags} current={tag} href={(t) => listHref(show, t)} />}
+
 			{promotions.length === 0 ? (
 				<EmptyNotice
-					title={show === "current" ? "No promotions running right now." : "No ended promotions yet."}
-					description={show === "current" ? "New deals drop here first — abangan!" : "Past offers will be listed here."}
+					title={tag ? `No promotions tagged “${tag}” here.` : show === "current" ? "No promotions running right now." : "No ended promotions yet."}
+					description={tag ? "Try another tag, or browse all promotions." : show === "current" ? "New deals drop here first — abangan!" : "Past offers will be listed here."}
 				/>
 			) : (
 				<>
@@ -88,7 +100,7 @@ export default async function PromotionsPage({ searchParams }: PageProps<"/promo
 						})}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={PROMOTIONS_PER_PAGE} total={total} basePath="/promotions" params={show === "ended" ? { show } : {}} />
+						<Pagination page={page} perPage={PROMOTIONS_PER_PAGE} total={total} basePath="/promotions" params={{ ...(show === "ended" ? { show } : {}), ...(tag ? { tag } : {}) }} />
 					</div>
 				</>
 			)}

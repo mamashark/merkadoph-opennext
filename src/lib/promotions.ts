@@ -60,16 +60,25 @@ function validityFilter(v: Validity | "current") {
 	}
 }
 
-export const getPublicPromotions = cached(async (show: "current" | "ended", page: number = 1, perPage: number = PROMOTIONS_PER_PAGE) => {
+export const getPublicPromotions = cached(async (show: "current" | "ended", page: number = 1, perPage: number = PROMOTIONS_PER_PAGE, tag?: string) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("promotions").select(SUMMARY, { count: "exact" }));
 	query = show === "ended" ? query.lt("ends_at", new Date().toISOString()) : query.or(validityFilter("current"));
+	if (tag) query = query.contains("tags", [tag]);
 	const { data, count, error } = await query
 		.order(show === "ended" ? "ends_at" : "published_at", { ascending: false, nullsFirst: false })
 		.range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load promotions: ${error.message}`);
 	return { promotions: (data ?? []) as PromotionSummary[], total: count ?? 0 };
 }, "promotions:getPublicPromotions", ["promotions"]);
+
+/** Distinct tags of live current or ended promotions, for the tag filter on /promotions. */
+export const getPromotionTags = cached(async (show: "current" | "ended"): Promise<string[]> => {
+	let query = onlyLive(createPublicClient().from("promotions").select("tags"));
+	query = show === "ended" ? query.lt("ends_at", new Date().toISOString()) : query.or(validityFilter("current"));
+	const { data } = await query.limit(1000);
+	return Array.from(new Set((data ?? []).flatMap((r) => (r.tags as string[] | null) ?? []))).sort((a, b) => a.localeCompare(b));
+}, "promotions:getPromotionTags", ["promotions"]);
 
 export const getPublicPromotionBySlug = cache(cached(async (slug: string): Promise<Promotion | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("promotions").select("*").eq("slug", slug)).maybeSingle();
@@ -90,7 +99,7 @@ export const PROMOTION_SORTS = {
 	title: { column: "title", ascending: true },
 } as const;
 
-export function adminListPromotions(opts: { q?: string; status?: string; validity?: string; sort?: string; page?: number; perPage?: number }) {
+export function adminListPromotions(opts: { q?: string; status?: string; validity?: string; tag?: string; sort?: string; page?: number; perPage?: number }) {
 	const v = opts.validity as Validity;
 	return adminList<PromotionSummary>("promotions", {
 		columns: SUMMARY,
@@ -101,10 +110,11 @@ export function adminListPromotions(opts: { q?: string; status?: string; validit
 		perPage: opts.perPage,
 		order: PROMOTION_SORTS[opts.sort as keyof typeof PROMOTION_SORTS] ?? PROMOTION_SORTS.updated,
 		refine: (query) => {
-			if (v === "ended") return query.lt("ends_at", new Date().toISOString());
-			if (v === "upcoming") return query.gt("starts_at", new Date().toISOString());
-			if (v === "active") return query.or(validityFilter("active"));
-			return query;
+			const q = opts.tag ? query.contains("tags", [opts.tag]) : query;
+			if (v === "ended") return q.lt("ends_at", new Date().toISOString());
+			if (v === "upcoming") return q.gt("starts_at", new Date().toISOString());
+			if (v === "active") return q.or(validityFilter("active"));
+			return q;
 		},
 	});
 }

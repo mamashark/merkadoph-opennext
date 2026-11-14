@@ -50,10 +50,11 @@ export type ServiceSummary = Pick<
 const SUMMARY = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,category,price_label,is_featured,sort_order,status,published_at,updated_at";
 export const SERVICES_PER_PAGE = 12;
 
-export const getPublicServices = cached(async (category: string | undefined, page: number = 1, perPage: number = SERVICES_PER_PAGE) => {
+export const getPublicServices = cached(async (category: string | undefined, page: number = 1, perPage: number = SERVICES_PER_PAGE, tag?: string) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("services").select(SUMMARY, { count: "exact" }));
 	if (category) query = query.eq("category", category);
+	if (tag) query = query.contains("tags", [tag]);
 	const { data, count, error } = await query
 		.order("is_featured", { ascending: false })
 		.order("sort_order", { ascending: true })
@@ -69,6 +70,12 @@ export const getServiceCategories = cached(async (scope: "public" | "admin" = "p
 	const { data } = await (scope === "admin" ? base : onlyLive(base)).limit(1000);
 	return Array.from(new Set((data ?? []).map((r) => r.category as string))).sort((a, b) => a.localeCompare(b));
 }, "services:getServiceCategories", ["services"]);
+
+/** Distinct tags of live services, for the tag filter on /services. */
+export const getServiceTags = cached(async (): Promise<string[]> => {
+	const { data } = await onlyLive(createPublicClient().from("services").select("tags")).limit(1000);
+	return Array.from(new Set((data ?? []).flatMap((r) => (r.tags as string[] | null) ?? []))).sort((a, b) => a.localeCompare(b));
+}, "services:getServiceTags", ["services"]);
 
 export const getPublicServiceBySlug = cache(cached(async (slug: string): Promise<Service | null> => {
 	const { data, error } = await onlyLive(createPublicClient().from("services").select("*").eq("slug", slug)).maybeSingle();
@@ -89,7 +96,7 @@ export const SERVICE_SORTS = {
 	title: { column: "title", ascending: true },
 } as const;
 
-export function adminListServices(opts: { q?: string; status?: string; category?: string; featured?: string; sort?: string; page?: number; perPage?: number }) {
+export function adminListServices(opts: { q?: string; status?: string; category?: string; featured?: string; tag?: string; sort?: string; page?: number; perPage?: number }) {
 	return adminList<ServiceSummary>("services", {
 		columns: SUMMARY,
 		q: opts.q,
@@ -103,6 +110,7 @@ export function adminListServices(opts: { q?: string; status?: string; category?
 			if (opts.category) q = q.eq("category", opts.category);
 			if (opts.featured === "yes") q = q.eq("is_featured", true);
 			if (opts.featured === "no") q = q.eq("is_featured", false);
+			if (opts.tag) q = q.contains("tags", [opts.tag]);
 			return q;
 		},
 	});

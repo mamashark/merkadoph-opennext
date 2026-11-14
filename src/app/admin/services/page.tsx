@@ -11,6 +11,7 @@ import { ListToolbar, listParams } from "@/components/admin/list-toolbar";
 import { EmptyState, RowActions, Thumb } from "@/components/admin/row-actions";
 import { Badge, StatusBadge } from "@/components/admin/status-badge";
 import { STATE_FILTER } from "@/components/admin/filters";
+import { allTagNames, tagFilter } from "@/lib/tags";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass, cardClass } from "@/lib/ui";
 
@@ -26,12 +27,13 @@ export default async function ServicesAdminPage({ searchParams }: PageProps<"/ad
 		status: param(params, "status"),
 		category: param(params, "category"),
 		featured: param(params, "featured"),
+		tag: param(params, "tag"),
 		sort: param(params, "sort"),
 	};
 	const page = pageParam(params);
 
-	const [{ rows, total }, categories] = await Promise.all([adminListServices({ ...values, page, perPage: PER_PAGE }), getServiceCategories("admin")]);
-	const filtered = !!(values.q || values.status || values.category || values.featured);
+	const [{ rows, total }, categories, tags] = await Promise.all([adminListServices({ ...values, page, perPage: PER_PAGE }), getServiceCategories("admin"), allTagNames()]);
+	const filtered = !!(values.q || values.status || values.category || values.featured || values.tag);
 
 	return (
 		<>
@@ -56,6 +58,7 @@ export default async function ServicesAdminPage({ searchParams }: PageProps<"/ad
 						searchPlaceholder="Search title or category…"
 						filters={[
 							STATE_FILTER,
+							tagFilter(tags),
 							{ name: "category", label: "Category", options: [{ label: "All categories", value: "" }, ...categories.map((c) => ({ label: c, value: c }))] },
 							{
 								name: "featured",

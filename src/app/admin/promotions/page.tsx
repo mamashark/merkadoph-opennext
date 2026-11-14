@@ -12,6 +12,7 @@ import { ListToolbar, listParams } from "@/components/admin/list-toolbar";
 import { EmptyState, RowActions, Thumb } from "@/components/admin/row-actions";
 import { Badge, StatusBadge } from "@/components/admin/status-badge";
 import { STATE_FILTER } from "@/components/admin/filters";
+import { allTagNames, tagFilter } from "@/lib/tags";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass, cardClass } from "@/lib/ui";
 
@@ -23,11 +24,11 @@ const validityBadge = { active: { tone: "published", label: "Running" }, upcomin
 export default async function PromotionsAdminPage({ searchParams }: PageProps<"/admin/promotions">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), status: param(params, "status"), validity: param(params, "validity"), sort: param(params, "sort") };
+	const values = { q: param(params, "q").trim(), status: param(params, "status"), validity: param(params, "validity"), tag: param(params, "tag"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
-	const { rows, total } = await adminListPromotions({ ...values, page, perPage: PER_PAGE });
-	const filtered = !!(values.q || values.status || values.validity);
+	const [{ rows, total }, tags] = await Promise.all([adminListPromotions({ ...values, page, perPage: PER_PAGE }), allTagNames()]);
+	const filtered = !!(values.q || values.status || values.validity || values.tag);
 
 	return (
 		<>
@@ -52,6 +53,7 @@ export default async function PromotionsAdminPage({ searchParams }: PageProps<"/
 						searchPlaceholder="Search title, code or discount…"
 						filters={[
 							STATE_FILTER,
+							tagFilter(tags),
 							{
 								name: "validity",
 								label: "Validity",

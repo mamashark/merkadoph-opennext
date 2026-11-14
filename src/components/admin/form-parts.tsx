@@ -7,6 +7,8 @@ import { ConfirmButton } from "@/components/ui/confirm-button";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { StatusBadge } from "./status-badge";
 import { SeoFields } from "./seo-fields";
+import { TagInput } from "./tag-input";
+import { allTagNames } from "@/lib/tags";
 import { SITE_URL } from "@/lib/env";
 import { cardClass, cn, hintClass, inputClass, labelClass } from "@/lib/ui";
 
@@ -176,12 +178,24 @@ export function CoverCard({ row, title = "Cover image" }: { row?: Base; title?: 
 	);
 }
 
-export function TagsCard({ row, placeholder }: { row?: Base; placeholder: string }) {
+/** Tags come from the shared list in Admin → Tags; new names typed here are added to it on save. */
+export async function TagsCard({ row, placeholder }: { row?: Pick<Base, "tags">; placeholder: string }) {
+	const suggestions = await allTagNames();
 	return (
 		<FormCard title="Tags">
-			<Field id="tags" label="Tags" hint="Comma separated, up to 10.">
-				<input id="tags" name="tags" defaultValue={row?.tags.join(", ")} placeholder={placeholder} className={inputClass} />
-			</Field>
+			<div>
+				<label htmlFor="tags" className={labelClass}>
+					Tags
+				</label>
+				<TagInput id="tags" name="tags" defaultValue={row?.tags.join(", ")} placeholder={placeholder} suggestions={suggestions} describedBy="tags-hint" />
+				<p id="tags-hint" className={hintClass}>
+					Comma separated, up to 10. Shared with every content type —{" "}
+					<a href="/admin/tags" className="underline hover:text-teal-700 dark:hover:text-teal-300">
+						manage tags
+					</a>
+					.
+				</p>
+			</div>
 		</FormCard>
 	);
 }

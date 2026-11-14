@@ -16,6 +16,7 @@ import { cn } from "@/lib/ui";
 import { SiteShell } from "@/components/site/site-shell";
 import { JsonLd } from "@/components/site/json-ld";
 import { ContactForm } from "./contact-form";
+import { HomeConstellation } from "./home-constellation";
 
 const DESCRIPTION = "Discover Filipino stories, community events, Filipino-owned businesses and special offers across Sweden. Mabuhay! Välkommen!";
 
@@ -175,6 +176,11 @@ export async function HomePage() {
 						))}
 					</ul>
 				</nav>
+
+				{/* Constellation: every content type and the tags that connect them (loads its graph on scroll) */}
+				<div className="mt-12 sm:mt-20">
+					<HomeConstellation />
+				</div>
 
 				{/* Blogs */}
 				{blogs.blogs.length > 0 && (

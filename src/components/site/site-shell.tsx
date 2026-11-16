@@ -11,22 +11,24 @@ const SOCIAL_LABELS: Record<string, string> = { facebook: "Facebook", instagram:
 
 /**
  * Public site chrome (header with section navigation + footer), shared by (site)/* and the homepage.
- * Every page is #faf9f6 in light mode; `tone="home"` also uses the homepage's dark palette (see globals.css).
+ * Every page is #faf9f6 in light mode; `tone="home"` also uses the homepage's dark palette (see globals.css);
+ * `tone="night"` matches the Highlights homepage (day sky in light mode, night sky in dark mode).
  */
-export async function SiteShell({ children, contactHref, tone = "default" }: { children: React.ReactNode; contactHref?: string; tone?: "default" | "home" }) {
+export async function SiteShell({ children, contactHref, tone = "default" }: { children: React.ReactNode; contactHref?: string; tone?: "default" | "home" | "night" }) {
 	const home = tone === "home";
+	const night = tone === "night";
 	const [shop, seo] = await Promise.all([getShopSettings().catch(() => null), getSeoSettings()]);
 	const shopEnabled = shop?.enabled ?? false;
 	const social = socialLinks(seo);
 	const addressLines = [seo.street, [seo.postal_code, seo.city].filter(Boolean).join(" ")].filter(Boolean);
 	const analyticsToken = process.env.NODE_ENV === "production" ? seo.cf_analytics_token : "";
 	return (
-		<div className={cn("flex min-h-dvh flex-col text-stone-900 dark:text-stone-100", home ? "bg-home-bg" : "bg-[#faf9f6] dark:bg-stone-950")}>
+		<div className={cn("flex min-h-dvh flex-col text-stone-900 dark:text-stone-100", night ? "bg-[#f7f5ee] dark:bg-[#03051a]" : home ? "bg-home-bg" : "bg-[#faf9f6] dark:bg-stone-950")}>
 			<a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-stone-900">
 				Skip to content
 			</a>
 			<header
-				className={cn("sticky top-0 z-30 border-b border-amber-900/10 backdrop-blur dark:border-white/10", home ? "bg-home-bg/90" : "bg-[#faf9f6]/90 dark:bg-stone-950/85")}
+				className={cn("sticky top-0 z-30 border-b border-amber-900/10 backdrop-blur dark:border-white/10", night ? "bg-[#f7f5ee]/90 dark:bg-[#03051a]/85" : home ? "bg-home-bg/90" : "bg-[#faf9f6]/90 dark:bg-stone-950/85")}
 			>
 				<div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
 					<Link href="/" aria-label="Merkado PH home" className="w-fit rounded-lg dark:bg-white dark:px-2 dark:py-1">

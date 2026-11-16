@@ -34,6 +34,26 @@ export type MountOptions = {
 	onHint: (text: string) => void;
 	onFolded: (folded: boolean) => void;
 	navigate: (href: string) => void;
+	/* Opt-in hooks (the homepage uses them; the coming-soon page does not, so it keeps its behaviour). */
+	/** Hint shown once the graph is open. */
+	unfoldedHint?: string;
+	/** Click / Enter on a category. When set, it replaces "pin the spotlight". */
+	onHubActivate?: (hubId: string) => void;
+	/** Pointer or focus enters (id + element) or leaves (null) a category. */
+	onHubHover?: (hubId: string | null, el: SVGGElement | null) => void;
+	/** Click on an item. Return true when handled, so the item's link is not followed. */
+	onItemActivate?: (item: ConstellationItem) => boolean;
+};
+
+export type ConstellationEngine = {
+	setFolded: (next: boolean) => void;
+	/** Where a category sits in the graph (SVG px, same as the stage box), if shown. */
+	hubPoint: (hubId: string) => { x: number; y: number } | null;
+	/** The category element, e.g. to give focus back after leaving a section. */
+	hubElement: (hubId: string) => SVGGElement | null;
+	/** Clears any spotlight. */
+	reset: () => void;
+	destroy: () => void;
 };
 
 export const UNFOLDED_HINT = "Hover a category · drag to rearrange";
@@ -60,7 +80,7 @@ interface GLink extends SimulationLinkDatum<GNode> {
 const src = (l: GLink) => l.source as GNode;
 const tgt = (l: GLink) => l.target as GNode;
 
-export function mountConstellation(o: MountOptions) {
+export function mountConstellation(o: MountOptions): ConstellationEngine {
 	const { stage, svg: svgEl, tip, hubs: HUBS, items: ITEMS, lines: LINES } = o;
 	const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 	let lineIdx = Math.floor(Math.random() * LINES.length);
@@ -75,7 +95,9 @@ export function mountConstellation(o: MountOptions) {
 	let busy = false;
 	let sim: Simulation<GNode, GLink> | undefined;
 	let drift: Timer | undefined;
-	let api: { unfold: () => void; fold: () => void } | undefined;
+	let api:
+		| { unfold: () => void; fold: () => void; reset: () => void; hubPoint: (id: string) => { x: number; y: number } | null; hubElement: (id: string) => SVGGElement | null }
+		| undefined;
 	const timeouts = new Set<ReturnType<typeof setTimeout>>();
 	const later = (fn: () => void, ms: number) => {
 		const t = setTimeout(() => {
@@ -256,7 +278,11 @@ export function mountConstellation(o: MountOptions) {
 		});
 
 		const hubs = nodeSel.filter((d) => d.kind === "hub").attr("tabindex", (d) => (d.shown ? 0 : -1))
-			.attr("role", "button").attr("aria-label", (d) => `${d.label}: ${d.count}`);
+			.attr("role", "button")
+			.attr("aria-label", (d) => {
+				const desc = HUBS.find((h) => h.id === d.hub)?.description;
+				return o.onHubActivate ? `${d.label} (${d.count})${desc ? `: ${desc}` : ""}. Open section` : `${d.label}: ${d.count}`;
+			});
 		hubs.append("rect").attr("x", -5).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", (d) => d.color ?? BLUE);
 		const label = hubs.append("text").attr("x", 13).attr("y", -9).attr("fill", INK).attr("font-size", small ? 12 : 14);
 		label.append("tspan").text((d) => d.label ?? "");
@@ -281,10 +307,21 @@ export function mountConstellation(o: MountOptions) {
 			linkSel.attr("stroke-opacity", (l) => (linkShown(l) ? baseOp(l) : 0));
 			nodeSel.attr("opacity", (n) => (n.shown ? 1 : 0));
 		};
-		hubs.on("mouseenter focus", (_, h) => { if (!busy) spotlight(h); })
-			.on("mouseleave blur", () => { if (!busy) (pinned ? spotlight(pinned) : reset()); })
+		let dragging = false;
+		hubs.on("mouseenter focus", (e: Event, h) => {
+			if (busy || dragging) return;
+			spotlight(h);
+			o.onHubHover?.(h.hub!, e.currentTarget as SVGGElement);
+		})
+			.on("mouseleave blur", () => {
+				if (busy || dragging) return;
+				if (pinned) spotlight(pinned);
+				else reset();
+				o.onHubHover?.(null, null);
+			})
 			.on("click", (e: MouseEvent, h) => {
 				e.stopPropagation();
+				if (o.onHubActivate) return o.onHubActivate(h.hub!);
 				pinned = pinned === h ? null : h;
 				if (pinned) spotlight(h);
 				else reset();
@@ -292,6 +329,7 @@ export function mountConstellation(o: MountOptions) {
 			.on("keydown", (e: KeyboardEvent, h) => {
 				if (e.key !== "Enter" && e.key !== " ") return;
 				e.preventDefault();
+				if (o.onHubActivate) return o.onHubActivate(h.hub!);
 				pinned = pinned === h ? null : h;
 				if (pinned) spotlight(h);
 				else reset();
@@ -326,6 +364,10 @@ export function mountConstellation(o: MountOptions) {
 			.on("mouseleave", hideTip)
 			.on("click", (e: MouseEvent, d) => {
 				e.stopPropagation();
+				if (d.item && o.onItemActivate?.(d.item)) {
+					e.preventDefault();
+					return hideTip();
+				}
 				if (!d.item?.href) return showTip(d);
 				if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
 				e.preventDefault();
@@ -334,9 +376,9 @@ export function mountConstellation(o: MountOptions) {
 		linked.on("focus", (_, d) => showTip(d)).on("blur", hideTip);
 
 		hubs.call(drag<SVGGElement, GNode>()
-			.on("start", (e, d) => { if (!e.active) s.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
+			.on("start", (e, d) => { dragging = true; o.onHubHover?.(null, null); if (!e.active) s.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
 			.on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
-			.on("end", (e, d) => { if (!e.active) s.alphaTarget(0); d.fx = null; d.fy = null; }));
+			.on("end", (e, d) => { dragging = false; if (!e.active) s.alphaTarget(0); d.fx = null; d.fy = null; }));
 
 		const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 		const render = () => {
@@ -415,6 +457,7 @@ export function mountConstellation(o: MountOptions) {
 			busy = true;
 			pinned = null;
 			hideTip();
+			o.onHubHover?.(null, null);
 			const start = nodes.map((n) => [n.x ?? cx, n.y ?? cy]);
 			const dur = reduceMotion ? 0 : 750;
 			const others = nodeSel.filter((n) => n.kind !== "center");
@@ -455,14 +498,26 @@ export function mountConstellation(o: MountOptions) {
 			});
 		}
 
-		api = { unfold, fold };
+		api = {
+			unfold,
+			fold,
+			reset: () => {
+				pinned = null;
+				reset();
+			},
+			hubPoint: (id) => {
+				const n = byId.get(`hub:${id}`);
+				return n?.shown ? { x: n.x ?? cx, y: n.y ?? cy } : null;
+			},
+			hubElement: (id) => hubs.filter((d) => d.hub === id).node(),
+		};
 	}
 
 	const setFolded = (next: boolean) => {
 		if (busy || !api || next === folded) return;
 		folded = next;
 		o.onFolded(next);
-		if (!next) o.onHint(UNFOLDED_HINT);
+		if (!next) o.onHint(o.unfoldedHint ?? UNFOLDED_HINT);
 		if (next) api.fold();
 		else api.unfold();
 	};
@@ -494,6 +549,9 @@ export function mountConstellation(o: MountOptions) {
 
 	return {
 		setFolded,
+		hubPoint: (id) => api?.hubPoint(id) ?? null,
+		hubElement: (id) => api?.hubElement(id) ?? null,
+		reset: () => api?.reset(),
 		destroy() {
 			stage.removeEventListener("click", onStageClick);
 			window.removeEventListener("resize", onResize);

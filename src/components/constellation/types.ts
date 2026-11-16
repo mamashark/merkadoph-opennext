@@ -10,6 +10,8 @@ export type ConstellationHub = {
 	dots?: number;
 	/** Number shown next to the label. Defaults to items + dots. */
 	count?: number;
+	/** One line about the category (screen-reader label and hover preview). */
+	description?: string;
 };
 
 export type ConstellationItem = {

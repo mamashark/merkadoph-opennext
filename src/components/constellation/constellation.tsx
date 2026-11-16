@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IBM_Plex_Mono } from "next/font/google";
 import type { ConstellationHub, ConstellationItem, ConstellationLine } from "./types";
+import { plexMono } from "./fonts";
 import styles from "./constellation.module.css";
-
-const plexMono = IBM_Plex_Mono({ variable: "--font-plex-mono", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
 
 /** Shakespeare and Rizal cues: one is drawn at random on each visit and each time the graph folds again. */
 export const DEFAULT_LINES: ConstellationLine[] = [

@@ -15,6 +15,7 @@ import { ContactForm } from "@/components/home/contact-form";
 import { plexMono } from "@/components/constellation/fonts";
 import type { ConstellationColor, ConstellationHub, ConstellationItem } from "@/components/constellation/types";
 import { HighlightsStage } from "./highlights-stage";
+import type { WorldInfo } from "./highlights-world";
 import { ChipFilter } from "./chip-filter";
 import styles from "./highlights.module.css";
 
@@ -38,9 +39,14 @@ const glyph = (title: string) => (title.split(/[\s:—-]+/).find((w) => w.length
 /** Excerpts can carry Markdown (e.g. imported posts); cards show plain text. */
 const plain = (s: string | null | undefined) => (s ? toPlainText(s) : "");
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** Short excerpt for the preview panel inside a Highlight. */
+const clip = (s: string | null | undefined, n = 240) => {
+	const t = plain(s);
+	return t.length > n ? `${t.slice(0, t.lastIndexOf(" ", n - 1) > n * 0.6 ? t.lastIndexOf(" ", n - 1) : n - 1).trimEnd()}…` : t;
+};
 
 type WorldId = "blogs" | "events" | "portfolio" | "services" | "announcements" | "promotions";
-type World = { id: WorldId; label: string; sub: string; color: ConstellationColor; count: number; list: string; dots: number };
+type World = { id: WorldId; label: string; sub: string; color: ConstellationColor; count: number; list: string; dots: number; allLabel: string; cta: string };
 
 export async function HighlightsHome() {
 	const [blogsRes, pinned, notices, upcoming, past, portfolio, services, promotions, seo] = await Promise.all([
@@ -63,12 +69,12 @@ export async function HighlightsHome() {
 
 	const worlds: World[] = (
 		[
-			{ id: "blogs", label: "Blogs", sub: "Stories about Filipino culture", color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
-			{ id: "events", label: "Events", sub: "Festivals, pop-ups, gatherings", color: "red", count: upcoming.total + past.total, list: "/events", dots: 10, has: events.length },
-			{ id: "portfolio", label: "Portfolio", sub: "Projects and pop-ups, year by year", color: "sun", count: portfolio.total, list: "/portfolio", dots: 14, has: portfolio.portfolios.length },
-			{ id: "services", label: "Services", sub: "Work we take on", color: "blue", count: services.total, list: "/services", dots: 8, has: services.services.length },
-			{ id: "announcements", label: "Announcements", sub: "Community notices", color: "violet", count: notices.total, list: `/blogs?tag=${encodeURIComponent(ANNOUNCEMENT_TAG)}`, dots: 6, has: notices.blogs.length },
-			{ id: "promotions", label: "Promotions", sub: "Offers from friends of Merkado", color: "orange", count: promotions.total, list: "/promotions", dots: 6, has: promotions.promotions.length },
+			{ id: "blogs", allLabel: "All stories", cta: "Read the full story", label: "Blogs", sub: "Stories about Filipino culture", color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
+			{ id: "events", allLabel: "All events", cta: "Event details", label: "Events", sub: "Festivals, pop-ups, gatherings", color: "red", count: upcoming.total + past.total, list: "/events", dots: 10, has: events.length },
+			{ id: "portfolio", allLabel: "All projects", cta: "View the project", label: "Portfolio", sub: "Projects and pop-ups, year by year", color: "sun", count: portfolio.total, list: "/portfolio", dots: 14, has: portfolio.portfolios.length },
+			{ id: "services", allLabel: "All services", cta: "About this service", label: "Services", sub: "Work we take on", color: "blue", count: services.total, list: "/services", dots: 8, has: services.services.length },
+			{ id: "announcements", allLabel: "All announcements", cta: "Read the announcement", label: "Announcements", sub: "Community notices", color: "violet", count: notices.total, list: `/blogs?tag=${encodeURIComponent(ANNOUNCEMENT_TAG)}`, dots: 6, has: notices.blogs.length },
+			{ id: "promotions", allLabel: "All offers", cta: "View the offer", label: "Promotions", sub: "Offers from friends of Merkado", color: "orange", count: promotions.total, list: "/promotions", dots: 6, has: promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
 		.filter((w) => w.has > 0)
@@ -77,9 +83,22 @@ export async function HighlightsHome() {
 
 	/* ------------------------- Graph: hubs + tiles ------------------------- */
 
-	type Entry = Omit<ConstellationItem, "links"> & { id: string; tags: string[] };
+	/** A graph tile plus what the Highlight's preview panel shows. */
+	type Entry = Omit<ConstellationItem, "links"> & { id: string; tags: string[]; slug: string; excerpt: string; cover?: string; coverAlt: string };
 	const entries: Entry[] = [
-		...stories.map((b) => ({ id: `blog-${b.slug}`, hub: "blogs", title: b.title, note: firstTag(b.tags) ?? formatDate(b.published_at), image: thumb(b.cover_image_url), href: `/blogs/${b.slug}`, tags: shownTags(b.tags) })),
+		...stories.map((b) => ({
+			id: `blog-${b.slug}`,
+			hub: "blogs",
+			title: b.title,
+			note: [firstTag(b.tags) && cap(firstTag(b.tags)!), formatDate(b.published_at)].filter(Boolean).join(" · "),
+			image: thumb(b.cover_image_url),
+			href: `/blogs/${b.slug}`,
+			tags: shownTags(b.tags),
+			slug: b.slug,
+			excerpt: clip(b.excerpt),
+			cover: b.cover_image_url ?? undefined,
+			coverAlt: b.cover_image_alt || "",
+		})),
 		...events.map((e) => ({
 			id: `event-${e.slug}`,
 			hub: "events",
@@ -88,6 +107,10 @@ export async function HighlightsHome() {
 			image: thumb(e.cover_image_url),
 			href: `/events/${e.slug}`,
 			tags: shownTags(e.tags),
+			slug: e.slug,
+			excerpt: clip(e.excerpt),
+			cover: e.cover_image_url ?? undefined,
+			coverAlt: e.cover_image_alt || "",
 		})),
 		...portfolio.portfolios.map((p) => ({
 			id: `project-${p.slug}`,
@@ -97,9 +120,37 @@ export async function HighlightsHome() {
 			image: thumb(portfolioCover(p)?.url),
 			href: `/portfolio/${p.slug}`,
 			tags: shownTags(p.tags),
+			slug: p.slug,
+			excerpt: clip(p.excerpt),
+			cover: portfolioCover(p)?.url,
+			coverAlt: portfolioCover(p)?.alt ?? "",
 		})),
-		...services.services.map((s) => ({ id: `service-${s.slug}`, hub: "services", title: s.title, note: s.price_label || s.category || undefined, image: thumb(s.cover_image_url), href: `/services/${s.slug}`, tags: shownTags(s.tags) })),
-		...notices.blogs.map((b) => ({ id: `notice-${b.slug}`, hub: "announcements", title: b.title, note: b.author_name || "Merkado PH", image: thumb(b.cover_image_url), href: `/blogs/${b.slug}`, tags: shownTags(b.tags) })),
+		...services.services.map((s) => ({
+			id: `service-${s.slug}`,
+			hub: "services",
+			title: s.title,
+			note: s.price_label || s.category || undefined,
+			image: thumb(s.cover_image_url),
+			href: `/services/${s.slug}`,
+			tags: shownTags(s.tags),
+			slug: s.slug,
+			excerpt: clip(s.excerpt),
+			cover: s.cover_image_url ?? undefined,
+			coverAlt: s.cover_image_alt || "",
+		})),
+		...notices.blogs.map((b) => ({
+			id: `notice-${b.slug}`,
+			hub: "announcements",
+			title: b.title,
+			note: [b.author_name || "Merkado PH", b.published_at && formatDate(b.published_at, { month: "short", year: "numeric" })].filter(Boolean).join(" · "),
+			image: thumb(b.cover_image_url),
+			href: `/blogs/${b.slug}`,
+			tags: shownTags(b.tags),
+			slug: b.slug,
+			excerpt: clip(b.excerpt),
+			cover: b.cover_image_url ?? undefined,
+			coverAlt: b.cover_image_alt || "",
+		})),
 		...promotions.promotions.map((p) => ({
 			id: `promo-${p.slug}`,
 			hub: "promotions",
@@ -108,14 +159,33 @@ export async function HighlightsHome() {
 			image: thumb(p.cover_image_url),
 			href: `/promotions/${p.slug}`,
 			tags: shownTags(p.tags),
+			slug: p.slug,
+			excerpt: clip(p.excerpt),
+			cover: p.cover_image_url ?? undefined,
+			coverAlt: p.cover_image_alt || "",
 		})),
 	];
 	// Items that share a tag are joined by a faint thread (one per pair).
-	const items: ConstellationItem[] = entries.map((e, i) => {
+	const items: ConstellationItem[] = entries.map(({ slug: _s, excerpt: _e, cover: _c, coverAlt: _a, ...e }, i) => {
 		const mine = new Set(e.tags.map((t) => t.toLowerCase()));
 		const links = entries.slice(i + 1).filter((o) => o.tags.some((t) => mine.has(t.toLowerCase()))).map((o) => o.id);
 		return { ...e, links };
 	});
+	// What you see when you zoom into a Highlight.
+	const worldInfo: WorldInfo[] = worlds.map((w) => ({
+		id: w.id,
+		n: W[w.id]!.n,
+		label: w.label,
+		sub: w.sub,
+		color: w.color,
+		count: w.count,
+		list: w.list,
+		allLabel: w.allLabel,
+		cta: w.cta,
+		entries: entries
+			.filter((e) => e.hub === w.id)
+			.map((e) => ({ slug: e.slug, itemId: e.id, title: e.title, note: e.note || undefined, thumb: e.image, cover: e.cover, coverAlt: e.coverAlt, excerpt: e.excerpt, href: e.href!, tags: e.tags })),
+	}));
 	const hubs: ConstellationHub[] = worlds.map((w) => ({ id: w.id, label: w.label, color: w.color, count: w.count, dots: w.dots, description: w.sub }));
 	const label = `Highlights of Merkado PH: ${worlds.map((w) => `${w.label} (${w.count})`).join(", ")}. The same content is listed below.`;
 
@@ -160,7 +230,7 @@ export async function HighlightsHome() {
 	const storyCats = Array.from(new Set(stories.slice(0, 5).map((b) => firstTag(b.tags)).filter((t): t is string => !!t))).map(cap);
 
 	return (
-		<SiteShell contactHref="#contact" tone="night">
+		<SiteShell contactHref="#contact" tone="night" revealAt="index">
 			<JsonLd
 				data={{
 					"@context": "https://schema.org",
@@ -183,6 +253,7 @@ export async function HighlightsHome() {
 					title="Merkado PH"
 					lede="The store has a new home. This is what comes next: Filipino culture, festivals and pop-ups, and three years of stories from our community."
 					label={label}
+					worlds={worldInfo}
 				/>
 
 				{/* About + index */}

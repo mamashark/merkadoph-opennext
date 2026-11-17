@@ -281,7 +281,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			.attr("role", "button")
 			.attr("aria-label", (d) => {
 				const desc = HUBS.find((h) => h.id === d.hub)?.description;
-				return o.onHubActivate ? `${d.label} (${d.count})${desc ? `: ${desc}` : ""}. Open section` : `${d.label}: ${d.count}`;
+				return o.onHubActivate ? `${d.label} (${d.count})${desc ? `: ${desc}` : ""}. Zoom in` : `${d.label}: ${d.count}`;
 			});
 		hubs.append("rect").attr("x", -5).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", (d) => d.color ?? BLUE);
 		const label = hubs.append("text").attr("x", 13).attr("y", -9).attr("fill", INK).attr("font-size", small ? 12 : 14);
@@ -523,7 +523,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 	};
 
 	const onStageClick = (e: MouseEvent) => {
-		if ((e.target as Element).closest("button, a")) return;
+		if ((e.target as Element).closest("button, a, [data-no-unfold]")) return;
 		if (folded) setFolded(false);
 	};
 	let resizeT: ReturnType<typeof setTimeout> | undefined;

@@ -53,3 +53,6 @@ next-env.d.ts
 
 /local
 !.env.production
+
+# Personal Claude Code instructions
+CLAUDE.local.md

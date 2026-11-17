@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { DEFAULT_LINES } from "@/components/constellation/constellation";
 import type { ConstellationEngine } from "@/components/constellation/engine";
 import type { ConstellationHub, ConstellationItem } from "@/components/constellation/types";
+import { HighlightsWorld, type WorldInfo } from "./highlights-world";
 import styles from "./highlights.module.css";
 
-export const UNFOLDED_HINT = "Hover a category · click to enter · drag to rearrange";
+export const UNFOLDED_HINT = "Hover a category · click to zoom in · drag to rearrange";
 
 type Props = {
 	hubs: ConstellationHub[];
@@ -16,7 +17,14 @@ type Props = {
 	title: string;
 	lede: string;
 	label: string;
+	worlds: WorldInfo[];
 };
+
+/** Which Highlight is zoomed into (and which entry is open). Mirrored in the URL: ?world=blogs&entry=<slug>. */
+type WorldView = { id: string; entry: string | null; leaving: boolean; instant: boolean };
+/** Our history entries carry their depth (1 = inside a Highlight, 2 = an entry), so "back" buttons can use history.back(). */
+const level = (v: { entry: string | null } | null) => (!v ? 0 : v.entry ? 2 : 1);
+const ZOOM = 3.4;
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -27,7 +35,7 @@ const canHover = () => window.matchMedia("(hover: hover)").matches;
  * its entries; clicking it "dives" into that section below, and "Back to highlights" climbs back out.
  * Also runs the page-wide bits: reveal-on-scroll, [data-dive] / [data-back] links, deep links (#blogs).
  */
-export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Props) {
+export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worlds }: Props) {
 	const router = useRouter();
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -43,6 +51,12 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 	const [peekOpen, setPeekOpen] = useState(false);
 	const peekRef = useRef<HTMLDivElement>(null);
 	const pendingPeekEl = useRef<SVGGElement | null>(null);
+	const [world, setWorldState] = useState<WorldView | null>(null);
+	const worldRef = useRef<WorldView | null>(null);
+	const setWorld = useCallback((v: WorldView | null) => {
+		worldRef.current = v;
+		setWorldState(v);
+	}, []);
 
 	/* ------------------------------ Camera ------------------------------ */
 
@@ -58,11 +72,11 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 	}, []);
 
 	const lean = useCallback((id: string) => {
-		const p = engineRef.current?.hubPoint(id), svg = svgRef.current, stage = stageRef.current;
-		if (!p || !svg || !stage || reduced()) return;
-		const { width, height } = stage.getBoundingClientRect();
+		const p = engineRef.current?.hubPoint(id), svg = svgRef.current;
+		if (!p || !svg || reduced()) return;
+		// Scale around the hovered category, so it stays under the pointer while the sky leans in.
 		const s = 1.06;
-		svg.style.transform = `translate(${(width / 2 - p.x) * 0.06 + p.x * (1 - s)}px, ${(height / 2 - p.y) * 0.06 + p.y * (1 - s)}px) scale(${s})`;
+		svg.style.transform = `translate(${p.x * (1 - s)}px, ${p.y * (1 - s)}px) scale(${s})`;
 	}, []);
 	const unlean = useCallback(() => {
 		if (!busyRef.current && svgRef.current) svgRef.current.style.transform = "";
@@ -218,6 +232,129 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 		[camera], // eslint-disable-line react-hooks/exhaustive-deps
 	);
 
+	/* ------------------------ Zoom into a Highlight ------------------------ */
+
+	const writeUrl = (v: { id: string; entry: string | null } | null, mode: "push" | "replace") => {
+		const p = new URLSearchParams(location.search);
+		p.delete("world");
+		p.delete("entry");
+		if (v) p.set("world", v.id);
+		if (v?.entry) p.set("entry", v.entry);
+		const qs = p.toString();
+		try {
+			const url = location.pathname + (qs ? `?${qs}` : "");
+			if (mode === "push") history.pushState({ hl: level(v) }, "", url);
+			// Same level (e.g. Next entry): keep the depth marker, so Back still goes up a level.
+			else history.replaceState({ ...history.state, hl: level(v) === level(worldRef.current) ? history.state?.hl : undefined }, "", url);
+		} catch {
+			/* ignore */
+		}
+	};
+	/** True when the previous history entry is the level above this one (so Back = up one level). */
+	const canGoBack = () => (history.state as { hl?: number } | null)?.hl === level(worldRef.current);
+
+	const enterWorld = useCallback(
+		async (id: string, entry: string | null = null, push = true) => {
+			const stage = stageRef.current, svg = svgRef.current;
+			if (!stage || !svg || busyRef.current || worldRef.current || !worlds.some((w) => w.id === id)) return;
+			if (push) writeUrl({ id, entry: null }, "push");
+			if (push && entry) writeUrl({ id, entry }, "push");
+			closePeek();
+			if (tipRef.current) tipRef.current.hidden = true;
+			// The stage is the first thing on the page; make sure all of it is on screen.
+			if (Math.abs(stage.getBoundingClientRect().top - stage.offsetTop) > 4) window.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" });
+			const p = engineRef.current?.hubPoint(id);
+			if (reduced() || !p) {
+				stage.dataset.world = "open";
+				setWorld({ id, entry, leaving: false, instant: false });
+				return;
+			}
+			busyRef.current = true;
+			stage.dataset.world = "zoom";
+			svg.dataset.cam = "dive";
+			camera(p.x, p.y, ZOOM);
+			await wait(380);
+			setWorld({ id, entry, leaving: false, instant: false });
+			await wait(760);
+			stage.dataset.world = "open";
+			svg.dataset.cam = "none";
+			camera(0, 0, 1);
+			engineRef.current?.reset();
+			void svg.getBoundingClientRect();
+			delete svg.dataset.cam;
+			busyRef.current = false;
+		},
+		[worlds, camera, closePeek, setWorld], // eslint-disable-line react-hooks/exhaustive-deps
+	);
+
+	const leaveWorld = useCallback(async () => {
+		const cur = worldRef.current, stage = stageRef.current, svg = svgRef.current;
+		if (!cur || cur.leaving || !stage || !svg) return;
+		const keyboard = !!document.activeElement?.closest(`.${styles.wRoot}`)?.matches(":focus-within") && document.activeElement?.matches(":focus-visible");
+		busyRef.current = true;
+		setWorld({ ...cur, leaving: true });
+		// Arrived by link: the sky is still folded, so open it on the way out.
+		if (foldedRef.current) engineRef.current?.setFolded(false);
+		const p = engineRef.current?.hubPoint(cur.id);
+		if (reduced() || !p) {
+			await wait(reduced() ? 0 : 380);
+			delete stage.dataset.world;
+		} else {
+			svg.dataset.cam = "none";
+			camera(p.x, p.y, ZOOM);
+			stage.dataset.world = "zoom";
+			void svg.getBoundingClientRect();
+			await wait(240);
+			svg.dataset.cam = "dive";
+			delete stage.dataset.world;
+			camera(0, 0, 1);
+			await wait(420);
+		}
+		setWorld(null);
+		await wait(reduced() || !p ? 0 : 700);
+		delete svg.dataset.cam;
+		busyRef.current = false;
+		if (keyboard) engineRef.current?.hubElement(cur.id)?.focus({ preventScroll: true });
+	}, [camera, setWorld]);
+
+	/** "All highlights" button / Escape. */
+	const closeWorld = useCallback(() => {
+		if (canGoBack() && level(worldRef.current) === 1) return history.back();
+		writeUrl(null, "replace");
+		void leaveWorld();
+	}, [leaveWorld]); // eslint-disable-line react-hooks/exhaustive-deps
+
+	const goEntry = useCallback(
+		(slug: string | null, how: "open" | "step" | "list") => {
+			const cur = worldRef.current;
+			if (!cur || cur.leaving) return;
+			if (how === "list" && canGoBack()) return history.back();
+			const next = { ...cur, entry: slug };
+			writeUrl(next, how === "open" && !cur.entry ? "push" : "replace");
+			setWorld(next);
+		},
+		[setWorld], // eslint-disable-line react-hooks/exhaustive-deps
+	);
+
+	// Browser Back / Forward between the sky, a Highlight and an entry.
+	useEffect(() => {
+		const sync = () => {
+			const q = new URLSearchParams(location.search);
+			const id = q.get("world");
+			const w = worlds.find((x) => x.id === id);
+			const entry = w?.entries.some((e) => e.slug === q.get("entry")) ? q.get("entry") : null;
+			const cur = worldRef.current;
+			if (!w) {
+				if (cur) void leaveWorld();
+				return;
+			}
+			if (cur && cur.id === w.id && !cur.leaving) setWorld({ ...cur, entry });
+			else if (!cur) void enterWorld(w.id, entry, false);
+		};
+		window.addEventListener("popstate", sync);
+		return () => window.removeEventListener("popstate", sync);
+	}, [worlds, enterWorld, leaveWorld, setWorld]);
+
 	/* ------------------------------ Engine ------------------------------ */
 
 	useEffect(() => {
@@ -240,7 +377,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 					setFolded(f);
 				},
 				navigate: (href) => router.push(href),
-				onHubActivate: (id) => void dive(id),
+				onHubActivate: (id) => void enterWorld(id),
 				onHubHover: (id, el) => {
 					if (busyRef.current) return;
 					if (id && el) {
@@ -251,10 +388,11 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 						unlean();
 					}
 				},
-				// An item with a card in its section dives there; others open their own page.
+				// A tile zooms into its Highlight with that entry open.
 				onItemActivate: (item) => {
-					if (!item.id || !document.querySelector(`#${item.hub} [data-key="${CSS.escape(item.id)}"]`)) return false;
-					void dive(item.hub, item.id);
+					const entry = worlds.find((w) => w.id === item.hub)?.entries.find((e) => e.itemId === item.id);
+					if (!entry) return false;
+					void enterWorld(item.hub, entry.slug);
 					return true;
 				},
 			});
@@ -265,7 +403,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 			engineRef.current?.destroy();
 			engineRef.current = null;
 		};
-	}, [hubs, items, router, dive, openPeek, closePeek, lean, unlean]);
+	}, [hubs, items, worlds, router, enterWorld, openPeek, closePeek, lean, unlean]);
 
 	/* ------------------------- Page-wide behaviour ------------------------ */
 
@@ -307,13 +445,24 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 		const sec = deep && hubs.some((h) => h.id === deep) ? document.getElementById(deep) : null;
 		if (sec) arrive(sec);
 
+		// Links into a Highlight (/?world=blogs&entry=<slug>) open it straight away.
+		const q = new URLSearchParams(location.search);
+		const w = worlds.find((x) => x.id === q.get("world"));
+		const stage = stageRef.current;
+		if (w && stage) {
+			const entry = w.entries.some((e) => e.slug === q.get("entry")) ? q.get("entry") : null;
+			stage.dataset.world = "open";
+			queueMicrotask(() => setWorld({ id: w.id, entry, leaving: false, instant: true }));
+		}
+
 		return () => {
 			io.disconnect();
 			root.removeEventListener("click", onClick);
 			delete root.dataset.js;
 		};
-	}, [hubs, dive, climb, arrive]);
+	}, [hubs, worlds, dive, climb, arrive, setWorld]);
 
+	const worldInfo = world ? worlds.find((w) => w.id === world.id) : undefined;
 	const peekItems = peek ? items.filter((it) => it.hub === peek.hub.id).slice(0, 3) : [];
 
 	return (
@@ -371,10 +520,21 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label }: Pr
 								</li>
 							))}
 						</ol>
-						<div className={`${styles.peekGo} ${styles.mono}`}>Click to enter {peek.hub.label} →</div>
+						<div className={`${styles.peekGo} ${styles.mono}`}>Click to zoom into {peek.hub.label} →</div>
 					</>
 				)}
 			</div>
+			{world && worldInfo && (
+				<HighlightsWorld
+					key={world.id}
+					world={worldInfo}
+					entry={world.entry}
+					leaving={world.leaving}
+					instant={world.instant}
+					onEntry={goEntry}
+					onClose={closeWorld}
+				/>
+			)}
 			<div ref={warpRef} className={styles.warp} aria-hidden="true" />
 		</div>
 	);

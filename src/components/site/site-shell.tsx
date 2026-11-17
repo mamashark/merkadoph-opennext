@@ -5,6 +5,7 @@ import { CartButton } from "@/components/shop/cart-button";
 import { getShopSettings } from "@/lib/shop";
 import { getSeoSettings, LEGAL_PAGES, siteJsonLd, socialLinks } from "@/lib/site-settings";
 import { JsonLd } from "./json-ld";
+import { RevealHeader } from "./reveal-header";
 import { cn } from "@/lib/ui";
 
 const SOCIAL_LABELS: Record<string, string> = { facebook: "Facebook", instagram: "Instagram", tiktok: "TikTok", youtube: "YouTube", linkedin: "LinkedIn" };
@@ -12,9 +13,20 @@ const SOCIAL_LABELS: Record<string, string> = { facebook: "Facebook", instagram:
 /**
  * Public site chrome (header with section navigation + footer), shared by (site)/* and the homepage.
  * Every page is #faf9f6 in light mode; `tone="home"` also uses the homepage's dark palette (see globals.css);
- * `tone="night"` matches the Highlights homepage (day sky in light mode, night sky in dark mode).
+ * `tone="night"` matches the Highlights homepage (day sky in light mode, night sky in dark mode). There the header
+ * has no logo and stays hidden until the section with id `revealAt` scrolls into view, so the hero fills the screen.
  */
-export async function SiteShell({ children, contactHref, tone = "default" }: { children: React.ReactNode; contactHref?: string; tone?: "default" | "home" | "night" }) {
+export async function SiteShell({
+	children,
+	contactHref,
+	tone = "default",
+	revealAt,
+}: {
+	children: React.ReactNode;
+	contactHref?: string;
+	tone?: "default" | "home" | "night";
+	revealAt?: string;
+}) {
 	const home = tone === "home";
 	const night = tone === "night";
 	const [shop, seo] = await Promise.all([getShopSettings().catch(() => null), getSeoSettings()]);
@@ -27,13 +39,15 @@ export async function SiteShell({ children, contactHref, tone = "default" }: { c
 			<a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-stone-900">
 				Skip to content
 			</a>
-			<header
-				className={cn("sticky top-0 z-30 border-b border-amber-900/10 backdrop-blur dark:border-white/10", night ? "bg-[#f7f5ee]/90 dark:bg-[#03051a]/85" : home ? "bg-home-bg/90" : "bg-[#faf9f6]/90 dark:bg-stone-950/85")}
-			>
-				<div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-0">
-					<Link href="/" aria-label="Merkado PH home" className="w-fit rounded-lg dark:bg-white dark:px-2 dark:py-1">
-						<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" sizes="144px" className="h-auto w-32 sm:w-36" />
-					</Link>
+			{(() => {
+				const bar = cn("border-b border-amber-900/10 backdrop-blur dark:border-white/10", night ? "bg-[#f7f5ee]/90 dark:bg-[#03051a]/85" : home ? "bg-home-bg/90" : "bg-[#faf9f6]/90 dark:bg-stone-950/85");
+				const inner = (
+				<div className={cn("mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:px-6 sm:py-0", revealAt ? "sm:justify-end" : "sm:justify-between")}>
+					{!revealAt && (
+						<Link href="/" aria-label="Merkado PH home" className="w-fit rounded-lg dark:bg-white dark:px-2 dark:py-1">
+							<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" sizes="144px" className="h-auto w-32 sm:w-36" />
+						</Link>
+					)}
 					<nav aria-label="Main" className="flex items-center gap-2">
 						<NavLinks shop={shopEnabled} />
 						{shopEnabled && <CartButton />}
@@ -47,7 +61,15 @@ export async function SiteShell({ children, contactHref, tone = "default" }: { c
 						)}
 					</nav>
 				</div>
-			</header>
+				);
+				return revealAt ? (
+					<RevealHeader revealAt={revealAt} className={bar}>
+						{inner}
+					</RevealHeader>
+				) : (
+					<header className={cn("sticky top-0 z-30", bar)}>{inner}</header>
+				);
+			})()}
 
 			<div id="main" className="flex-1">
 				{children}

@@ -117,8 +117,11 @@
 
 .stage {
 	position: relative;
-	/* A full screen under the sticky site header. */
-	height: clamp(560px, calc(100svh - 64px), 1040px);
+	/* Exactly one screen, at any size (svh = the visible area with the phone's address bar showing).
+	   The site header stays hidden until the next section (see RevealHeader). */
+	height: 100vh;
+	height: 100svh;
+	min-height: 420px;
 	width: 100%;
 	overflow: hidden;
 	isolation: isolate;
@@ -138,7 +141,7 @@
 	will-change: transform;
 }
 .graph[data-cam="dive"] {
-	transition: transform 1.1s var(--ease-io);
+	transition: transform 1.1s var(--ease-io), opacity 0.55s 0.25s;
 }
 .graph[data-cam="none"] {
 	transition: none;
@@ -1143,5 +1146,437 @@
 	.root[data-js] [data-reveal]:not([data-in]) {
 		opacity: 1;
 		transform: none;
+	}
+}
+
+/* ------------------------------------------------------------------ */
+/* Inside a Highlight (zoomed in): entry stars + side panel            */
+/* ------------------------------------------------------------------ */
+
+/* The big sky zooms towards the Highlight and fades; the intro steps aside. */
+.stage[data-world] .graph {
+	opacity: 0;
+	pointer-events: none;
+}
+.stage[data-world="open"] .graph {
+	visibility: hidden;
+}
+.intro,
+.hint {
+	transition: opacity 0.4s;
+}
+.stage[data-world] .intro,
+.stage[data-world] .hint,
+.stage[data-world] .peek,
+.stage[data-world] .tip {
+	opacity: 0 !important;
+	pointer-events: none;
+	visibility: hidden;
+	transition: opacity 0.3s, visibility 0s 0.3s;
+}
+
+.wRoot {
+	--panel-w: min(400px, 38vw);
+	position: absolute;
+	inset: 0;
+	z-index: 6;
+	cursor: default;
+	background: radial-gradient(ellipse 60% 55% at calc(50% + var(--panel-w) / 2) 50%, color-mix(in srgb, var(--c) 14%, transparent), transparent 70%);
+	opacity: 0;
+	transition: opacity 0.5s;
+}
+.wRoot[data-state="open"] {
+	opacity: 1;
+}
+.wRoot[data-state="leaving"] {
+	transition-duration: 0.35s;
+}
+
+.wSky {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	right: 0;
+	left: calc(var(--gutter) + var(--panel-w) + 24px);
+}
+.wLines {
+	position: absolute;
+	inset: 0;
+	overflow: visible;
+}
+.wLines line {
+	stroke: var(--c);
+	stroke-width: 1;
+	stroke-opacity: 0.45;
+	stroke-dasharray: 1;
+	stroke-dashoffset: 1;
+	transition: stroke-dashoffset 0.7s var(--ease-out), stroke-opacity 0.25s;
+	transition-delay: calc(var(--i) * 45ms + 120ms), 0s;
+}
+.wRoot[data-state="open"] .wLines line {
+	stroke-dashoffset: 0;
+}
+.wLines line[data-lit] {
+	stroke-opacity: 1;
+	stroke-width: 1.5;
+}
+
+.wCore {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	transform: translate(-7px, -50%);
+	font: 500 13px/1 var(--font-mono);
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	white-space: nowrap;
+}
+.wCore i {
+	width: 14px;
+	height: 14px;
+	background: var(--c);
+	box-shadow: 0 0 0 6px color-mix(in srgb, var(--c) 18%, transparent);
+}
+.wCore sup {
+	margin-left: 5px;
+	font-size: 10px;
+	color: var(--muted);
+}
+
+.wStar {
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 52px;
+	height: 52px;
+	margin: -26px 0 0 -26px;
+	cursor: pointer;
+	opacity: 0;
+	transform: translate(var(--cx), var(--cy)) scale(0.2);
+	transition: transform 0.8s var(--ease-out), opacity 0.4s;
+	transition-delay: calc(var(--i) * 45ms);
+}
+.wRoot[data-state="open"] .wStar {
+	opacity: 1;
+	transform: translate(var(--x), var(--y));
+}
+.wRoot[data-state="leaving"] .wStar {
+	transition-duration: 0.4s, 0.3s;
+	transition-delay: 0s;
+}
+.wTile {
+	position: absolute;
+	inset: 0;
+	display: block;
+	overflow: hidden;
+	border: 1px solid color-mix(in srgb, var(--ink) 55%, transparent);
+	background-color: var(--tile-bg);
+	transition: transform 0.35s var(--ease-out), border-color 0.2s, box-shadow 0.3s;
+}
+.wTile img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+.wStar[data-lit] .wTile {
+	transform: scale(1.18);
+	border-color: var(--c);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 25%, transparent), 0 14px 40px var(--shadow);
+}
+.wStar[data-active] .wTile {
+	border-width: 2px;
+}
+.wLabel {
+	position: absolute;
+	top: calc(100% + 10px);
+	left: 50%;
+	width: max-content;
+	max-width: 200px;
+	transform: translateX(-50%);
+	padding: 4px 8px;
+	font-size: 12px;
+	line-height: 1.3;
+	text-align: center;
+	background: var(--panel);
+	border: 1px solid var(--line-2);
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.2s;
+}
+.wStar[data-lit] .wLabel {
+	opacity: 1;
+}
+
+/* Thread from the panel to the lit star, like an index line */
+.wWire {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
+	pointer-events: none;
+	z-index: 1;
+}
+.wWire path {
+	fill: none;
+	stroke: var(--c);
+	stroke-width: 1;
+}
+.wWire rect {
+	fill: var(--c);
+}
+
+/* Side panel */
+.wPanel {
+	position: absolute;
+	z-index: 2;
+	left: var(--gutter);
+	top: 20px;
+	bottom: 20px;
+	width: var(--panel-w);
+	display: flex;
+	flex-direction: column;
+	background: var(--panel);
+	border: 1px solid var(--line-2);
+	backdrop-filter: blur(10px);
+	box-shadow: 0 30px 80px var(--shadow);
+	opacity: 0;
+	transform: translateX(-24px);
+	transition: opacity 0.4s, transform 0.6s var(--ease-out);
+	transition-delay: 0.15s;
+}
+.wRoot[data-state="open"] .wPanel {
+	opacity: 1;
+	transform: none;
+}
+.wRoot[data-state="leaving"] .wPanel {
+	transition-delay: 0s;
+	transition-duration: 0.25s;
+}
+.wHead {
+	padding: 16px 20px 14px;
+	border-bottom: 1px solid var(--line);
+}
+.wHead h2 {
+	margin: 10px 0 2px;
+	font-size: clamp(28px, 3vw, 40px);
+	font-weight: 700;
+	line-height: 1;
+	letter-spacing: -0.02em;
+}
+.wHead h2:focus {
+	outline: none;
+}
+.wSub {
+	margin: 0;
+	font-size: 14px;
+	color: var(--muted);
+}
+.wBack {
+	display: inline-flex;
+	align-items: center;
+	min-height: 32px;
+	margin: 0 0 4px -6px;
+	padding: 4px 6px;
+	border: 0;
+	background: none;
+	color: var(--muted);
+	font-size: 11px;
+	cursor: pointer;
+}
+.wBack:hover {
+	color: var(--c);
+}
+
+/* List ⇄ entry: two panes side by side; opening an entry slides them over. */
+.wSlider {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	overflow: hidden;
+}
+.wPane {
+	flex: 0 0 100%;
+	min-width: 0;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	padding: 12px 20px 20px;
+	transition: transform 0.55s var(--ease-io), opacity 0.4s;
+}
+.wRoot[data-entry] .wPane {
+	transform: translateX(-100%);
+}
+.wPane[inert] {
+	opacity: 0;
+}
+
+.wList {
+	list-style: none;
+	margin: 0 0 16px;
+	padding: 0;
+}
+.wList li {
+	opacity: 0;
+	transform: translateX(-8px);
+	transition: opacity 0.35s, transform 0.5s var(--ease-out);
+	transition-delay: calc(var(--i) * 40ms + 260ms);
+}
+.wRoot[data-state="open"] .wList li {
+	opacity: 1;
+	transform: none;
+}
+.wList a {
+	display: grid;
+	grid-template-columns: 28px 1fr;
+	gap: 10px;
+	align-items: baseline;
+	padding: 10px 8px;
+	min-height: 44px;
+	text-decoration: none;
+	border-bottom: 1px solid var(--line);
+	transition: background 0.2s;
+}
+.wList a[data-lit] {
+	background: color-mix(in srgb, var(--c) 12%, transparent);
+}
+.wList b {
+	display: block;
+	font-weight: 600;
+	font-size: 15px;
+	line-height: 1.3;
+}
+.wList small {
+	display: block;
+	margin-top: 3px;
+	font-size: 10px;
+	color: var(--muted);
+}
+.wNum {
+	color: var(--c);
+}
+.wAll {
+	width: 100%;
+	justify-content: center;
+}
+
+.wEntry {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.wEntry .wBack {
+	align-self: flex-start;
+}
+.wCover {
+	position: relative;
+	aspect-ratio: 16 / 10;
+	width: 100%;
+	overflow: hidden;
+	border: 1px solid var(--line-2);
+}
+.wEntry .kicker {
+	margin: 4px 0 0;
+}
+.wEntry h3 {
+	margin: 0;
+	font-size: clamp(22px, 2.2vw, 28px);
+	font-weight: 700;
+	line-height: 1.12;
+	letter-spacing: -0.015em;
+}
+.wEntry h3:focus {
+	outline: none;
+}
+.wExcerpt {
+	margin: 0;
+	font-size: 15px;
+	color: var(--ink-2);
+}
+.wTags {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+}
+.wTags li {
+	padding: 4px 8px;
+	font-size: 10px;
+	border: 1px solid var(--line-2);
+	color: var(--muted);
+}
+.root .wGo {
+	justify-content: center;
+	background: var(--c);
+	border-color: var(--c);
+	color: var(--on-c);
+}
+.root .wGo:hover {
+	background: transparent;
+	color: var(--ink);
+}
+.wCover.weave {
+	aspect-ratio: 16 / 4;
+}
+.wStep {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	padding-top: 12px;
+	border-top: 1px solid var(--line);
+	color: var(--muted);
+}
+.wStep .btn:disabled {
+	opacity: 0.35;
+	cursor: default;
+	border-color: var(--line-2);
+	color: var(--ink);
+}
+
+/* Phones and small tablets: the sky on top, the panel as a bottom sheet. */
+@media (max-width: 760px) {
+	.wRoot {
+		background: radial-gradient(ellipse 80% 40% at 50% 22%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%);
+	}
+	.wSky {
+		left: 0;
+		bottom: auto;
+		height: 40%;
+	}
+	.wStar {
+		width: 40px;
+		height: 40px;
+		margin: -20px 0 0 -20px;
+	}
+	.wLabel {
+		display: none;
+	}
+	.wPanel {
+		left: 0;
+		right: 0;
+		top: 40%;
+		bottom: 0;
+		width: auto;
+		border-width: 1px 0 0;
+		transform: translateY(40px);
+	}
+	.wHead {
+		padding: 12px 16px 10px;
+	}
+	.wPane {
+		padding: 8px 16px 16px;
+	}
+	.wCover {
+		aspect-ratio: 16 / 7;
+	}
+	/* Room for the entry: the sheet's heading steps aside while one is open. */
+	.wRoot[data-entry] .wHead p,
+	.wRoot[data-entry] .wHead .wSub {
+		display: none;
 	}
 }

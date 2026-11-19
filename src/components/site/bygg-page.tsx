@@ -1,30 +1,34 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { BYGG } from "@/lib/bygg-content";
 import { BUSINESSES } from "@/lib/businesses";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
+import { SiteShell } from "@/components/site/site-shell";
 import { JsonLd } from "@/components/site/json-ld";
 import { ContactForm } from "@/components/home/contact-form";
+import { plexMono } from "@/components/constellation/fonts";
+import hl from "@/components/highlights/highlights.module.css";
+import styles from "./bygg-page.module.css";
 
 const b = BUSINESSES.bygg;
+const pad = (n: number) => String(n).padStart(2, "0");
+/** The Bygg Highlight's colour on the homepage, as this page's accent. */
+const accent = { "--c": "var(--orange)", "--c-fill": "var(--orange-fill)" } as React.CSSProperties;
 
 export async function byggMetadata(): Promise<Metadata> {
 	const meta = await pageMetadata({ title: BYGG.metaTitle, description: BYGG.metaDescription, path: b.path, image: { url: BYGG.hero.src, alt: BYGG.hero.alt } });
 	return { ...meta, openGraph: { ...meta.openGraph, locale: "sv_SE" } };
 }
 
-/** White bands: a white page in light mode, the site's dark stone in dark mode. Headings in the brand orange. */
-const heading = "font-display font-bold tracking-tight text-bygg-orange-ink dark:text-brand-orange";
-/** Blue bands keep the old page's blue in both themes, with white text. */
-const blue = "bg-bygg-blue text-white";
-
 /**
- * Merkado Byggnadsavdelning, in Swedish: the old Shopify building page rebuilt with the site's components.
- * Banner photo → logo and intro → roofing services (blue) → reasons → contact (blue) with the form → logo sign-off.
+ * Merkado Byggnadsavdelning, in Swedish, in the homepage's theme (day sky / night sky, brand palette):
+ * hero photo → about with figures → roofing services → reasons → contact with the form → sign-off.
+ * Content: src/lib/bygg-content.ts.
  */
 export function ByggPage() {
 	return (
-		<main lang="sv">
+		<SiteShell contactHref="#kontakt" tone="night">
 			<JsonLd
 				data={[
 					{
@@ -48,110 +52,160 @@ export function ByggPage() {
 					breadcrumbs([{ name: b.name, path: b.path }]),
 				]}
 			/>
-
-			{/* Banner */}
-			<div className="relative aspect-[3/2] max-h-[78svh] w-full overflow-hidden bg-stone-200 sm:aspect-[16/7] dark:bg-stone-800">
-				<Image src={BYGG.hero.src} alt={BYGG.hero.alt} fill priority sizes="100vw" className="object-cover" />
-			</div>
-
-			{/* Logo, slogan and intro */}
-			<section className="bg-white px-4 py-14 text-center sm:py-20 dark:bg-stone-950">
-				<h1 className="mx-auto w-fit">
-					{/* The logo is the page title; it has its own colours, so it sits on a light tile in dark mode. */}
-					<span className="block rounded-2xl p-3 dark:bg-white">
-						{/* eslint-disable-next-line @next/next/no-img-element -- small SVG logo, no optimisation needed */}
-						<img src={BYGG.logo.vertical} alt={b.name} width={200} height={200} className="h-40 w-40 sm:h-48 sm:w-48" />
-					</span>
-				</h1>
-				<p className="mt-6 text-xs font-semibold uppercase tracking-[0.2em] text-bygg-orange-ink dark:text-brand-orange">{BYGG.slogan}</p>
-				<p className="mx-auto mt-4 max-w-2xl text-lg text-stone-800 dark:text-stone-200">{BYGG.intro}</p>
-				<p className="mt-4 text-sm italic text-stone-700 dark:text-stone-300">{BYGG.partner}</p>
-				<p className="mt-8">
-					<a
-						href="#kontakt"
-						className="inline-flex min-h-11 items-center rounded-lg bg-bygg-blue px-5 text-sm font-semibold text-white hover:bg-bygg-blue/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bygg-blue focus-visible:ring-offset-2 dark:focus-visible:ring-offset-stone-950"
-					>
-						Boka kostnadsfri konsultation
-					</a>
-				</p>
-			</section>
-
-			{/* Roofing services: photo and text side by side, alternating */}
-			<section className={`${blue} px-4 py-16 sm:py-24`} aria-labelledby="bygg-services">
-				<h2 id="bygg-services" className="text-center font-display text-3xl font-bold italic tracking-tight sm:text-4xl">
-					{BYGG.servicesHeading}
-				</h2>
-				<div className="mx-auto mt-12 max-w-5xl space-y-10 sm:space-y-0">
-					{BYGG.services.map((s, i) => (
-						<article key={s.slug} id={s.slug} className="grid scroll-mt-24 items-center gap-6 sm:grid-cols-2 sm:gap-0">
-							<div className={`relative aspect-[3/2] overflow-hidden ${i % 2 ? "sm:order-2" : ""}`}>
-								<Image src={s.image.src} alt={s.image.alt} fill sizes="(max-width: 640px) 100vw, 512px" className="object-cover" />
-							</div>
-							<div className="sm:px-10">
-								<h3 className="font-display text-xl font-bold italic tracking-tight sm:text-2xl">{s.title}</h3>
-								<p className="mt-3 leading-relaxed text-white/90">{s.text}</p>
-							</div>
-						</article>
-					))}
-				</div>
-			</section>
-
-			{/* Why choose us */}
-			<section className="bg-white px-4 py-16 sm:py-24 dark:bg-stone-950" aria-labelledby="bygg-why">
-				<h2 id="bygg-why" className={`${heading} text-center text-3xl italic sm:text-4xl`}>
-					{BYGG.whyHeading}
-				</h2>
-				<ul className="mx-auto mt-10 grid max-w-6xl gap-4 sm:grid-cols-2 lg:grid-cols-5">
-					{BYGG.reasons.map((r) => (
-						<li key={r.title} className="rounded-xl bg-orange-50/70 p-5 dark:bg-white/5">
-							<h3 className={`${heading} text-base`}>{r.title}</h3>
-							<p className="mt-2 text-sm leading-relaxed text-stone-800 dark:text-stone-300">{r.text}</p>
-						</li>
-					))}
-				</ul>
-			</section>
-
-			{/* Contact */}
-			<section id="kontakt" className={`${blue} scroll-mt-16 px-4 py-16 sm:py-24`} aria-labelledby="bygg-contact">
-				<div className="mx-auto grid max-w-5xl items-center gap-8 sm:grid-cols-[2fr_3fr] sm:gap-12">
-					<div className="relative aspect-[3/2] overflow-hidden rounded-xl">
-						<Image src={BYGG.cta.image.src} alt={BYGG.cta.image.alt} fill sizes="(max-width: 640px) 100vw, 400px" className="object-cover" />
+			<main lang="sv" className={`${hl.root} ${plexMono.variable}`} style={accent} aria-labelledby="bygg-title">
+				{/* Hero */}
+				<header className={styles.hero}>
+					<Image src={BYGG.hero.src} alt={BYGG.hero.alt} fill priority sizes="100vw" className={styles.heroImg} />
+					<div className={`${hl.wrap} ${styles.heroText}`}>
+						<span className={styles.logoTile}>
+							{/* eslint-disable-next-line @next/next/no-img-element -- small SVG logo */}
+							<img src={BYGG.logo.vertical} alt="" width={132} height={132} />
+						</span>
+						<p className={`${hl.kicker} ${hl.mono}`} style={{ marginTop: 22 }}>
+							{b.eyebrow} · Västra Götaland
+						</p>
+						<h1 id="bygg-title">{b.name}</h1>
+						<p className={styles.lede}>{BYGG.metaDescription}</p>
+						<div className={styles.heroActions}>
+							<a href="#kontakt" className={`${hl.btn} ${hl.btnSolid}`}>
+								Boka kostnadsfri konsultation
+							</a>
+							<a href="#tjanster" className={hl.btn}>
+								{BYGG.servicesHeading} ↓
+							</a>
+						</div>
 					</div>
-					<div>
-						<h2 id="bygg-contact" className="font-display text-3xl font-bold italic tracking-tight sm:text-4xl">
-							{BYGG.cta.heading}
+				</header>
+
+				{/* About + figures */}
+				<section className={hl.about} aria-labelledby="bygg-about">
+					<div className={hl.wrap}>
+						<p className={hl.eyebrow}>Merkado PH · Bygg</p>
+						<h2 id="bygg-about">
+							Din Byggare i <em>Tiden!</em>
 						</h2>
-						<p className="mt-4 leading-relaxed text-white/90">{BYGG.cta.text}</p>
-						<ul className="mt-4 space-y-1">
-							<li>
-								<span aria-hidden>📞 </span>Ring:{" "}
-								<a href={BYGG.cta.phone.href} className="font-semibold underline underline-offset-4">
-									{BYGG.cta.phone.label}
-								</a>
-							</li>
-							<li>
-								<span aria-hidden>📧 </span>Mejl:{" "}
-								<a href={`mailto:${BYGG.cta.email}`} className="font-semibold underline underline-offset-4">
-									{BYGG.cta.email}
-								</a>
-							</li>
-						</ul>
-						<p className="mt-4 text-white/90">{BYGG.cta.formLead}</p>
+						<p className={hl.aboutLede}>{BYGG.intro}</p>
+						<p className={styles.partner}>{BYGG.partner}</p>
+						<dl className={hl.stats}>
+							<div>
+								<dt>Takläggningstjänster</dt>
+								<dd>{BYGG.services.length}</dd>
+							</div>
+							<div>
+								<dt>Egen byggnadsställning, upp till</dt>
+								<dd>9 m</dd>
+							</div>
+							<div>
+								<dt>Konsultation, kostnadsfri</dt>
+								<dd>0 kr</dd>
+							</div>
+						</dl>
 					</div>
-				</div>
-				<div className="mx-auto mt-10 max-w-3xl rounded-2xl bg-white p-5 text-stone-900 sm:p-8 dark:bg-stone-950 dark:text-stone-100">
-					<ContactForm topics={[b.name, ...BYGG.services.map((s) => s.title)]} locale="sv" />
-				</div>
-			</section>
+				</section>
 
-			{/* Sign-off */}
-			<section className="bg-white px-4 py-12 text-center dark:bg-stone-950" aria-label="Merkado Byggnadsavdelning">
-				<span className="mx-auto block w-fit rounded-xl p-2 dark:bg-white">
-					<Image src={BYGG.logo.horizontal} alt="" width={240} height={80} className="h-auto w-56" />
-				</span>
-				<p className={`${heading} mt-4 text-base`}>{BYGG.footerTitle}</p>
-				<p className="mt-1 text-sm italic text-stone-700 dark:text-stone-300">{BYGG.partner}</p>
-			</section>
-		</main>
+				{/* Roofing services */}
+				<section className={hl.world} id="tjanster" aria-labelledby="bygg-services">
+					<div className={hl.wrap}>
+						<div className={hl.worldHead}>
+							<div>
+								<span className={`${hl.kicker} ${hl.mono}`}>01 — Tjänster</span>
+								<h2 id="bygg-services">
+									Våra <em className={hl.long}>Takläggnings&shy;tjänster</em>
+								</h2>
+							</div>
+						</div>
+						<div className={styles.rows}>
+							{BYGG.services.map((s, i) => (
+								<article key={s.slug} id={s.slug} className={`${hl.card} ${styles.row}`}>
+									<div className={styles.rowImg}>
+										<Image src={s.image.src} alt={s.image.alt} fill sizes="(max-width: 760px) 100vw, 640px" />
+									</div>
+									<div className={styles.rowText}>
+										<span className={`${hl.num} ${hl.mono}`}>{pad(i + 1)}</span>
+										<h3>{s.title}</h3>
+										<p>{s.text}</p>
+									</div>
+								</article>
+							))}
+						</div>
+					</div>
+				</section>
+
+				{/* Why us */}
+				<section className={hl.world} aria-labelledby="bygg-why">
+					<div className={hl.wrap}>
+						<div className={hl.worldHead}>
+							<div>
+								<span className={`${hl.kicker} ${hl.mono}`}>02 — Varför oss</span>
+								<h2 id="bygg-why">
+									Varför Välja <em>Merkado PH?</em>
+								</h2>
+							</div>
+						</div>
+						<ul className={styles.reasons}>
+							{BYGG.reasons.map((r, i) => (
+								<li key={r.title} className={`${hl.card} ${styles.reason}`}>
+									<span className={`${hl.num} ${hl.mono}`}>{pad(i + 1)}</span>
+									<h3>{r.title}</h3>
+									<p>{r.text}</p>
+								</li>
+							))}
+						</ul>
+					</div>
+				</section>
+
+				{/* Contact */}
+				<section className={hl.contact} id="kontakt" aria-labelledby="bygg-contact">
+					<div className={`${hl.wrap} ${hl.contactGrid}`}>
+						<div>
+							<p className={hl.eyebrow}>Kontakta oss</p>
+							<h2 id="bygg-contact">
+								Redo att starta ditt <em>byggprojekt?</em>
+							</h2>
+							<p className={hl.aboutLede}>{BYGG.cta.text}</p>
+							<ul className={styles.reach}>
+								<li>
+									<span className={`${styles.reachLabel} ${hl.mono}`}>Ring</span>
+									<a href={BYGG.cta.phone.href}>{BYGG.cta.phone.label}</a>
+								</li>
+								<li>
+									<span className={`${styles.reachLabel} ${hl.mono}`}>Mejl</span>
+									<a href={`mailto:${BYGG.cta.email}`}>{BYGG.cta.email}</a>
+								</li>
+							</ul>
+							<div className={styles.photo}>
+								<Image src={BYGG.cta.image.src} alt={BYGG.cta.image.alt} fill sizes="420px" />
+							</div>
+						</div>
+						<div className={hl.form}>
+							<p className={styles.partner} style={{ margin: "0 0 18px" }}>
+								{BYGG.cta.formLead}
+							</p>
+							<ContactForm topics={[b.name, ...BYGG.services.map((s) => s.title)]} locale="sv" />
+						</div>
+					</div>
+				</section>
+
+				{/* Sign-off */}
+				<section className={hl.signoff} aria-label={b.name}>
+					<div className={`${hl.wrap} ${hl.signoffRow}`}>
+						<div>
+							<span className={styles.signLogo}>
+								<Image src={BYGG.logo.horizontal} alt="" width={200} height={67} />
+							</span>
+							<p className={hl.signoffTitle} style={{ marginTop: 18, fontSize: "clamp(22px, 2.6vw, 34px)" }}>
+								{BYGG.footerTitle}
+							</p>
+							<p>{BYGG.partner}</p>
+						</div>
+						<p>
+							<Link href="/" lang="en">
+								← Merkado PH
+							</Link>
+						</p>
+					</div>
+				</section>
+			</main>
+		</SiteShell>
 	);
 }

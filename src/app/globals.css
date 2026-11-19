@@ -31,9 +31,6 @@
 	--color-brand-red: #e10606;
 	--color-brand-olive: #33331e;
 	--color-brand-on: #22220f;
-	/* Merkado Byggnadsavdelning (/bygg): the blue of its old page, and a darker orange that reads on white (5.2:1). */
-	--color-bygg-blue: #0553b1;
-	--color-bygg-orange-ink: #a85716;
 }
 
 :root {

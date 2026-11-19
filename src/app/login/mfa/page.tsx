@@ -30,7 +30,7 @@ export default async function MfaPage({ searchParams }: PageProps<"/login/mfa">)
 		<main className="flex min-h-dvh items-center justify-center bg-[#faf9f6] px-4 py-12 dark:bg-slate-950">
 			<div className="w-full max-w-sm">
 				<div className="mb-8 inline-block rounded-xl dark:bg-white dark:px-3 dark:py-2">
-					<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" className="h-auto w-40" />
+					<Image src="/brand/logo-horizontal.png" alt="Merkado PH" width={600} height={160} loading="eager" className="h-auto w-40" />
 				</div>
 				<span className="flex h-11 w-11 items-center justify-center rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300">
 					<ShieldCheck className="h-6 w-6" aria-hidden />

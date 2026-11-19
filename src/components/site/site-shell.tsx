@@ -49,7 +49,9 @@ export async function SiteShell({
 						<nav aria-label="Main" className="flex min-w-0 items-center gap-1 sm:gap-3">
 							{!revealAt && (
 								<Link href="/" className="flex shrink-0 items-center gap-2 rounded-lg pr-1 text-[15px] font-semibold tracking-tight text-stone-950 dark:text-white">
-									<Image src="/android-chrome-192x192.png" alt="" width={28} height={28} className="h-7 w-7" priority />
+									{/* The bag: dark lines on light backgrounds, white lines on dark ones. */}
+									<Image src="/brand/mark.png" alt="" width={53} height={64} className="h-8 w-auto dark:hidden" priority />
+									<Image src="/brand/mark-on-dark.png" alt="" width={53} height={64} className="hidden h-8 w-auto dark:block" priority />
 									<span className="max-sm:sr-only">Merkado PH</span>
 								</Link>
 							)}

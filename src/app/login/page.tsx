@@ -46,7 +46,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
 			<section className="flex items-center justify-center px-4 py-12 sm:px-8">
 				<div className="w-full max-w-sm">
 					<Link href="/" className="mb-10 inline-block rounded-xl dark:bg-white dark:px-3 dark:py-2">
-						<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" className="h-auto w-44" />
+						<Image src="/brand/logo-horizontal.png" alt="Merkado PH" width={600} height={160} loading="eager" className="h-auto w-44" />
 					</Link>
 
 					<h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Sign in to admin</h1>

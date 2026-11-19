@@ -5,7 +5,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 
 **Phase:** Content & launch prep. The site is built and deployed behind the staging gate (visitors see "coming soon"). Kay is filling in the content.
 **% complete (launch prep):** 4 of 16 tasks done ≈ 25%. Counted from the task lists below; update when tasks move.
-**Last updated:** 2026-11-19 by Pia (PM)
+**Last updated:** 2026-11-19 by Quinn (QA)
 
 ---
 
@@ -20,7 +20,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | Task | Owner | Notes |
 |---|---|---|
 | Review commit `1e61085` (zoom into a Highlight, full-screen hero, reveal-on-scroll header) | Arvid (ARCH) | Not reviewed yet. |
-| Test the homepage on real phones and with touch (zoom in, entry panel, Back, Escape) | Quinn (QA) | Tested only in headless Chrome at ≥ 500px wide; real devices unverified. |
+| Test the homepage on real phones and with touch (zoom in, entry panel, Back, Escape) | Quinn (QA) | 2026-11-19: emulated pass done (headless Chrome, touch on, 320/375/390/414 portrait + 568/667/844/896 landscape, local `next dev`). Journeys work; found B5–B10. **Real iOS Safari / Android Chrome still unverified** (Needs Kay #5). Retest after B5 is fixed. |
 | Lighthouse the homepage on mobile and desktop, light and dark | Ally (A11Y) | Not measured since the Highlights homepage was added. |
 | Bring home JS under the 170 KB budget | Finn (FE) | 183 KB in the 16 Nov audit; the zoom view added code since, so likely higher (unverified). |
 | Deploy `971ef16` (security update) and `1e61085` to Cloudflare | Dex (OPS) | Needs Kay's OK. Whether the live Worker already has them is unverified (no Cloudflare token locally). |
@@ -57,6 +57,12 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | B2 | Home JS 183 KB, over the 170 KB budget; one 245 ms long task | Major | Finn (FE) | Open (16 Nov audit) |
 | B3 | Old Shopify URLs return 404 | Major | Sol (SEO) | Open |
 | B4 | Legal pages describe a shop | Major | Dana (DATA) | Open |
+| B5 | Phones in landscape (568×320, 667×375, emulated): the hero's hint bar (`.hint` in `highlights.module.css`: z-index 3, only `.hintText` has `pointer-events: none`) covers the top of the sky and catches taps. In 6 of 12 landscape loads one Highlight (Portfolio, Blogs, Events or Promotions) could not be tapped at all; the "Open/Fold again" button also covers hub labels or tiles in portrait (partly, 5 of 12 portrait loads). Steps: `/` → Open → tap a category near the top. Expected: zooms in. Actual: nothing. Workaround: scroll to the section bands. | Major | Finn (FE) | Open |
+| B6 | Phones in landscape (height < 420px): `.stage` has `min-height: 420px`, so the hero is taller than the screen. The bottom sheet's bottom is cut off (667×375: sheet 168–420px, only 113px of list showing; entry pane 152px), and hubs can land below the fold (568×320: one hub off screen in each of 3 loads). | Minor | Finn (FE) | Open |
+| B7 | Small phones, bottom sheet with an entry open: "Read the full story" and Previous/Next sit below the visible part of the sheet (320×568: CTA at 704px, sheet ends 568px; 375×667: 757 vs 667; 390×844: cut off at 844). Users have to scroll inside the sheet. Touch-scrolling the sheet works (it scrolls and the page does not). | Minor | Finn (FE) | Open |
+| B8 | Browser Back within ~0.4s of tapping a Highlight (375×667, emulated): the URL goes back to `/` but the Highlight still opens (100ms and 300ms: Events open at `/`; 600ms: OK). The next Back leaves the homepage. Cause: `popstate` arrives before `setWorld()` in `enterWorld()`, so `sync()` sees no world. | Minor | Finn (FE) | Open |
+| B9 | With a Highlight open on a phone, swiping on the zoomed sky (top 40%) scrolls the page: the sheet slides up under the revealed header (panel top −62 to −192px) while `?world=` stays in the URL. Needs a UX decision: lock the page scroll while a Highlight is open, or close it. | Minor | Finn (FE) / Uma (UX) | Open |
+| B10 | Touch devices see mouse wording: the hint "Hover a category · click to zoom in · drag to rearrange" (shown when width > 560px, e.g. landscape) and the folded prompts "Click." | Cosmetic | Sol (SEO) copy + Finn (FE) | Open |
 
 ## Needs Kay
 
@@ -64,6 +70,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2. **Deploy the latest commits to the preview** so you can check the new homepage with your staging link. Recommended: yes. Visitors still see "coming soon".
 3. **Site focus.** The brief is culture, events and portfolio, but some copy leans towards roofing and home improvement. Recommended: decide the focus, then Sol aligns the copy, Services and Portfolio.
 4. **reCAPTCHA loads before anyone uses a form.** Recommended: load it only when a form is focused or in view. Alternative: Cloudflare Turnstile (a new third-party script, so it needs your OK).
+5. **Real-phone check of the homepage.** Emulation can't confirm iOS Safari (svh and the address bar, momentum scroll, the Back swipe, tap delay), Android Chrome's Back button and gesture, or real touch accuracy. Recommended: after B5 is fixed, Kay runs Quinn's manual steps on one iPhone (Safari) and one Android phone (Chrome), using the preview with the staging link (needs Needs Kay #2), and reports pass/fail per step. B5 is graded Major (one Highlight can't be tapped in landscape); Kay may downgrade it to Minor because the sections below still work.
 
 ---
 
@@ -76,3 +83,5 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-17 · FE · Zoom into a Highlight, full-screen hero, reveal-on-scroll header (`1e61085`); fixed hover lean moving categories away from the pointer
 2026-11-19 · PM · Agents moved to `.claude/agents/` so Claude Code loads them; created STATUS.md
 2026-11-19 · FE · Coming-soon page: constellation removed, text kept (no client JS on that page now); not deployed
+2026-11-19 · QA · Homepage mobile test in emulated Chrome (touch, 320–414 portrait, 568–896 landscape, light + dark at 390): journeys, Back/Forward, Escape, deep links and refresh pass; no horizontal scroll; no console errors. Logged B5 (Major) and B6–B10. Real devices still unverified.
+2026-11-19 · FE · Coming-soon page: text moved top-left; twinkling CSS stars (reduced motion: still); not deployed

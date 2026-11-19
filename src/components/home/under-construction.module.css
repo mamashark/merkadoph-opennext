@@ -1,0 +1,49 @@
+/* Coming-soon page: text top-left over a sky of stars that twinkle one by one. Colours come from the stage tokens in constellation.module.css. */
+
+/* Doubled class: wins over .intro (bottom-anchored) whatever the stylesheet order. */
+.top.top {
+	top: 0;
+	bottom: auto;
+	padding-top: max(40px, env(safe-area-inset-top, 0px), 8vh);
+	padding-bottom: 0;
+}
+
+.sky {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	pointer-events: none;
+}
+.star {
+	position: absolute;
+	width: var(--s);
+	height: var(--s);
+	border-radius: 50%;
+	background: var(--star);
+	opacity: 0.25;
+	animation: twinkle var(--t) ease-in-out var(--d) infinite;
+}
+/* A few brighter stars in the flag's sun colour, with a soft glow. */
+.bright {
+	background: var(--sun);
+	box-shadow: 0 0 6px 1px color-mix(in srgb, var(--sun) 60%, transparent);
+}
+
+@keyframes twinkle {
+	0%,
+	100% {
+		opacity: 0.15;
+		transform: scale(0.7);
+	}
+	50% {
+		opacity: 1;
+		transform: scale(1.15);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.star {
+		animation: none;
+		opacity: 0.6;
+	}
+}

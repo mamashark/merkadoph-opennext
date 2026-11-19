@@ -6,6 +6,7 @@ import { getPublicPortfolios, portfolioCover, type PortfolioSummary } from "@/li
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
 import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
+import { offeringHref } from "@/components/site/business-page";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -95,8 +96,8 @@ export async function HighlightsHome() {
 			},
 			{ id: "impact", allLabel: "All projects", cta: "View the project", label: "Community Impact", sub: "Projects that brought people together", color: "sun", count: portfolio.total, list: "/impact", dots: 14, has: portfolio.portfolios.length },
 			// The two businesses always show: their page is worth visiting even before offerings are listed.
-			{ id: "bygg", allLabel: "Visit Merkado PH Bygg", cta: "Read more", label: "Merkado PH Bygg", sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
-			{ id: "digital", allLabel: "Visit Merkado PH Digital", cta: "Read more", label: "Merkado PH Digital", sub: "Websites, webshops and branding", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
+			{ id: "bygg", allLabel: `Visit ${BUSINESSES.bygg.name}`, cta: "Read more", label: BUSINESSES.bygg.name, sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
+			{ id: "digital", allLabel: `Visit ${BUSINESSES.digital.name}`, cta: "Read more", label: BUSINESSES.digital.name, sub: "Websites, webshops and branding", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
 			{ id: "bulletin", allLabel: "Bulletin Board", cta: "Read more", label: "Bulletin Board", sub: "Embassy news, notices and offers", color: "coral", count: notices.total + promotions.total, list: "/bulletin", dots: 6, has: notices.blogs.length + promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
@@ -114,7 +115,7 @@ export async function HighlightsHome() {
 		title: s.title,
 		note: s.price_label || undefined,
 		image: thumb(s.cover_image_url),
-		href: `/services/${s.slug}`,
+		href: offeringHref(BUSINESSES[hub], s.slug),
 		tags: shownTags(s.tags),
 		slug: s.slug,
 		excerpt: clip(s.excerpt),
@@ -236,7 +237,7 @@ export async function HighlightsHome() {
 	/* ------------------------------ Markup ------------------------------ */
 
 	const style = (w: World | undefined) => ({ "--c": `var(--${w?.color ?? "sun"})`, "--c-fill": `var(--${w?.color ?? "sun"}-fill)` }) as React.CSSProperties;
-	const head = (id: WorldId, title: React.ReactNode, body: string, allLabel: string) => {
+	const head = (id: WorldId, title: React.ReactNode, body: string, allLabel: string, bodyLang?: string) => {
 		const w = W[id]!;
 		return (
 			<div className={styles.worldHead}>
@@ -247,7 +248,7 @@ export async function HighlightsHome() {
 					<h2 id={`${id}-title`} tabIndex={-1}>
 						{title}
 					</h2>
-					<p>{body}</p>
+					<p lang={bodyLang}>{body}</p>
 				</div>
 				<div className={styles.worldLinks}>
 					<Link href={w.list} className={`${styles.back} ${styles.all} ${styles.mono}`}>
@@ -465,7 +466,7 @@ export async function HighlightsHome() {
 					</section>
 				)}
 
-				{/* The two businesses: Merkado PH Bygg and Merkado PH Digital */}
+				{/* The two businesses: Merkado Byggnadsavdelning (Swedish page) and Merkado PH Digital */}
 				{(["bygg", "digital"] as const).map((id) => {
 					const w = W[id];
 					const { b, main, offerings: list } = biz[id];
@@ -475,11 +476,21 @@ export async function HighlightsHome() {
 							<div className={`${styles.wrap} ${styles.zoom}`}>
 								{head(
 									id,
-									<>
-										Merkado PH <em>{id === "bygg" ? "Bygg" : "Digital"}</em>
-									</>,
+									id === "bygg" ? (
+										<>
+											Merkado{" "}
+											<em lang="sv" className={styles.long}>
+												Byggnadsavdelning
+											</em>
+										</>
+									) : (
+										<>
+											Merkado PH <em>Digital</em>
+										</>
+									),
 									plain(main?.excerpt) || b.intro,
 									w.allLabel,
+									b.lang === "en" ? undefined : b.lang,
 								)}
 								{list.length > 0 && (
 									<div className={styles.services}>
@@ -489,7 +500,7 @@ export async function HighlightsHome() {
 												<article key={s.id} className={`${styles.service} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`service-${s.slug}`}>
 													<span className={`${styles.num} ${styles.mono}`}>{String(i + 1).padStart(2, "0")}</span>
 													<h3>
-														<Link href={`/services/${s.slug}`} className={styles.stretch}>
+														<Link href={offeringHref(b, s.slug)} className={styles.stretch}>
 															{s.title}
 														</Link>
 													</h3>

@@ -9,11 +9,19 @@ export const BUSINESSES = {
 	bygg: {
 		id: "bygg",
 		path: "/bygg",
-		slug: "merkado-ph-bygg",
+		slug: "merkado-byggnadsavdelning",
 		category: "Bygg",
-		name: "Merkado PH Bygg",
-		eyebrow: "Construction",
-		intro: "Construction services by Tindero Pedro, from Merkado PH.",
+		name: "Merkado Byggnadsavdelning",
+		/** This page is in Swedish (Kay, 2026-11-19); the rest of the site is English. */
+		lang: "sv",
+		eyebrow: "Bygg- och entreprenadtjänster",
+		intro: "Bygg- och entreprenadtjänster med inriktning på takläggning, i Västra Götaland.",
+		ctaDefault: "Kontakta oss",
+		servicesHeading: "Våra Takläggningstjänster",
+		contactHeading: "Kontakta oss",
+		contactLede: "Fyll i dina kontaktuppgifter så hör vi av oss.",
+		/** Offerings are sections on this page (as on the old Shopify page), not pages of their own. */
+		offeringPages: false,
 	},
 	digital: {
 		id: "digital",
@@ -21,8 +29,14 @@ export const BUSINESSES = {
 		slug: "merkado-ph-digital",
 		category: "Digital",
 		name: "Merkado PH Digital",
+		lang: "en",
 		eyebrow: "Websites · Webshops · Branding",
 		intro: "Websites, webshops and branding, from Merkado PH.",
+		ctaDefault: "Get in touch",
+		servicesHeading: "Our services",
+		contactHeading: "Get in touch",
+		contactLede: "Tell us about your project and we’ll get back to you.",
+		offeringPages: true,
 	},
 } as const;
 

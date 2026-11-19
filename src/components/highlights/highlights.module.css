@@ -1676,3 +1676,9 @@
 		display: none;
 	}
 }
+
+/* One long word in a section title (e.g. "Byggnadsavdelning"): break it on narrow screens instead of overflowing. */
+.long {
+	hyphens: auto;
+	overflow-wrap: anywhere;
+}

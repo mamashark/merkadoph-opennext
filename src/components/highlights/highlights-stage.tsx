@@ -53,6 +53,8 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	const pendingPeekEl = useRef<SVGGElement | null>(null);
 	const [world, setWorldState] = useState<WorldView | null>(null);
 	const worldRef = useRef<WorldView | null>(null);
+	/** Page scroll when a Highlight opened, restored when it closes (so the sky isn't left half scrolled under the header). */
+	const scrollBeforeWorld = useRef(0);
 	const setWorld = useCallback((v: WorldView | null) => {
 		worldRef.current = v;
 		setWorldState(v);
@@ -257,6 +259,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		async (id: string, entry: string | null = null, push = true) => {
 			const stage = stageRef.current, svg = svgRef.current;
 			if (!stage || !svg || busyRef.current || worldRef.current || !worlds.some((w) => w.id === id)) return;
+			scrollBeforeWorld.current = window.scrollY;
 			if (push) writeUrl({ id, entry: null }, "push");
 			if (push && entry) writeUrl({ id, entry }, "push");
 			closePeek();
@@ -311,6 +314,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			await wait(420);
 		}
 		setWorld(null);
+		window.scrollTo({ top: scrollBeforeWorld.current, behavior: "instant" as ScrollBehavior });
 		await wait(reduced() || !p ? 0 : 700);
 		delete svg.dataset.cam;
 		busyRef.current = false;

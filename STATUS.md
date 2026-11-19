@@ -23,7 +23,6 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | Test the homepage on real phones and with touch (zoom in, entry panel, Back, Escape) | Quinn (QA) | 2026-11-19: emulated pass done (headless Chrome, touch on, 320/375/390/414 portrait + 568/667/844/896 landscape, local `next dev`). Journeys work; found B5–B10. **Real iOS Safari / Android Chrome still unverified** (Needs Kay #5). Retest after B5 is fixed. |
 | Lighthouse the homepage on mobile and desktop, light and dark | Ally (A11Y) | Not measured since the Highlights homepage was added. |
 | Bring home JS under the 170 KB budget | Finn (FE) | 183 KB in the 16 Nov audit; the zoom view added code since, so likely higher (unverified). |
-| Deploy `971ef16` (security update) and `1e61085` to Cloudflare | Dex (OPS) | Needs Kay's OK. Whether the live Worker already has them is unverified (no Cloudflare token locally). |
 | Remove or unpublish every `sample`-tagged item | Sol (SEO) | `node scripts/seed-sample-content.mjs --remove`. Before launch. |
 | Add 301 redirects for old Shopify URLs (Admin → SEO → Redirects) | Sol (SEO) | Old URLs return 404. |
 | Rewrite legal pages for a no-shop site | Dana (DATA) | They still describe a shop. |
@@ -90,3 +89,4 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-19 · UI · Homepage + coming-soon text/accents use the brand palette (olive, teal, yellow, orange, red-orange, red #E10606); light mode uses AA-passing shades; highlighter marks on highlighted words; not deployed
 2026-11-19 · FE · B5 fix: hint bar no longer catches taps, Open/Fold corner kept clear of nodes, 44px category tap targets; emulated retest in progress
 2026-11-19 · FE · B5 retest (emulated touch): 70/70 + 29/29 taps open their Highlight; also fixed the page staying scrolled after closing a Highlight (header then covered the top of the sky)
+2026-11-19 · OPS · Deployed `1193fd7` to Cloudflare with Kay's OK (version b5abea63), built with NEXT_PUBLIC_SITE_URL=https://merkadoph.se (`.env.local` would bake in localhost). Checked live: coming-soon page with stars, canonical/OG on merkadoph.se, new og-default.jpg, /api/health ok, gate still redirects /blogs → /. Staged homepage not checked (no STAGE_KEY here)

@@ -6,7 +6,7 @@ import { getPublicPortfolios, portfolioCover, type PortfolioSummary } from "@/li
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
 import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
-import { offeringHref } from "@/components/site/business-page";
+import { BYGG } from "@/lib/bygg-content";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -51,16 +51,29 @@ type World = { id: WorldId; label: string; sub: string; color: ConstellationColo
 /** Events in the sky: what's coming up; when nothing is, the most recent ones (the rest are in the /events archive). */
 const RECENT_EVENTS = 5;
 
+/** One thing a business offers, as the homepage shows it (tile, preview, card). */
+type Offering = { id: string; slug: string; title: string; excerpt: string; image?: string; imageAlt: string; price?: string; tags: string[]; href: string };
+type Biz = { b: Business; excerpt: string; cover?: string; coverAlt: string; offerings: Offering[] };
+const fromService = (s: ServiceSummary): Offering => ({
+	id: s.id,
+	slug: s.slug,
+	title: s.title,
+	excerpt: s.excerpt ?? "",
+	image: s.cover_image_url ?? undefined,
+	imageAlt: s.cover_image_alt || "",
+	price: s.price_label || undefined,
+	tags: shownTags(s.tags),
+	href: `/services/${s.slug}`,
+});
+
 export async function HighlightsHome() {
-	const [blogsRes, pinned, notices, upcoming, past, portfolio, byggMain, byggList, digitalMain, digitalList, promotions, seo] = await Promise.all([
+	const [blogsRes, pinned, notices, upcoming, past, portfolio, digitalMain, digitalList, promotions, seo] = await Promise.all([
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
 		safe(getPublishedBlogs(1, 6, { tag: ANNOUNCEMENT_TAG }), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicEvents("past", 1, RECENT_EVENTS), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicPortfolios(undefined, 1, PER_TYPE), { portfolios: [] as PortfolioSummary[], total: 0 }),
-		safe(getPublicServiceBySlug(BUSINESSES.bygg.slug), null),
-		safe(getPublicServices(BUSINESSES.bygg.category, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
 		safe(getPublicServiceBySlug(BUSINESSES.digital.slug), null),
 		safe(getPublicServices(BUSINESSES.digital.category, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
 		safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[], total: 0 }),
@@ -73,10 +86,23 @@ export async function HighlightsHome() {
 	const live = upcoming.events.length > 0;
 	const events = live ? upcoming.events : past.events;
 	// Each business: its main service (the page's text) and its offerings (same category).
-	const biz = {
-		bygg: { b: BUSINESSES.bygg, main: byggMain, offerings: byggList.services.filter((s) => s.slug !== BUSINESSES.bygg.slug) },
-		digital: { b: BUSINESSES.digital, main: digitalMain, offerings: digitalList.services.filter((s) => s.slug !== BUSINESSES.digital.slug) },
-	} satisfies Record<BusinessId, { b: Business; main: Service | null; offerings: ServiceSummary[] }>;
+	// Bygg is a fixed Swedish page (src/lib/bygg-content.ts); Digital comes from Admin → Services.
+	const biz: Record<BusinessId, Biz> = {
+		bygg: {
+			b: BUSINESSES.bygg,
+			excerpt: BYGG.intro,
+			cover: BYGG.hero.src,
+			coverAlt: BYGG.hero.alt,
+			offerings: BYGG.services.map((s) => ({ id: s.slug, slug: s.slug, title: s.title, excerpt: s.text, image: s.image.src, imageAlt: s.image.alt, tags: [], href: `${BUSINESSES.bygg.path}#${s.slug}` })),
+		},
+		digital: {
+			b: BUSINESSES.digital,
+			excerpt: plain(digitalMain?.excerpt) || BUSINESSES.digital.intro,
+			cover: digitalMain?.cover_image_url ?? undefined,
+			coverAlt: digitalMain?.cover_image_alt || "",
+			offerings: digitalList.services.filter((s) => s.slug !== BUSINESSES.digital.slug).map(fromService),
+		},
+	};
 	const offerings = [...biz.bygg.offerings, ...biz.digital.offerings];
 
 	const worlds: World[] = (
@@ -109,36 +135,24 @@ export async function HighlightsHome() {
 
 	/** A graph tile plus what the Highlight's preview panel shows. */
 	type Entry = Omit<ConstellationItem, "links"> & { id: string; tags: string[]; slug: string; excerpt: string; cover?: string; coverAlt: string };
-	const serviceEntry = (hub: BusinessId) => (s: ServiceSummary): Entry => ({
-		id: `service-${s.slug}`,
+	const offeringEntry = (hub: BusinessId) => (o: Offering): Entry => ({
+		id: `service-${o.slug}`,
 		hub,
-		title: s.title,
-		note: s.price_label || undefined,
-		image: thumb(s.cover_image_url),
-		href: offeringHref(BUSINESSES[hub], s.slug),
-		tags: shownTags(s.tags),
-		slug: s.slug,
-		excerpt: clip(s.excerpt),
-		cover: s.cover_image_url ?? undefined,
-		coverAlt: s.cover_image_alt || "",
+		title: o.title,
+		note: o.price,
+		image: thumb(o.image),
+		href: o.href,
+		tags: o.tags,
+		slug: o.slug,
+		excerpt: clip(o.excerpt),
+		cover: o.image,
+		coverAlt: o.imageAlt,
 	});
 	const businessEntries = (id: BusinessId): Entry[] => {
-		const { b, main } = biz[id];
+		const { b, excerpt, cover, coverAlt, offerings: list } = biz[id];
 		return [
-			{
-				id: `business-${id}`,
-				hub: id,
-				title: b.name,
-				note: b.eyebrow,
-				image: thumb(main?.cover_image_url),
-				href: b.path,
-				tags: [],
-				slug: b.slug,
-				excerpt: clip(main?.excerpt || b.intro),
-				cover: main?.cover_image_url ?? undefined,
-				coverAlt: main?.cover_image_alt || "",
-			},
-			...biz[id].offerings.map(serviceEntry(id)),
+			{ id: `business-${id}`, hub: id, title: b.name, note: b.eyebrow, image: thumb(cover), href: b.path, tags: [], slug: `${id}-page`, excerpt: clip(excerpt), cover, coverAlt },
+			...list.map(offeringEntry(id)),
 		];
 	};
 	const entries: Entry[] = [
@@ -469,7 +483,7 @@ export async function HighlightsHome() {
 				{/* The two businesses: Merkado Byggnadsavdelning (Swedish page) and Merkado PH Digital */}
 				{(["bygg", "digital"] as const).map((id) => {
 					const w = W[id];
-					const { b, main, offerings: list } = biz[id];
+					const { b, excerpt, offerings: list } = biz[id];
 					if (!w) return null;
 					return (
 						<section key={id} className={styles.world} id={id} aria-labelledby={`${id}-title`} style={style(w)}>
@@ -488,19 +502,19 @@ export async function HighlightsHome() {
 											Merkado PH <em>Digital</em>
 										</>
 									),
-									plain(main?.excerpt) || b.intro,
+									excerpt,
 									w.allLabel,
 									b.lang === "en" ? undefined : b.lang,
 								)}
 								{list.length > 0 && (
-									<div className={styles.services}>
+									<div className={styles.services} lang={b.lang === "en" ? undefined : b.lang}>
 										{list.slice(0, 4).map((s, i) => {
-											const chips = [s.price_label, ...shownTags(s.tags).map(cap)].filter((c, j, a): c is string => !!c && a.indexOf(c) === j).slice(0, 3);
+											const chips = [s.price, ...s.tags.map(cap)].filter((c, j, a): c is string => !!c && a.indexOf(c) === j).slice(0, 3);
 											return (
 												<article key={s.id} className={`${styles.service} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`service-${s.slug}`}>
 													<span className={`${styles.num} ${styles.mono}`}>{String(i + 1).padStart(2, "0")}</span>
 													<h3>
-														<Link href={offeringHref(b, s.slug)} className={styles.stretch}>
+														<Link href={s.href} className={styles.stretch}>
 															{s.title}
 														</Link>
 													</h3>

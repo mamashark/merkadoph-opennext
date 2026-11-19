@@ -1,27 +1,18 @@
 /**
  * The two businesses under Merkado PH, each with its own page and homepage Highlight.
- * Their words live in Admin → Services, not in code:
- * - the service with slug `slug` is the page's main text (excerpt, body, cover, call to action, SEO fields);
- * - every other live service with category `category` is listed on the page as an offering.
- * `intro` is only shown until that main service is published, so it states nothing beyond what the business is.
+ * - Bygg (/bygg): Merkado Byggnadsavdelning, a fixed page in Swedish; its content is in src/lib/bygg-content.ts.
+ * - Digital (/digital): its words live in Admin → Services. The service with slug `slug` is the page's main text
+ *   (excerpt, body, cover, call to action, SEO fields); every other live service with category `category` is listed.
+ *   `intro` is only shown until that main service is published, so it states nothing beyond what the business is.
  */
 export const BUSINESSES = {
 	bygg: {
 		id: "bygg",
 		path: "/bygg",
-		slug: "merkado-byggnadsavdelning",
-		category: "Bygg",
 		name: "Merkado Byggnadsavdelning",
 		/** This page is in Swedish (Kay, 2026-11-19); the rest of the site is English. */
 		lang: "sv",
 		eyebrow: "Bygg- och entreprenadtjänster",
-		intro: "Bygg- och entreprenadtjänster med inriktning på takläggning, i Västra Götaland.",
-		ctaDefault: "Kontakta oss",
-		servicesHeading: "Våra Takläggningstjänster",
-		contactHeading: "Kontakta oss",
-		contactLede: "Fyll i dina kontaktuppgifter så hör vi av oss.",
-		/** Offerings are sections on this page (as on the old Shopify page), not pages of their own. */
-		offeringPages: false,
 	},
 	digital: {
 		id: "digital",
@@ -36,12 +27,13 @@ export const BUSINESSES = {
 		servicesHeading: "Our services",
 		contactHeading: "Get in touch",
 		contactLede: "Tell us about your project and we’ll get back to you.",
-		offeringPages: true,
 	},
 } as const;
 
 export type BusinessId = keyof typeof BUSINESSES;
 export type Business = (typeof BUSINESSES)[BusinessId];
+/** A business whose page is built from Admin → Services. */
+export type ServiceBusiness = typeof BUSINESSES.digital;
 
 /**
  * Official links for the Philippine Embassy in Sweden, shown on the Bulletin Board.

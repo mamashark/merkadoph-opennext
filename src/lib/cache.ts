@@ -48,9 +48,9 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	},
 	services: {
 		label: "Services",
-		description: "Service data, the services list, every service page, and the Merkado Byggnadsavdelning and Merkado PH Digital pages.",
+		description: "Service data, the services list, every service page and the Merkado PH Digital page.",
 		tags: ["services"],
-		paths: [{ path: "/services" }, { path: "/services/[slug]", type: "page" }, { path: "/bygg" }, { path: "/digital" }],
+		paths: [{ path: "/services" }, { path: "/services/[slug]", type: "page" }, { path: "/digital" }],
 	},
 	portfolio: {
 		label: "Community Impact",

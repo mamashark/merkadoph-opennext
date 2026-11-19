@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { getPublicServiceBySlug, getPublicServices } from "@/lib/services";
 import { summarize } from "@/lib/content";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
-import type { Business } from "@/lib/businesses";
+import type { ServiceBusiness as Business } from "@/lib/businesses";
 import { Body, CoverFigure, CtaLink } from "@/components/site/detail";
 import { ContentCard, PageIntro } from "@/components/site/content-card";
 import { JsonLd } from "@/components/site/json-ld";
@@ -20,9 +19,6 @@ async function load(b: Business) {
 	return { main, offerings: list.services.filter((s) => s.slug !== b.slug).slice(0, MAX_OFFERINGS) };
 }
 
-/** Where an offering lives: its own page, or its section on the business page. */
-export const offeringHref = (b: Business, slug: string) => (b.offeringPages ? `/services/${slug}` : `${b.path}#${slug}`);
-
 export async function businessMetadata(b: Business): Promise<Metadata> {
 	const { main } = await load(b);
 	const meta = await pageMetadata({
@@ -31,13 +27,12 @@ export async function businessMetadata(b: Business): Promise<Metadata> {
 		path: b.path,
 		image: main?.cover_image_url ? { url: main.cover_image_url, alt: main.cover_image_alt } : null,
 	});
-	return b.lang === "sv" ? { ...meta, openGraph: { ...meta.openGraph, locale: "sv_SE" } } : meta;
+	return meta;
 }
 
 /**
- * /bygg and /digital: the business's main text from Admin → Services, its offerings and the contact form.
+ * /digital: the business's main text from Admin → Services, its offerings and the contact form.
  * Until the main service is published, the page shows only the short intro and any offerings.
- * `lang` marks the page content's language (the Bygg page is Swedish; the site header and footer stay English).
  */
 export async function BusinessPage({ business: b }: { business: Business }) {
 	const { main, offerings } = await load(b);
@@ -60,7 +55,7 @@ export async function BusinessPage({ business: b }: { business: Business }) {
 							hasOfferCatalog: {
 								"@type": "OfferCatalog",
 								name: b.servicesHeading,
-								itemListElement: offerings.map((s) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: s.title, url: absoluteUrl(offeringHref(b, s.slug)) } })),
+								itemListElement: offerings.map((s) => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: s.title, url: absoluteUrl(`/services/${s.slug}`) } })),
 							},
 						}),
 					},
@@ -81,12 +76,11 @@ export async function BusinessPage({ business: b }: { business: Business }) {
 					<h2 id={`${b.id}-offer-title`} className="font-display text-2xl font-bold tracking-tight sm:text-3xl">
 						{b.servicesHeading}
 					</h2>
-					{b.offeringPages ? (
-						<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+					<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 							{offerings.map((s) => (
 								<ContentCard
 									key={s.id}
-									href={offeringHref(b, s.slug)}
+									href={`/services/${s.slug}`}
 									title={s.title}
 									excerpt={s.excerpt}
 									image={s.cover_image_url ?? undefined}
@@ -96,25 +90,6 @@ export async function BusinessPage({ business: b }: { business: Business }) {
 								/>
 							))}
 						</div>
-					) : (
-						// Image and text side by side, alternating, like the old Shopify page.
-						<div className="mt-8 space-y-12 sm:space-y-16">
-							{offerings.map((s, i) => (
-								<article key={s.id} id={s.slug} className="grid scroll-mt-24 items-center gap-6 sm:grid-cols-2 sm:gap-10">
-									{s.cover_image_url && (
-										<div className={`relative aspect-[3/2] overflow-hidden rounded-2xl bg-stone-200 dark:bg-stone-800 ${i % 2 ? "sm:order-2" : ""}`}>
-											<Image src={s.cover_image_url} alt={s.cover_image_alt || ""} fill sizes="(max-width: 640px) 100vw, 560px" className="object-cover" />
-										</div>
-									)}
-									<div>
-										<h3 className="font-display text-xl font-bold tracking-tight sm:text-2xl">{s.title}</h3>
-										{s.excerpt && <p className="mt-3 text-stone-700 dark:text-stone-300">{s.excerpt}</p>}
-										{s.price_label && <p className="mt-3 text-sm font-semibold text-teal-800 dark:text-teal-300">{s.price_label}</p>}
-									</div>
-								</article>
-							))}
-						</div>
-					)}
 				</section>
 			)}
 

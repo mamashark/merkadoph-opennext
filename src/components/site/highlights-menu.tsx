@@ -1,0 +1,94 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
+import { NAV_HIGHLIGHTS } from "./site-nav";
+import { cn } from "@/lib/ui";
+
+/**
+ * The header's "Highlights" menu: every section of the site, with its Highlight colour and a one-line description.
+ * Built on <details>, so it opens without JavaScript; with JavaScript it also closes on Escape, an outside click
+ * and after navigating.
+ */
+export function HighlightsMenu({ shop = false }: { shop?: boolean }) {
+	const ref = useRef<HTMLDetailsElement>(null);
+	const pathname = usePathname();
+	const items = shop ? [{ href: "/shop", label: "Shop", sub: "Filipino groceries", swatch: "bg-stone-500" }, ...NAV_HIGHLIGHTS] : NAV_HIGHLIGHTS;
+	const current = items.find((i) => pathname === i.href || pathname.startsWith(`${i.href}/`));
+
+	// Close after navigating.
+	useEffect(() => {
+		if (ref.current) ref.current.open = false;
+	}, [pathname]);
+
+	useEffect(() => {
+		const close = (focusSummary: boolean) => {
+			const d = ref.current;
+			if (!d?.open) return;
+			d.open = false;
+			if (focusSummary) d.querySelector("summary")?.focus();
+		};
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === "Escape") close(true);
+		};
+		const onPointer = (e: PointerEvent) => {
+			if (!ref.current?.contains(e.target as Node)) close(false);
+		};
+		document.addEventListener("keydown", onKey);
+		document.addEventListener("pointerdown", onPointer);
+		return () => {
+			document.removeEventListener("keydown", onKey);
+			document.removeEventListener("pointerdown", onPointer);
+		};
+	}, []);
+
+	return (
+		<details ref={ref} className="group relative">
+			<summary
+				className={cn(
+					"flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors [&::-webkit-details-marker]:hidden",
+					"border-transparent text-stone-800 hover:border-stone-900/15 dark:text-stone-200 dark:hover:border-white/20",
+					"group-open:border-stone-900/20 group-open:bg-white group-open:text-stone-950 dark:group-open:border-white/25 dark:group-open:bg-stone-900 dark:group-open:text-white",
+				)}
+			>
+				Highlights
+				{current && <span className="sr-only">, current section: {current.label}</span>}
+				<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
+			</summary>
+			{/* Phones: full width under the header. Larger screens: a panel under the button. */}
+			<div className="fixed inset-x-4 top-16 z-40 overflow-hidden sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-2 sm:w-[22rem] rounded-xl border border-stone-900/10 bg-white text-stone-900 shadow-xl dark:border-white/10 dark:bg-stone-900 dark:text-stone-100">
+				<ul>
+					{items.map((i) => {
+						const active = i === current;
+						return (
+							<li key={i.href} className="border-b border-stone-900/5 dark:border-white/5">
+								<Link
+									href={i.href}
+									aria-current={active ? "page" : undefined}
+									className={cn(
+										"flex items-center gap-3 px-4 py-2.5 hover:bg-stone-900/[0.04] focus-visible:bg-stone-900/[0.06] focus-visible:outline-none dark:hover:bg-white/5 dark:focus-visible:bg-white/10",
+										active && "bg-stone-900/[0.04] dark:bg-white/5",
+									)}
+								>
+									<span className={cn("h-3 w-3 shrink-0", i.swatch)} aria-hidden />
+									<span className="min-w-0">
+										<span className="block text-sm font-semibold leading-tight">
+											{i.label}
+											{active && <span className="ml-2 text-xs font-normal text-stone-600 dark:text-stone-400">You&rsquo;re here</span>}
+										</span>
+										<span className="block truncate text-xs text-stone-600 dark:text-stone-400">{i.sub}</span>
+									</span>
+								</Link>
+							</li>
+						);
+					})}
+				</ul>
+				<Link href="/#index" className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold hover:bg-stone-900/[0.04] dark:hover:bg-white/5">
+					View all highlights <ArrowUpRight className="h-4 w-4" aria-hidden />
+				</Link>
+			</div>
+		</details>
+	);
+}

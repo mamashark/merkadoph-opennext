@@ -107,3 +107,13 @@ export async function adminPortfolioTags(): Promise<string[]> {
 }
 
 export const adminGetPortfolio = (id: string) => adminGet<Portfolio>("portfolios", id);
+
+/** Site search (/search): live rows whose title or summary contains `term` (already cleaned with searchTerm()). */
+export const searchPublicPortfolios = cached(async (term: string, limit: number = 8) => {
+	const { data, error } = await onlyLive(createPublicClient().from("portfolios").select("id,slug,title,excerpt,completed_on"))
+		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+		.order("completed_on", { ascending: false, nullsFirst: false })
+		.limit(limit);
+	if (error) throw new Error(`Failed to search portfolios: ${error.message}`);
+	return (data ?? []) as { id: string, slug: string, title: string, excerpt: string | null, completed_on: string | null }[];
+}, "portfolio:search", ["portfolio"]);

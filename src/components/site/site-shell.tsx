@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { NavLinks } from "./nav-links";
+import { Search } from "lucide-react";
+import { HighlightsMenu } from "./highlights-menu";
+import { DEFAULT_CONTACT_HREF } from "./site-nav";
 import { CartButton } from "@/components/shop/cart-button";
 import { getShopSettings } from "@/lib/shop";
 import { getSeoSettings, LEGAL_PAGES, siteJsonLd, socialLinks } from "@/lib/site-settings";
@@ -13,8 +15,9 @@ const SOCIAL_LABELS: Record<string, string> = { facebook: "Facebook", instagram:
 /**
  * Public site chrome (header with section navigation + footer), shared by (site)/* and the homepage.
  * Every page is #faf9f6 in light mode; `tone="home"` also uses the homepage's dark palette (see globals.css);
- * `tone="night"` matches the Highlights homepage (day sky in light mode, night sky in dark mode). There the header
- * has no logo and stays hidden until the section with id `revealAt` scrolls into view, so the hero fills the screen.
+ * `tone="night"` matches the Highlights homepage (day sky in light mode, night sky in dark mode).
+ * Header: Merkado PH (home) · Highlights menu · Search ··· Get in touch (`contactHref`, else the homepage's contact section).
+ * With `revealAt` (the homepage) the header has no logo and stays hidden until that section scrolls into view.
  */
 export async function SiteShell({
 	children,
@@ -42,25 +45,34 @@ export async function SiteShell({
 			{(() => {
 				const bar = cn("border-b border-amber-900/10 backdrop-blur dark:border-white/10", night ? "bg-[#f7f5ee]/90 dark:bg-[#03051a]/85" : home ? "bg-home-bg/90" : "bg-[#faf9f6]/90 dark:bg-stone-950/85");
 				const inner = (
-				<div className={cn("mx-auto flex max-w-6xl flex-col gap-2 px-4 py-3 sm:h-16 sm:flex-row sm:items-center sm:px-6 sm:py-0", revealAt ? "sm:justify-end" : "sm:justify-between")}>
-					{!revealAt && (
-						<Link href="/" aria-label="Merkado PH home" className="w-fit rounded-lg dark:bg-white dark:px-2 dark:py-1">
-							<Image src="/logo.webp" alt="Merkado PH" width={600} height={188} loading="eager" sizes="144px" className="h-auto w-32 sm:w-36" />
-						</Link>
-					)}
-					<nav aria-label="Main" className="flex items-center gap-2">
-						<NavLinks shop={shopEnabled} />
-						{shopEnabled && <CartButton />}
-						{contactHref && (
-							<a
-								href={contactHref}
-								className="hidden whitespace-nowrap rounded-full bg-teal-700 px-4 py-1.5 text-sm font-semibold text-white hover:bg-teal-800 dark:bg-teal-500 dark:text-stone-950 dark:hover:bg-teal-400 sm:inline-block"
+					<div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-4 sm:gap-3 sm:px-6">
+						<nav aria-label="Main" className="flex min-w-0 items-center gap-1 sm:gap-3">
+							{!revealAt && (
+								<Link href="/" className="flex shrink-0 items-center gap-2 rounded-lg pr-1 text-[15px] font-semibold tracking-tight text-stone-950 dark:text-white">
+									<Image src="/android-chrome-192x192.png" alt="" width={28} height={28} className="h-7 w-7" priority />
+									<span className="max-sm:sr-only">Merkado PH</span>
+								</Link>
+							)}
+							<HighlightsMenu shop={shopEnabled} />
+							<Link
+								href="/search"
+								className="flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-sm font-medium text-stone-800 hover:bg-stone-900/5 dark:text-stone-200 dark:hover:bg-white/10"
 							>
-								Get a quote
+								<span className="max-sm:sr-only">Search</span>
+								<Search className="h-4 w-4" aria-hidden />
+							</Link>
+						</nav>
+						<div className="ml-auto flex shrink-0 items-center gap-2">
+							{shopEnabled && <CartButton />}
+							<a
+								href={contactHref ?? DEFAULT_CONTACT_HREF}
+								className="inline-flex min-h-10 items-center whitespace-nowrap rounded-full bg-teal-700 px-4 text-sm font-semibold text-white hover:bg-teal-800 dark:bg-teal-500 dark:text-stone-950 dark:hover:bg-teal-400"
+							>
+								<span className="max-[400px]:hidden">Get in touch</span>
+								<span className="min-[401px]:hidden">Contact</span>
 							</a>
-						)}
-					</nav>
-				</div>
+						</div>
+					</div>
 				);
 				return revealAt ? (
 					<RevealHeader revealAt={revealAt} className={bar}>

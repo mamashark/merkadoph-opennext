@@ -102,3 +102,13 @@ export function adminListEvents(opts: { q?: string; status?: string; when?: stri
 }
 
 export const adminGetEvent = (id: string) => adminGet<EventItem>("events", id);
+
+/** Site search (/search): live rows whose title or summary contains `term` (already cleaned with searchTerm()). */
+export const searchPublicEvents = cached(async (term: string, limit: number = 8) => {
+	const { data, error } = await onlyLive(createPublicClient().from("events").select("id,slug,title,excerpt,starts_at"))
+		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+		.order("starts_at", { ascending: false, nullsFirst: false })
+		.limit(limit);
+	if (error) throw new Error(`Failed to search events: ${error.message}`);
+	return (data ?? []) as { id: string, slug: string, title: string, excerpt: string | null, starts_at: string | null }[];
+}, "events:search", ["events"]);

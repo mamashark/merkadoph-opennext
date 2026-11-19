@@ -120,3 +120,13 @@ export function adminListPromotions(opts: { q?: string; status?: string; validit
 }
 
 export const adminGetPromotion = (id: string) => adminGet<Promotion>("promotions", id);
+
+/** Site search (/search): live rows whose title or summary contains `term` (already cleaned with searchTerm()). */
+export const searchPublicPromotions = cached(async (term: string, limit: number = 8) => {
+	const { data, error } = await onlyLive(createPublicClient().from("promotions").select("id,slug,title,excerpt,ends_at"))
+		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+		.order("published_at", { ascending: false, nullsFirst: false })
+		.limit(limit);
+	if (error) throw new Error(`Failed to search promotions: ${error.message}`);
+	return (data ?? []) as { id: string, slug: string, title: string, excerpt: string | null, ends_at: string | null }[];
+}, "promotions:search", ["promotions"]);

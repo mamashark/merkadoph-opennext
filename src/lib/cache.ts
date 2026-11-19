@@ -29,9 +29,9 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	home: { label: "Homepage", description: "The / page.", tags: [], paths: [{ path: "/" }] },
 	listings: {
 		label: "Listing pages",
-		description: "/blogs, /events, /promotions, /services, /impact, /bygg, /digital and /bulletin (all tabs and pages).",
+		description: "/blogs, /events, /promotions, /services, /impact, /bygg, /digital, /bulletin and /search (all tabs and pages).",
 		tags: [],
-		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/impact" }, { path: "/bygg" }, { path: "/digital" }, { path: "/bulletin" }],
+		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/impact" }, { path: "/bygg" }, { path: "/digital" }, { path: "/bulletin" }, { path: "/search" }],
 	},
 	blogs: {
 		label: "Blogs",

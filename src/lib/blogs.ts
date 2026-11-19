@@ -142,3 +142,13 @@ export async function adminBlogCounts() {
 	if (all.error) throw new Error(`Failed to load blog stats: ${all.error.message}`);
 	return { total: all.count ?? 0, published: live.count ?? 0, drafts: (all.count ?? 0) - (live.count ?? 0) };
 }
+
+/** Site search (/search): live rows whose title or summary contains `term` (already cleaned with searchTerm()). */
+export const searchPublicBlogs = cached(async (term: string, limit: number = 8) => {
+	const { data, error } = await onlyLive(createPublicClient().from("blogs").select("id,slug,title,excerpt,published_at"))
+		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+		.order("published_at", { ascending: false, nullsFirst: false })
+		.limit(limit);
+	if (error) throw new Error(`Failed to search blogs: ${error.message}`);
+	return (data ?? []) as { id: string, slug: string, title: string, excerpt: string | null, published_at: string | null }[];
+}, "blogs:search", ["blogs"]);

@@ -117,3 +117,13 @@ export function adminListServices(opts: { q?: string; status?: string; category?
 }
 
 export const adminGetService = (id: string) => adminGet<Service>("services", id);
+
+/** Site search (/search): live rows whose title or summary contains `term` (already cleaned with searchTerm()). */
+export const searchPublicServices = cached(async (term: string, limit: number = 8) => {
+	const { data, error } = await onlyLive(createPublicClient().from("services").select("id,slug,title,excerpt,category"))
+		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+		.order("title", { ascending: true, nullsFirst: false })
+		.limit(limit);
+	if (error) throw new Error(`Failed to search services: ${error.message}`);
+	return (data ?? []) as { id: string, slug: string, title: string, excerpt: string | null, category: string | null }[];
+}, "services:search", ["services"]);

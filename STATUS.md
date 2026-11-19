@@ -5,7 +5,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 
 **Phase:** Content & launch prep. The site is built and deployed behind the staging gate (visitors see "coming soon"). Kay is filling in the content.
 **% complete (launch prep):** 4 of 16 tasks done ≈ 25%. Counted from the task lists below; update when tasks move.
-**Last updated:** 2026-11-19 by Quinn (QA)
+**Last updated:** 2026-11-19 by Dex (OPS)
 
 ---
 
@@ -27,8 +27,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | Remove or unpublish every `sample`-tagged item | Sol (SEO) | `node scripts/seed-sample-content.mjs --remove`. Before launch. |
 | Add 301 redirects for old Shopify URLs (Admin → SEO → Redirects) | Sol (SEO) | Old URLs return 404. |
 | Rewrite legal pages for a no-shop site | Dana (DATA) | They still describe a shop. |
-| Set up uptime monitoring and alerts | Dex (OPS) | Not confirmed. |
-| Check Workers Logs for "Error 1102" (resource limits) | Dex (OPS) | Seen once in the 16 Nov audit. |
+| Check Workers Logs for "Error 1102" (resource limits) | Dex (OPS) | Seen once in the 16 Nov audit. Needs Cloudflare dashboard access (no token locally). Once monitoring runs, a repeat 1102 shows up as `/api/health` down. |
 | Fix the ESLint setup | Finn (FE) | See bug B1. |
 | Re-check "noindex on production" after launch with a clean browser | Sol (SEO) | Probably the staging cookie (staged pages add noindex on purpose). |
 
@@ -37,6 +36,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | Task | Owner | Blocked by |
 |---|---|---|
 | Launch (`NEXT_PUBLIC_HOMEPAGE_LIVE=true` + deploy) | Dex (OPS) | Kay finishing the content; Needs Kay #1. |
+| Set up uptime monitoring and alerts | Dex (OPS), 2026-11-19 | Prepared, **not running yet**: Needs Kay #6. Code on branch `ops/uptime-monitoring` (`f0c6db3`, not pushed): hourly GitHub Actions check (`.github/workflows/uptime.yml`) + Workers Issues on in `wrangler.jsonc`. The existing `/api/health` (Worker + database, outside the staging gate; returned 200 `{"ok":true}` on 2026-11-19) is the endpoint to monitor. |
 
 ## Done
 
@@ -71,6 +71,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 3. **Site focus.** The brief is culture, events and portfolio, but some copy leans towards roofing and home improvement. Recommended: decide the focus, then Sol aligns the copy, Services and Portfolio.
 4. **reCAPTCHA loads before anyone uses a form.** Recommended: load it only when a form is focused or in view. Alternative: Cloudflare Turnstile (a new third-party script, so it needs your OK).
 5. **Real-phone check of the homepage.** Emulation can't confirm iOS Safari (svh and the address bar, momentum scroll, the Back swipe, tap delay), Android Chrome's Back button and gesture, or real touch accuracy. Recommended: after B5 is fixed, Kay runs Quinn's manual steps on one iPhone (Safari) and one Android phone (Chrome), using the preview with the staging link (needs Needs Kay #2), and reports pass/fail per step. B5 is graded Major (one Highlight can't be tapped in landscape); Kay may downgrade it to Minor because the sections below still work.
+6. **Uptime monitoring (adds a third-party service).** Recommended: **UptimeRobot Free** (50 monitors, 5-minute checks, keyword monitors, email alerts; its pricing page says the free plan is for "personal and commercial projects"). Two keyword monitors: `https://merkadoph.se/api/health` must contain `"ok":true` (catches Worker errors such as 1102 and a down database), and `https://merkadoph.se/` must contain `Merkado PH` (the coming-soon page counts as up, so it works before and after launch). Alerts by email to Kay. Plus: OK to push branch `ops/uptime-monitoring` (hourly GitHub Actions check as the fallback, no new service and no secrets) and to switch on Workers Issues (Cloudflare, free in open beta) in the dashboard, with the matching `wrangler.jsonc` line in the next approved deploy. Alternative: Better Stack Free (10 monitors, email/Slack; its pricing says "Free for personal projects", so less clearly fine for a business). Fallback if you don't want any new service: only the GitHub Actions check (hourly, so up to about an hour before you hear). Cloudflare Health Checks need a Pro plan or higher and Cloudflare Notifications list no Workers error alert, so neither is used. Dex has the click-by-click setup steps.
 
 ---
 
@@ -85,3 +86,5 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-19 · FE · Coming-soon page: constellation removed, text kept (no client JS on that page now); not deployed
 2026-11-19 · QA · Homepage mobile test in emulated Chrome (touch, 320–414 portrait, 568–896 landscape, light + dark at 390): journeys, Back/Forward, Escape, deep links and refresh pass; no horizontal scroll; no console errors. Logged B5 (Major) and B6–B10. Real devices still unverified.
 2026-11-19 · FE · Coming-soon page: text moved top-left; twinkling CSS stars (reduced motion: still); not deployed
+2026-11-19 · OPS · Uptime monitoring prepared, not live: hourly GitHub Actions uptime check + Workers Issues config on branch `ops/uptime-monitoring` (`f0c6db3`, not pushed); probe tested against production (both checks up) and a fake host (both down); `tsc` and `wrangler deploy --dry-run` pass. External monitor (UptimeRobot recommended) waits for Kay (Needs Kay #6)
+2026-11-19 · UI · Homepage + coming-soon text/accents use the brand palette (olive, teal, yellow, orange, red-orange, red #E10606); light mode uses AA-passing shades; highlighter marks on highlighted words; not deployed

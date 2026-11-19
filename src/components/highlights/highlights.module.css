@@ -2,26 +2,37 @@
  * Highlights homepage: the constellation hero, an index, then one band per content type.
  * Night sky in dark mode, day sky in light mode. The graph reads these variables too (constellation/engine.ts).
  */
+/* Text and accents use the Merkado PH brand palette (olive #33331E, teal #19B796, yellow #FFCC3F, orange #F47E20,
+   red-orange #F05D22, red #E10606). Dark mode uses them as they are; light mode uses darker shades of the same hues so text passes 4.5:1. */
 .root {
+	/* Brand colours at full strength, for fills and highlighter marks (text on them is olive). */
+	--sun-fill: #ffcc3f;
+	--leaf-fill: #19b796;
+	--red-fill: #e10606;
+	--coral-fill: #f05d22;
+	--orange-fill: #f47e20;
+	--blue-fill: color-mix(in srgb, var(--blue) 35%, transparent);
+	--violet-fill: color-mix(in srgb, var(--violet) 35%, transparent);
 	--night: #f7f5ee;
 	--night-2: #ffffff;
 	--night-3: #e6e3d6;
-	--ink: #11163a;
-	--ink-2: #343a62;
-	--muted: #4d5378;
+	--ink: #33331e;
+	--ink-2: #48472f;
+	--muted: #5f5c4a;
 	--blue: #2f5bd8;
-	--sun: #8a6400;
-	--red: #c42a40;
-	--leaf: #0f7a51;
-	--orange: #b44a09;
+	--sun: #856a21;
+	--red: #e10606;
+	--coral: #bb491b;
+	--leaf: #117c65;
+	--orange: #a85716;
 	--violet: #6b45d6;
 	--tile-bg: #e6e3d6;
 	--star: #9ea3c4;
-	--line: rgba(17, 22, 58, 0.12);
-	--line-2: rgba(17, 22, 58, 0.24);
+	--line: rgba(51, 51, 30, 0.12);
+	--line-2: rgba(51, 51, 30, 0.24);
 	--panel: rgba(255, 255, 255, 0.94);
 	--on-c: #ffffff;
-	--shadow: rgba(17, 22, 58, 0.16);
+	--shadow: rgba(51, 51, 30, 0.16);
 	--font-display: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
 	--font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -39,19 +50,20 @@
 		--night: #03051a;
 		--night-2: #080c2a;
 		--night-3: #0b1030;
-		--ink: #e9ecff;
-		--ink-2: #bcc1e0;
-		--muted: #8a90b8;
+		--ink: #f7f5ee;
+		--ink-2: #d9d5c7;
+		--muted: #a8a391;
 		--blue: #5b84ff;
-		--sun: #fcd116;
-		--red: #ff5a6e;
-		--leaf: #3ddc97;
-		--orange: #ff9f45;
+		--sun: #ffcc3f;
+		--red: #e73434;
+		--coral: #f05d22;
+		--leaf: #19b796;
+		--orange: #f47e20;
 		--violet: #a98bff;
 		--tile-bg: #0b1030;
 		--star: #8a90b8;
-		--line: rgba(233, 236, 255, 0.12);
-		--line-2: rgba(233, 236, 255, 0.24);
+		--line: rgba(247, 245, 238, 0.12);
+		--line-2: rgba(247, 245, 238, 0.24);
 		--panel: rgba(9, 13, 44, 0.9);
 		--on-c: #03051a;
 		--shadow: rgba(0, 0, 0, 0.45);
@@ -420,10 +432,27 @@
 	letter-spacing: -0.03em;
 	max-width: 13ch;
 }
+/* Highlighted words: a brand-colour highlighter stripe in light mode, coloured text in dark mode. */
 .about h2 em,
-.worldHead h2 em {
+.worldHead h2 em,
+.contact h2 em {
 	font-style: normal;
-	color: var(--c, var(--sun));
+	color: var(--ink);
+	padding: 0 0.05em;
+	/* Softened so the olive letters that dip into the stripe stay readable (≥ 3:1 for large text). */
+	--mark: color-mix(in srgb, var(--c-fill, var(--sun-fill)) 60%, transparent);
+	background: linear-gradient(transparent 60%, var(--mark) 60%, var(--mark) 90%, transparent 90%);
+	-webkit-box-decoration-break: clone;
+	box-decoration-break: clone;
+}
+@media (prefers-color-scheme: dark) {
+	.about h2 em,
+	.worldHead h2 em,
+	.contact h2 em {
+		color: var(--c, var(--sun));
+		background: none;
+		padding: 0;
+	}
 }
 .aboutLede {
 	margin: 24px 0 0;
@@ -1093,10 +1122,6 @@
 	font-weight: 700;
 	line-height: 0.95;
 	letter-spacing: -0.03em;
-}
-.contact h2 em {
-	font-style: normal;
-	color: var(--sun);
 }
 .form {
 	padding: clamp(22px, 3vw, 36px);

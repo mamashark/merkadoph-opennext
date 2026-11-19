@@ -73,7 +73,7 @@ export async function HighlightsHome() {
 			{ id: "events", allLabel: "All events", cta: "Event details", label: "Events", sub: "Festivals, pop-ups, gatherings", color: "red", count: upcoming.total + past.total, list: "/events", dots: 10, has: events.length },
 			{ id: "portfolio", allLabel: "All projects", cta: "View the project", label: "Portfolio", sub: "Projects and pop-ups, year by year", color: "sun", count: portfolio.total, list: "/portfolio", dots: 14, has: portfolio.portfolios.length },
 			{ id: "services", allLabel: "All services", cta: "About this service", label: "Services", sub: "Work we take on", color: "blue", count: services.total, list: "/services", dots: 8, has: services.services.length },
-			{ id: "announcements", allLabel: "All announcements", cta: "Read the announcement", label: "Announcements", sub: "Community notices", color: "violet", count: notices.total, list: `/blogs?tag=${encodeURIComponent(ANNOUNCEMENT_TAG)}`, dots: 6, has: notices.blogs.length },
+			{ id: "announcements", allLabel: "All announcements", cta: "Read the announcement", label: "Announcements", sub: "Community notices", color: "coral", count: notices.total, list: `/blogs?tag=${encodeURIComponent(ANNOUNCEMENT_TAG)}`, dots: 6, has: notices.blogs.length },
 			{ id: "promotions", allLabel: "All offers", cta: "View the offer", label: "Promotions", sub: "Offers from friends of Merkado", color: "orange", count: promotions.total, list: "/promotions", dots: 6, has: promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
@@ -191,7 +191,7 @@ export async function HighlightsHome() {
 
 	/* ------------------------------ Markup ------------------------------ */
 
-	const style = (w: World | undefined) => ({ "--c": `var(--${w?.color ?? "sun"})` }) as React.CSSProperties;
+	const style = (w: World | undefined) => ({ "--c": `var(--${w?.color ?? "sun"})`, "--c-fill": `var(--${w?.color ?? "sun"}-fill)` }) as React.CSSProperties;
 	const head = (id: WorldId, title: React.ReactNode, body: string, allLabel: string) => {
 		const w = W[id]!;
 		return (

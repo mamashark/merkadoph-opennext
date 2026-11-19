@@ -2,17 +2,18 @@
 .stage {
 	/* Light: daytime sky. The graph reads these variables too (see engine.ts). */
 	--night: #f7f5ee;
-	--ink: #11163a;
-	--muted: #4d5378;
+	--ink: #33331e;
+	--muted: #5f5c4a;
 	--blue: #2f5bd8;
-	--sun: #a87a00;
-	--red: #d42f45;
-	--leaf: #12875a;
-	--orange: #c2510a;
+	--sun: #856a21;
+	--red: #e10606;
+	--coral: #bb491b;
+	--leaf: #117c65;
+	--orange: #a85716;
 	--violet: #6b45d6;
 	--tile-bg: #e6e3d6;
 	--star: #9ea3c4;
-	--line: rgba(17, 22, 58, 0.35);
+	--line: rgba(51, 51, 30, 0.35);
 	--panel: rgba(255, 255, 255, 0.92);
 	--font-display: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
 	--font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -29,17 +30,18 @@
 	.stage {
 		/* Dark: the night sky of the flag. */
 		--night: #03051a;
-		--ink: #e9ecff;
-		--muted: #8a90b8;
+		--ink: #f7f5ee;
+		--muted: #a8a391;
 		--blue: #5b84ff;
-		--sun: #fcd116;
-		--red: #ff5a6e;
-		--leaf: #3ddc97;
-		--orange: #ff9f45;
+		--sun: #ffcc3f;
+		--red: #e73434;
+		--coral: #f05d22;
+		--leaf: #19b796;
+		--orange: #f47e20;
 		--violet: #a98bff;
 		--tile-bg: #0b1030;
 		--star: #8a90b8;
-		--line: rgba(233, 236, 255, 0.3);
+		--line: rgba(247, 245, 238, 0.3);
 		--panel: rgba(9, 13, 44, 0.86);
 		color-scheme: dark;
 	}

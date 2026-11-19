@@ -43,6 +43,8 @@ export type MountOptions = {
 	onHubHover?: (hubId: string | null, el: SVGGElement | null) => void;
 	/** Click on an item. Return true when handled, so the item's link is not followed. */
 	onItemActivate?: (item: ConstellationItem) => boolean;
+	/** A top-right box (px) that nodes stay out of, e.g. under the Open/Fold button, so nothing sits where it can't be tapped. */
+	keepClear?: { width: number; height: number };
 };
 
 export type ConstellationEngine = {
@@ -283,6 +285,8 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				const desc = HUBS.find((h) => h.id === d.hub)?.description;
 				return o.onHubActivate ? `${d.label} (${d.count})${desc ? `: ${desc}` : ""}. Zoom in` : `${d.label}: ${d.count}`;
 			});
+		// An invisible 44px tap target around the 10px square (touch, B5).
+		hubs.append("circle").attr("r", 22).attr("fill", "transparent");
 		hubs.append("rect").attr("x", -5).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", (d) => d.color ?? BLUE);
 		const label = hubs.append("text").attr("x", 13).attr("y", -9).attr("fill", INK).attr("font-size", small ? 12 : 14);
 		label.append("tspan").text((d) => d.label ?? "");
@@ -386,6 +390,11 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				// hubs keep room on the right for their label
 				n.x = clamp(n.x ?? cx, 16, width - (n.kind === "hub" ? 140 : 16));
 				n.y = clamp(n.y ?? cy, n.kind === "hub" ? 40 : 16, height - 16);
+				// Hubs also keep their label (above-right of the square) out of the box.
+				const k = o.keepClear;
+				if (k && n.kind !== "center" && n.x > width - k.width - (n.kind === "hub" ? 140 : 16) && n.y < k.height + (n.kind === "hub" ? 24 : 16)) {
+					n.y = k.height + (n.kind === "hub" ? 24 : 16);
+				}
 			});
 			linkSel.attr("x1", (d) => src(d).x ?? 0).attr("y1", (d) => src(d).y ?? 0)
 				.attr("x2", (d) => tgt(d).x ?? 0).attr("y2", (d) => tgt(d).y ?? 0);

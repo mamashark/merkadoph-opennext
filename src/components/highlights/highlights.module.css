@@ -238,6 +238,11 @@
 	color: var(--muted);
 	letter-spacing: 0.06em;
 	z-index: 3;
+	/* Only the button takes taps; the bar itself lets them through to the sky (B5). */
+	pointer-events: none;
+}
+.hint .btn {
+	pointer-events: auto;
 }
 .hintText {
 	pointer-events: none;

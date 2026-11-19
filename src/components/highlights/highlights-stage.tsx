@@ -371,6 +371,8 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 				items,
 				lines: DEFAULT_LINES,
 				unfoldedHint: UNFOLDED_HINT,
+				// The Open/Fold button's corner (button + its top/right padding).
+				keepClear: { width: 150, height: 66 },
 				onHint: setHint,
 				onFolded: (f) => {
 					foldedRef.current = f;

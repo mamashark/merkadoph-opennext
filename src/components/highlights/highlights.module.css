@@ -133,7 +133,8 @@
 	   The site header stays hidden until the next section (see RevealHeader). */
 	height: 100vh;
 	height: 100svh;
-	min-height: 420px;
+	/* Low enough for phones held sideways (320px tall), so the hero never runs past the screen (B6). */
+	min-height: 280px;
 	width: 100%;
 	overflow: hidden;
 	isolation: isolate;
@@ -1568,8 +1569,9 @@
 	color: var(--ink);
 }
 
-/* Phones and small tablets: the sky on top, the panel as a bottom sheet. */
-@media (max-width: 760px) {
+/* Phones and small tablets held upright: the sky on top, the panel as a bottom sheet.
+   Held sideways, the screen is too short for a sheet, so the side panel layout is used instead (B6). */
+@media (max-width: 760px) and (orientation: portrait) {
 	.wRoot {
 		background: radial-gradient(ellipse 80% 40% at 50% 22%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%);
 	}
@@ -1607,6 +1609,70 @@
 	/* Room for the entry: the sheet's heading steps aside while one is open. */
 	.wRoot[data-entry] .wHead p,
 	.wRoot[data-entry] .wHead .wSub {
+		display: none;
+	}
+}
+
+/* Short landscape screens (phones held sideways): a slimmer side panel and a smaller hero intro. */
+@media (max-height: 500px) and (orientation: landscape) {
+	.wRoot {
+		--panel-w: min(340px, 46vw);
+	}
+	.wPanel {
+		top: 8px;
+		bottom: 8px;
+	}
+	.wHead {
+		padding: 8px 14px;
+	}
+	.wHead h2 {
+		margin-top: 4px;
+		font-size: 24px;
+	}
+	.wHead .kicker,
+	.wSub {
+		display: none;
+	}
+	.wPane {
+		padding: 6px 14px 14px;
+	}
+	.wList a {
+		padding: 8px 6px;
+	}
+	.wCover {
+		aspect-ratio: 16 / 6;
+	}
+	.wStar {
+		width: 36px;
+		height: 36px;
+		margin: -18px 0 0 -18px;
+	}
+	.wLabel {
+		display: none;
+	}
+	.intro {
+		gap: 6px;
+		padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+	}
+	.intro h1 {
+		font-size: 2rem;
+	}
+	.lede {
+		font-size: 0.85rem;
+		max-width: 26rem;
+	}
+	/* The hint is mouse wording and would sit on top of the stars here. */
+	.hintText {
+		display: none;
+	}
+}
+/* Very short (phones held sideways, ≤ 420px tall): just the title, so the sky has room.
+   The same words are in the About section right below. */
+@media (max-height: 420px) and (orientation: landscape) {
+	.intro h1 {
+		font-size: 1.6rem;
+	}
+	.lede {
 		display: none;
 	}
 }

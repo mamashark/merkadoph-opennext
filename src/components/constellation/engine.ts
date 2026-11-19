@@ -121,7 +121,8 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		const TILE_BG = C("--tile-bg"), STAR = C("--star"), FONT_DISPLAY = C("--font-display");
 
 		const small = width < 560;
-		const cx = width / 2, cy = height * (small ? 0.42 : 0.48);
+		// Short screens (phones held sideways) lift the sun so its prompt clears the title at the bottom.
+		const cx = width / 2, cy = height * (small ? 0.42 : height < 440 ? 0.36 : 0.48);
 		const rand = (a: number, b: number) => a + Math.random() * (b - a);
 		const sizeScale = small ? 0.4 : 1;
 

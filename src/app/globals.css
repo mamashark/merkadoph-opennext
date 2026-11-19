@@ -31,6 +31,8 @@
 	--color-brand-red: #e10606;
 	--color-brand-olive: #33331e;
 	--color-brand-on: #22220f;
+	/* Tahooo (sister brand): caramel, its colour in the Highlights menu. */
+	--color-tahooo-caramel: #9a5a2b;
 }
 
 :root {

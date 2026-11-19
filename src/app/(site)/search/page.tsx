@@ -7,6 +7,7 @@ import { searchPublicPortfolios } from "@/lib/portfolio";
 import { searchPublicServices } from "@/lib/services";
 import { searchPublicPromotions } from "@/lib/promotions";
 import { BYGG } from "@/lib/bygg-content";
+import { TAHOOO } from "@/lib/tahooo-content";
 import { BUSINESSES } from "@/lib/businesses";
 import { param, searchTerm, toPlainText } from "@/lib/content";
 import { formatDate } from "@/lib/datetime";
@@ -58,11 +59,19 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 			.filter((h) => `${h.title} ${h.text}`.toLowerCase().includes(needle))
 			.map((h) => ({ ...h, text: short(h.text), lang: "sv" }));
 
+		const tahooo: Hit[] = [
+			{ href: "/tahooo", title: TAHOOO.name, text: `${TAHOOO.tagline.en} ${TAHOOO.whatIsTaho} ${TAHOOO.occasions.join(", ")}. Taho Tahooo` },
+			...TAHOOO.flavours.map((f) => ({ href: `/tahooo#${f.id}`, title: f.en === f.sv ? f.sv : `${f.sv} · ${f.en}`, text: `Taho flavour. ${TAHOOO.sizes}. ${TAHOOO.allergens.en}.` })),
+		]
+			.filter((h) => `${h.title} ${h.text}`.toLowerCase().includes(needle))
+			.map((h) => ({ ...h, text: short(h.text.replace(" Taho Tahooo", "")) }));
+
 		groups = [
 			{ id: "blogs", label: "Blog", swatch: "bg-brand-teal", hits: blogs.map((b) => ({ href: `/blogs/${b.slug}`, title: b.title, text: short(b.excerpt), meta: b.published_at ? formatDate(b.published_at) : undefined })) },
 			{ id: "events", label: "Events", swatch: "bg-brand-red", hits: events.map((e) => ({ href: `/events/${e.slug}`, title: e.title, text: short(e.excerpt), meta: e.starts_at ? formatDate(e.starts_at) : undefined })) },
 			{ id: "impact", label: "Community Impact", swatch: "bg-brand-yellow", hits: projects.map((p) => ({ href: `/impact/${p.slug}`, title: p.title, text: short(p.excerpt), meta: p.completed_on?.slice(0, 4) })) },
 			{ id: "bygg", label: BUSINESSES.bygg.name, swatch: "bg-brand-orange", hits: bygg },
+			{ id: "tahooo", label: TAHOOO.name, swatch: "bg-tahooo-caramel", hits: tahooo },
 			{ id: "services", label: "Services", swatch: "bg-blue-600", hits: services.map((s) => ({ href: `/services/${s.slug}`, title: s.title, text: short(s.excerpt), meta: s.category ?? undefined })) },
 			{ id: "offers", label: "Offers", swatch: "bg-brand-promo", hits: offers.map((p) => ({ href: `/promotions/${p.slug}`, title: p.title, text: short(p.excerpt), meta: p.ends_at ? `Until ${formatDate(p.ends_at)}` : undefined })) },
 		].filter((g) => g.hits.length > 0);

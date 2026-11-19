@@ -1,6 +1,6 @@
 /** Data for the constellation graph. Plain types only, so server components can build it. */
 
-export type ConstellationColor = "blue" | "sun" | "red" | "leaf" | "orange" | "violet" | "coral";
+export type ConstellationColor = "blue" | "sun" | "red" | "leaf" | "orange" | "violet" | "coral" | "caramel";
 
 export type ConstellationHub = {
 	id: string;

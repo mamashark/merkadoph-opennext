@@ -7,6 +7,7 @@ import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
 import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
+import { TAHOOO } from "@/lib/tahooo-content";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -45,7 +46,7 @@ const clip = (s: string | null | undefined, n = 240) => {
 	return t.length > n ? `${t.slice(0, t.lastIndexOf(" ", n - 1) > n * 0.6 ? t.lastIndexOf(" ", n - 1) : n - 1).trimEnd()}…` : t;
 };
 
-type WorldId = "blogs" | "events" | "impact" | BusinessId | "bulletin";
+type WorldId = "blogs" | "events" | "impact" | BusinessId | "tahooo" | "bulletin";
 type World = { id: WorldId; label: string; sub: string; color: ConstellationColor; count: number; list: string; dots: number; allLabel: string; cta: string };
 
 /** Events in the sky: what's coming up; when nothing is, the most recent ones (the rest are in the /events archive). */
@@ -124,6 +125,7 @@ export async function HighlightsHome() {
 			// The two businesses always show: their page is worth visiting even before offerings are listed.
 			{ id: "bygg", allLabel: `Visit ${BUSINESSES.bygg.name}`, cta: "Read more", label: BUSINESSES.bygg.name, sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
 			{ id: "digital", allLabel: `Visit ${BUSINESSES.digital.name}`, cta: "Read more", label: BUSINESSES.digital.name, sub: "Websites, webshops and branding", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
+			{ id: "tahooo", allLabel: "Visit Tahooo Corner", cta: "Read more", label: TAHOOO.name, sub: "Taho for your event in Gothenburg", color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
 			{ id: "bulletin", allLabel: "Bulletin Board", cta: "Read more", label: "Bulletin Board", sub: "Embassy news, notices and offers", color: "coral", count: notices.total + promotions.total, list: "/bulletin", dots: 6, has: notices.blogs.length + promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
@@ -197,6 +199,32 @@ export async function HighlightsHome() {
 		})),
 		...businessEntries("bygg"),
 		...businessEntries("digital"),
+		// Tahooo Corner: the page (cart photo), then each flavour on the menu.
+		{
+			id: "tahooo-page",
+			hub: "tahooo",
+			title: TAHOOO.name,
+			note: TAHOOO.brand,
+			image: thumb(TAHOOO.cart.src),
+			href: "/tahooo",
+			tags: ["Tahooo"],
+			slug: "tahooo-page",
+			excerpt: `${TAHOOO.tagline.en} ${TAHOOO.whatIsTaho}`,
+			cover: TAHOOO.cart.src,
+			coverAlt: TAHOOO.cart.alt,
+		},
+		...TAHOOO.flavours.map((f) => ({
+			id: `taho-${f.id}`,
+			hub: "tahooo",
+			title: f.en === f.sv ? f.sv : `${f.sv} · ${f.en}`,
+			note: `${TAHOOO.sizes} · ${TAHOOO.allergens.en}`,
+			href: `/tahooo#${f.id}`,
+			tags: [],
+			slug: f.id,
+			excerpt: "",
+			coverAlt: "",
+			shape: "dot" as const,
+		})),
 		...notices.blogs.map((b) => ({
 			id: `notice-${b.slug}`,
 			hub: "bulletin",
@@ -535,6 +563,52 @@ export async function HighlightsHome() {
 						</section>
 					);
 				})}
+
+				{/* Tahooo Corner */}
+				{W.tahooo && (
+					<section className={styles.world} id="tahooo" aria-labelledby="tahooo-title" style={style(W.tahooo)}>
+						<div className={`${styles.wrap} ${styles.zoom}`}>
+							{head(
+								"tahooo",
+								<>
+									Tahooo <em>Corner</em>
+								</>,
+								`${TAHOOO.tagline.en} Book the taho cart for birthdays, weddings, baptisms, community and company events in ${TAHOOO.area}.`,
+								W.tahooo.allLabel,
+							)}
+							<div className={styles.services}>
+								<article className={`${styles.service} ${styles.card}`} data-key="tahooo-menu">
+									<span className={`${styles.num} ${styles.mono}`}>01</span>
+									<h3>
+										<Link href="/tahooo#meny" className={styles.stretch}>
+											The menu
+										</Link>
+									</h3>
+									<p>{TAHOOO.whatIsTaho.split(". ")[0]}.</p>
+									<ul lang="sv">
+										{TAHOOO.flavours.map((f) => (
+											<li key={f.id}>{f.sv}</li>
+										))}
+									</ul>
+								</article>
+								<article className={`${styles.service} ${styles.card}`} data-key="tahooo-book">
+									<span className={`${styles.num} ${styles.mono}`}>02</span>
+									<h3>
+										<Link href="/tahooo#boka" className={styles.stretch}>
+											Book the cart
+										</Link>
+									</h3>
+									<p>We bring the cart and serve fresh taho at your event in {TAHOOO.area}.</p>
+									<ul>
+										{TAHOOO.occasions.map((o) => (
+											<li key={o}>{o}</li>
+										))}
+									</ul>
+								</article>
+							</div>
+						</div>
+					</section>
+				)}
 
 				{/* Bulletin Board: notices (posts tagged "Announcement") and current partner offers */}
 				{W.bulletin && (

@@ -27,7 +27,7 @@ const TEXT = {
 			["Something else", "Something else"],
 		],
 		message: "Message",
-		placeholder: "Tell us about your project — roof type, rough size, location and timing.",
+		placeholder: "Tell us what you have in mind: what, where and when.",
 		privacy: "We only use your details to reply to you.",
 		sending: "Sending…",
 		send: "Send message",

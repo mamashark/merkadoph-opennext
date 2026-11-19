@@ -1,0 +1,312 @@
+/*
+ * Tahooo Corner (/tahooo), in the Tahooo brand (Brand Guide, October 2026): coloured like a cup of taho.
+ * Light: soya ground, arnibal ink. Dark: boba ground, soya ink, sago accents.
+ * Flavour colours are for the menu only (brand rule), as small dots next to dark/light text.
+ */
+.root {
+	--soya: #f8f3ea;
+	--arnibal: #5b2f14;
+	--caramel: #9a5a2b;
+	--sago: #c9935f;
+	--sago-light: #e6cba5;
+	--boba: #1c1612;
+	--ube: #6a3d9a;
+	--mango: #f8b51c;
+	--strawberry: #e5486a;
+	--pandan: #5fa046;
+
+	--bg: var(--soya);
+	--bg-2: #ffffff;
+	--ink: var(--arnibal);
+	--ink-2: #6b4128;
+	--accent: var(--caramel);
+	--line: rgba(91, 47, 20, 0.16);
+	--btn-bg: var(--arnibal);
+	--btn-ink: var(--soya);
+
+	background: var(--bg);
+	color: var(--ink);
+	font-family: var(--font-tahooo-body), "Segoe UI", system-ui, sans-serif;
+	font-size: 17px;
+	line-height: 1.6;
+}
+@media (prefers-color-scheme: dark) {
+	.root {
+		--bg: var(--boba);
+		--bg-2: #2a211b;
+		--ink: var(--soya);
+		--ink-2: var(--sago-light);
+		--accent: var(--sago);
+		--line: rgba(248, 243, 234, 0.16);
+		--btn-bg: var(--sago);
+		--btn-ink: var(--boba);
+	}
+}
+.root h1,
+.root h2,
+.root h3 {
+	font-family: var(--font-tahooo-display), var(--font-tahooo-body), system-ui, sans-serif;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+	text-wrap: balance;
+	margin: 0;
+}
+.root :focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+}
+
+.wrap {
+	max-width: 1120px;
+	margin: 0 auto;
+	padding: 0 max(20px, env(safe-area-inset-left, 0px));
+}
+.section {
+	padding: clamp(56px, 8vw, 104px) 0;
+	border-top: 1px solid var(--line);
+	scroll-margin-top: 72px;
+}
+.eyebrow {
+	margin: 0;
+	font-size: 12px;
+	font-weight: 700;
+	letter-spacing: 0.2em;
+	text-transform: uppercase;
+	color: var(--accent);
+}
+.lede {
+	margin: 14px 0 0;
+	max-width: 60ch;
+	color: var(--ink-2);
+	font-size: clamp(17px, 1.6vw, 20px);
+}
+
+/* Hero: logo and words beside the cart */
+.hero {
+	display: grid;
+	grid-template-columns: 1.05fr 1fr;
+	gap: clamp(24px, 4vw, 56px);
+	align-items: center;
+	padding: clamp(40px, 6vw, 80px) 0 clamp(48px, 7vw, 88px);
+}
+.logoTile {
+	display: inline-block;
+	border-radius: 18px;
+}
+@media (prefers-color-scheme: dark) {
+	.logoTile {
+		background: var(--soya);
+		padding: 10px 14px;
+	}
+}
+.logoTile img {
+	display: block;
+	width: clamp(120px, 14vw, 168px);
+	height: auto;
+}
+.hero h1 {
+	margin-top: 22px;
+	font-size: clamp(2.6rem, 6.4vw, 4.6rem);
+	line-height: 0.98;
+}
+.tagline {
+	margin: 16px 0 0;
+	font-family: var(--font-tahooo-display), sans-serif;
+	font-style: italic;
+	font-size: clamp(20px, 2.2vw, 26px);
+	line-height: 1.3;
+}
+.taglineEn {
+	margin: 4px 0 0;
+	color: var(--ink-2);
+}
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 28px;
+}
+.btn {
+	display: inline-flex;
+	align-items: center;
+	min-height: 48px;
+	padding: 0 22px;
+	border-radius: 999px;
+	font-weight: 700;
+	text-decoration: none;
+	background: var(--btn-bg);
+	color: var(--btn-ink);
+	border: 2px solid var(--btn-bg);
+}
+.btn:hover {
+	background: transparent;
+	color: var(--ink);
+}
+.btnGhost {
+	background: transparent;
+	color: var(--ink);
+	border-color: var(--line);
+}
+.btnGhost:hover {
+	border-color: var(--accent);
+}
+.cart {
+	position: relative;
+	aspect-ratio: 1200 / 1155;
+	width: 100%;
+}
+.cart img {
+	object-fit: contain;
+}
+.sister {
+	margin: 22px 0 0;
+	font-size: 14px;
+	color: var(--ink-2);
+}
+
+/* Taho explained */
+.explain {
+	display: grid;
+	grid-template-columns: 1fr 1.2fr;
+	gap: clamp(20px, 4vw, 56px);
+	align-items: start;
+}
+.explain h2,
+.head h2,
+.book h2 {
+	margin-top: 10px;
+	font-size: clamp(30px, 4vw, 46px);
+	line-height: 1.05;
+}
+.explain p {
+	margin: 0;
+	font-size: clamp(17px, 1.6vw, 20px);
+}
+
+/* Menu: flavours */
+.head {
+	margin-bottom: clamp(24px, 4vw, 40px);
+}
+.menu {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: 12px;
+}
+.flavour {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	min-height: 64px;
+	padding: 12px 16px;
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	border-radius: 999px;
+}
+.dot {
+	flex: none;
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 3px var(--line);
+}
+.dot[data-c="sago"] {
+	background: var(--sago);
+}
+.dot[data-c="ube"] {
+	background: var(--ube);
+}
+.dot[data-c="mango"] {
+	background: var(--mango);
+}
+.dot[data-c="strawberry"] {
+	background: var(--strawberry);
+}
+.dot[data-c="pandan"] {
+	background: var(--pandan);
+}
+.flavour b {
+	display: block;
+	line-height: 1.2;
+}
+.flavour small {
+	display: block;
+	font-size: 13px;
+	color: var(--ink-2);
+}
+.facts {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 28px;
+	margin: 22px 0 0;
+	padding: 0;
+	list-style: none;
+	font-size: 15px;
+	color: var(--ink-2);
+}
+.facts b {
+	color: var(--ink);
+}
+@media (max-width: 900px) {
+	.menu {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+
+/* Occasions */
+.occasions {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+.occasions li {
+	padding: 10px 18px;
+	border-radius: 999px;
+	border: 1.5px solid var(--accent);
+	font-weight: 600;
+}
+
+/* Booking */
+.book {
+	display: grid;
+	grid-template-columns: 1fr 1.3fr;
+	gap: clamp(24px, 4vw, 56px);
+	align-items: start;
+}
+.form {
+	padding: clamp(20px, 3vw, 32px);
+	background: var(--bg-2);
+	border: 1px solid var(--line);
+	border-radius: 20px;
+	color: #1c1917;
+}
+@media (prefers-color-scheme: dark) {
+	.form {
+		color: #f5f5f4;
+	}
+}
+.checklist {
+	margin: 18px 0 0;
+	padding-left: 1.2em;
+	color: var(--ink-2);
+}
+.checklist li + li {
+	margin-top: 4px;
+}
+
+@media (max-width: 860px) {
+	.hero,
+	.explain,
+	.book {
+		grid-template-columns: 1fr;
+	}
+	.cart {
+		max-width: 520px;
+		margin: 0 auto;
+	}
+}

@@ -10,6 +10,7 @@ export const NAV_HIGHLIGHTS: NavHighlight[] = [
 	{ href: "/impact", label: "Community Impact", sub: "Projects that brought people together", swatch: "bg-brand-yellow" },
 	{ href: "/bygg", label: "Merkado Byggnadsavdelning", sub: "Construction by Tindero Pedro", swatch: "bg-brand-orange" },
 	{ href: "/digital", label: "Merkado PH Digital", sub: "Websites, webshops and branding", swatch: "bg-blue-600" },
+	{ href: "/tahooo", label: "Tahooo Corner", sub: "Taho for your event in Gothenburg", swatch: "bg-tahooo-caramel" },
 	{ href: "/bulletin", label: "Bulletin Board", sub: "Embassy news, notices and offers", swatch: "bg-brand-promo" },
 ];
 

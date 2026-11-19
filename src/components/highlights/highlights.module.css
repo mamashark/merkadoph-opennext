@@ -10,6 +10,7 @@
 	--leaf-fill: #19b796;
 	--red-fill: #e10606;
 	--coral-fill: #f05d22;
+	--caramel-fill: #c9935f;
 	--orange-fill: #f47e20;
 	--blue-fill: color-mix(in srgb, var(--blue) 35%, transparent);
 	--violet-fill: color-mix(in srgb, var(--violet) 35%, transparent);
@@ -23,6 +24,8 @@
 	--sun: #856a21;
 	--red: #e10606;
 	--coral: #bb491b;
+	/* Tahooo caramel (its brand colour); reads 5.6:1 on the day sky. */
+	--caramel: #9a5a2b;
 	--leaf: #117c65;
 	--orange: #a85716;
 	--violet: #6b45d6;
@@ -57,6 +60,7 @@
 		--sun: #ffcc3f;
 		--red: #e73434;
 		--coral: #f05d22;
+		--caramel: #c9935f;
 		--leaf: #19b796;
 		--orange: #f47e20;
 		--violet: #a98bff;

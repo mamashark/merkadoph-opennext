@@ -13,7 +13,7 @@ export function PortfolioForm({ portfolio }: { portfolio?: Portfolio }) {
 			id={p?.id}
 			main={
 				<>
-					<BasicsSection row={p} publicPath="/portfolio" titlePlaceholder="e.g. New standing-seam roof in Täby" />
+					<BasicsSection row={p} publicPath="/impact" titlePlaceholder="e.g. Philippine Independence Day 2025" />
 
 					<FormCard title="Project images">
 						<GalleryField
@@ -45,7 +45,7 @@ export function PortfolioForm({ portfolio }: { portfolio?: Portfolio }) {
 					<PublishCard row={p} noun="project" />
 					<CoverCard row={p} title="Cover image (optional)" />
 					<TagsCard row={p} placeholder="roofing, renovation" />
-					<SeoCard row={p} pathPrefix="/portfolio/" />
+					<SeoCard row={p} pathPrefix="/impact/" />
 				</>
 			}
 		/>

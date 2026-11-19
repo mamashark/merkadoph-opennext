@@ -18,14 +18,14 @@ export function generateStaticParams() {
 	return [];
 }
 
-export async function generateMetadata({ params }: PageProps<"/portfolio/[slug]">): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<"/impact/[slug]">): Promise<Metadata> {
 	const project = await getPublicPortfolioBySlug((await params).slug);
 	if (!project) return { title: "Project not found", robots: { index: false } };
 	const cover = portfolioCover(project);
 	return pageMetadata({
 		title: project.meta_title || project.title,
 		description: summarize(project),
-		path: `/portfolio/${project.slug}`,
+		path: `/impact/${project.slug}`,
 		image: cover,
 		type: "article",
 		publishedTime: project.published_at,
@@ -34,11 +34,11 @@ export async function generateMetadata({ params }: PageProps<"/portfolio/[slug]"
 	});
 }
 
-export default async function PortfolioProjectPage({ params }: PageProps<"/portfolio/[slug]">) {
+export default async function PortfolioProjectPage({ params }: PageProps<"/impact/[slug]">) {
 	const project = await getPublicPortfolioBySlug((await params).slug);
 	if (!project) notFound();
 
-	const path = `/portfolio/${project.slug}`;
+	const path = `/impact/${project.slug}`;
 	const related = await getRelatedPortfolios(project.id, 3).catch(() => []);
 	const completed = project.completed_on ? formatDate(project.completed_on, { month: "long", year: "numeric" }) : null;
 
@@ -61,14 +61,14 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/portf
 						image: project.images.map((img) => ({ "@type": "ImageObject", contentUrl: img.url, caption: img.description || img.alt || undefined, description: img.alt || undefined })),
 					},
 					breadcrumbs([
-						{ name: "Portfolio", path: "/portfolio" },
+						{ name: "Community Impact", path: "/impact" },
 						{ name: project.title, path },
 					]),
 				]}
 			/>
 
 			<article>
-				<DetailHeader backHref="/portfolio" backLabel="All projects" tags={project.tags} title={project.title} excerpt={project.excerpt} />
+				<DetailHeader backHref="/impact" backLabel="All projects" tags={project.tags} title={project.title} excerpt={project.excerpt} />
 
 				<Facts
 					facts={[
@@ -95,13 +95,13 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/portf
 					<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
 						{related.map((p) => {
 							const cover = portfolioCover(p);
-							return <ContentCard key={p.id} href={`/portfolio/${p.slug}`} title={p.title} excerpt={p.excerpt} image={cover?.url} imageAlt={cover?.alt} eyebrow={p.location ?? undefined} headingLevel="h3" />;
+							return <ContentCard key={p.id} href={`/impact/${p.slug}`} title={p.title} excerpt={p.excerpt} image={cover?.url} imageAlt={cover?.alt} eyebrow={p.location ?? undefined} headingLevel="h3" />;
 						})}
 					</div>
 				</section>
 			)}
 
-			<BackFooter href="/portfolio" label="Back to all projects" />
+			<BackFooter href="/impact" label="Back to all projects" />
 		</main>
 	);
 }

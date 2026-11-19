@@ -4,12 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/ui";
 
+/** Mirrors the homepage Highlights. */
 const baseLinks = [
 	{ href: "/blogs", label: "Blog" },
 	{ href: "/events", label: "Events" },
-	{ href: "/promotions", label: "Promotions" },
-	{ href: "/services", label: "Services" },
-	{ href: "/portfolio", label: "Portfolio" },
+	{ href: "/impact", label: "Impact" },
+	{ href: "/bygg", label: "Bygg" },
+	{ href: "/digital", label: "Digital" },
+	{ href: "/bulletin", label: "Bulletin" },
 ];
 
 /** Only client piece of the public header: highlights the current section. */

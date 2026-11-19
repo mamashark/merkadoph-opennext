@@ -33,7 +33,7 @@ export default async function EditPortfolioPage({ params, searchParams }: PagePr
 				]}
 				actions={
 					contentState(portfolio) === "published" && (
-						<a href={`/portfolio/${portfolio.slug}`} target="_blank" rel="noreferrer" className={buttonClass("secondary")}>
+						<a href={`/impact/${portfolio.slug}`} target="_blank" rel="noreferrer" className={buttonClass("secondary")}>
 							<ExternalLink className="h-4 w-4" aria-hidden /> View live
 						</a>
 					)

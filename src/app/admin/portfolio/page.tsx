@@ -90,7 +90,7 @@ export default async function PortfolioAdminPage({ searchParams }: PageProps<"/a
 										label={p.title}
 										id={p.id}
 										editHref={`/admin/portfolio/${p.id}/edit`}
-										viewHref={contentState(p) === "published" ? `/portfolio/${p.slug}` : null}
+										viewHref={contentState(p) === "published" ? `/impact/${p.slug}` : null}
 										deleteAction={deletePortfolio}
 									/>
 								</li>

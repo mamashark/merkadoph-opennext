@@ -51,6 +51,13 @@ const nextConfig: NextConfig = {
 	async headers() {
 		return [{ source: "/:path*", headers: securityHeaders }];
 	},
+	// Portfolio became Community Impact (2026-11-19). Relative destinations, so they follow the site's own host.
+	async redirects() {
+		return [
+			{ source: "/portfolio", destination: "/impact", permanent: true },
+			{ source: "/portfolio/:slug", destination: "/impact/:slug", permanent: true },
+		];
+	},
 };
 
 export default nextConfig;

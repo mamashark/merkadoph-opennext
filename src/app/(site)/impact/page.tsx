@@ -10,22 +10,22 @@ import { JsonLd } from "@/components/site/json-ld";
 
 // Renders per request (it reads the tag/page from the URL); the data itself comes from the cache.
 
-const description = "Roofs, renovations and builds we've finished across Sweden — photos and the story behind each project. See our work, then ask for a free quote.";
+const description = "Community projects by Merkado PH and friends: events, pop-ups and initiatives that brought people together, with photos and the story behind each one.";
 
-export async function generateMetadata({ searchParams }: PageProps<"/portfolio">): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: PageProps<"/impact">): Promise<Metadata> {
 	const params = await searchParams;
 	const tag = param(params, "tag");
 	const page = pageParam(params);
 	const meta = await pageMetadata({
-		title: `${tag ? `${tag} projects` : "Portfolio"}${page > 1 ? ` — Page ${page}` : ""}`,
+		title: `${tag ? `${tag} projects` : "Community Impact"}${page > 1 ? ` — Page ${page}` : ""}`,
 		description,
-		path: page > 1 ? `/portfolio?page=${page}` : "/portfolio",
+		path: page > 1 ? `/impact?page=${page}` : "/impact",
 	});
 	// Tag filters are views of the same list: keep them out of the index (seo.md A-3).
 	return tag ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
-export default async function PortfolioPage({ searchParams }: PageProps<"/portfolio">) {
+export default async function PortfolioPage({ searchParams }: PageProps<"/impact">) {
 	const params = await searchParams;
 	const page = pageParam(params);
 	const tags = await getPortfolioTags();
@@ -40,29 +40,29 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/portfo
 					{
 						"@context": "https://schema.org",
 						"@type": "CollectionPage",
-						name: "Portfolio",
+						name: "Community Impact",
 						description,
-						url: absoluteUrl("/portfolio"),
+						url: absoluteUrl("/impact"),
 						mainEntity: {
 							"@type": "ItemList",
-							itemListElement: portfolios.map((p, i) => ({ "@type": "ListItem", position: (page - 1) * PORTFOLIO_PER_PAGE + i + 1, url: absoluteUrl(`/portfolio/${p.slug}`), name: p.title })),
+							itemListElement: portfolios.map((p, i) => ({ "@type": "ListItem", position: (page - 1) * PORTFOLIO_PER_PAGE + i + 1, url: absoluteUrl(`/impact/${p.slug}`), name: p.title })),
 						},
 					},
-					breadcrumbs([{ name: "Portfolio", path: "/portfolio" }]),
+					breadcrumbs([{ name: "Community Impact", path: "/impact" }]),
 				]}
 			/>
-			<PageIntro eyebrow="Portfolio" title="Projects we're proud of" description={description} />
+			<PageIntro eyebrow="Community Impact" title="What we built together" description={description} />
 
 			{tags.length > 1 && (
 				<LinkTabs
 					label="Project types"
 					current={tag}
-					tabs={[{ label: "All", value: "", href: "/portfolio" }, ...tags.map((t) => ({ label: t, value: t, href: `/portfolio?tag=${encodeURIComponent(t)}` }))]}
+					tabs={[{ label: "All", value: "", href: "/impact" }, ...tags.map((t) => ({ label: t, value: t, href: `/impact?tag=${encodeURIComponent(t)}` }))]}
 				/>
 			)}
 
 			{portfolios.length === 0 ? (
-				<EmptyNotice title="Our portfolio is being put together." description="Abangan! New projects are coming soon." />
+				<EmptyNotice title="Our community projects are being put together." description="Abangan! New projects are coming soon." />
 			) : (
 				<>
 					<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -71,7 +71,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/portfo
 							return (
 								<ContentCard
 									key={p.id}
-									href={`/portfolio/${p.slug}`}
+									href={`/impact/${p.slug}`}
 									title={p.title}
 									excerpt={p.excerpt}
 									image={cover?.url}
@@ -89,7 +89,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/portfo
 						})}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={PORTFOLIO_PER_PAGE} total={total} basePath="/portfolio" params={tag ? { tag } : {}} />
+						<Pagination page={page} perPage={PORTFOLIO_PER_PAGE} total={total} basePath="/impact" params={tag ? { tag } : {}} />
 					</div>
 				</>
 			)}

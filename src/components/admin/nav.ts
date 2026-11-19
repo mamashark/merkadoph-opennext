@@ -48,7 +48,7 @@ export const adminNav: NavSection[] = [
 				],
 			},
 			{
-				label: "Portfolio",
+				label: "Community Impact",
 				icon: GalleryHorizontalEnd,
 				children: [
 					{ label: "All projects", href: "/admin/portfolio" },

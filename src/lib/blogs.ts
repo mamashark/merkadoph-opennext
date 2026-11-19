@@ -38,6 +38,8 @@ export type BlogSummary = Pick<
 const SUMMARY_COLUMNS = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,status,published_at,author_name,created_at,updated_at";
 
 export const BLOGS_PER_PAGE = 9;
+/** Posts tagged with this (Admin → Tags) are notices: they appear on the Bulletin Board (/bulletin) and the homepage Highlight. */
+export const ANNOUNCEMENT_TAG = "Announcement";
 
 /* ----------------------------- Public (RLS) ----------------------------- */
 

@@ -26,7 +26,7 @@ export function PortfolioHomeShowcase({ projects }: { projects: PortfolioSummary
 					{p.excerpt && <p className="mt-2 max-w-2xl text-stone-700 dark:text-stone-300">{p.excerpt}</p>}
 				</div>
 				<Link
-					href={`/portfolio/${p.slug}`}
+					href={`/impact/${p.slug}`}
 					className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800 dark:bg-teal-500 dark:text-stone-950 dark:hover:bg-teal-400"
 				>
 					View project<span className="sr-only">: {p.title}</span> <ArrowRight className="h-4 w-4" aria-hidden />
@@ -35,7 +35,7 @@ export function PortfolioHomeShowcase({ projects }: { projects: PortfolioSummary
 			<PortfolioImageGrid images={p.images.slice(0, HOME_IMAGES)} viewerImages={p.images} title={p.title} />
 			{p.images.length > HOME_IMAGES && (
 				<p className="mt-4 text-sm">
-					<Link href={`/portfolio/${p.slug}`} className="font-semibold text-teal-800 hover:underline dark:text-teal-300">
+					<Link href={`/impact/${p.slug}`} className="font-semibold text-teal-800 hover:underline dark:text-teal-300">
 						See all {p.images.length} photos
 					</Link>
 				</p>

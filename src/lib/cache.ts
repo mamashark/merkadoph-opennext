@@ -29,34 +29,34 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	home: { label: "Homepage", description: "The / page.", tags: [], paths: [{ path: "/" }] },
 	listings: {
 		label: "Listing pages",
-		description: "/blogs, /events, /promotions, /services and /portfolio (all tabs and pages).",
+		description: "/blogs, /events, /promotions, /services, /impact, /bygg, /digital and /bulletin (all tabs and pages).",
 		tags: [],
-		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/portfolio" }],
+		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/impact" }, { path: "/bygg" }, { path: "/digital" }, { path: "/bulletin" }],
 	},
 	blogs: {
 		label: "Blogs",
-		description: "Blog data, the blog list, every post page and the RSS feed.",
+		description: "Blog data, the blog list, every post page, the RSS feed and the Bulletin Board (notices are posts).",
 		tags: ["blogs"],
-		paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }, { path: "/blogs/rss.xml" }],
+		paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }, { path: "/blogs/rss.xml" }, { path: "/bulletin" }],
 	},
 	events: { label: "Events", description: "Event data, the events list and every event page.", tags: ["events"], paths: [{ path: "/events" }, { path: "/events/[slug]", type: "page" }] },
 	promotions: {
 		label: "Promotions",
-		description: "Promotion data, the promotions list and every promotion page.",
+		description: "Promotion data, the promotions list, every promotion page and the Bulletin Board (offers).",
 		tags: ["promotions"],
-		paths: [{ path: "/promotions" }, { path: "/promotions/[slug]", type: "page" }],
+		paths: [{ path: "/promotions" }, { path: "/promotions/[slug]", type: "page" }, { path: "/bulletin" }],
 	},
 	services: {
 		label: "Services",
-		description: "Service data, the services list and every service page.",
+		description: "Service data, the services list, every service page, and the Merkado PH Bygg and Digital pages.",
 		tags: ["services"],
-		paths: [{ path: "/services" }, { path: "/services/[slug]", type: "page" }],
+		paths: [{ path: "/services" }, { path: "/services/[slug]", type: "page" }, { path: "/bygg" }, { path: "/digital" }],
 	},
 	portfolio: {
-		label: "Portfolio",
-		description: "Project data, the /portfolio list, every project page and the homepage showcase.",
+		label: "Community Impact",
+		description: "Project data, the /impact list, every project page and the homepage.",
 		tags: ["portfolio"],
-		paths: [{ path: "/portfolio" }, { path: "/portfolio/[slug]", type: "page" }, { path: "/" }],
+		paths: [{ path: "/impact" }, { path: "/impact/[slug]", type: "page" }, { path: "/" }],
 	},
 	shop: {
 		label: "Shop",
@@ -104,7 +104,9 @@ export function purgeAll() {
 /** After saving content: that type's data + pages, the homepage (it shows every type) and the sitemap. */
 export function purgeContent(tag: ContentTag, slugs: Array<string | null | undefined> = []) {
 	purgeGroups([tag, "home", "sitemap"]);
-	for (const slug of new Set(slugs)) if (slug) revalidatePath(`/${tag}/${slug}`);
+	// Projects (cache tag "portfolio") are public at /impact.
+	const base = tag === "portfolio" ? "impact" : tag;
+	for (const slug of new Set(slugs)) if (slug) revalidatePath(`/${base}/${slug}`);
 }
 
 /** After saving shop data (products, categories, tags, settings): shop pages, feed, homepage and sitemap. */

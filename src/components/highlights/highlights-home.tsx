@@ -1,10 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
-import { getPublishedBlogs, PINNED_BLOG_TITLE, getPublishedBlogByTitle, type BlogSummary } from "@/lib/blogs";
+import { ANNOUNCEMENT_TAG, getPublishedBlogs, PINNED_BLOG_TITLE, getPublishedBlogByTitle, type BlogSummary } from "@/lib/blogs";
 import { getPublicEvents, type EventSummary } from "@/lib/events";
 import { getPublicPortfolios, portfolioCover, type PortfolioSummary } from "@/lib/portfolio";
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
-import { getPublicServices, type ServiceSummary } from "@/lib/services";
+import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
+import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -19,8 +20,6 @@ import type { WorldInfo } from "./highlights-world";
 import { ChipFilter } from "./chip-filter";
 import styles from "./highlights.module.css";
 
-/** Posts tagged with this (Admin → Tags) also appear under Announcements. */
-export const ANNOUNCEMENT_TAG = "Announcement";
 /** The old shop now lives here. */
 const GROCERY_URL = "https://phasianmarket.se";
 
@@ -45,36 +44,60 @@ const clip = (s: string | null | undefined, n = 240) => {
 	return t.length > n ? `${t.slice(0, t.lastIndexOf(" ", n - 1) > n * 0.6 ? t.lastIndexOf(" ", n - 1) : n - 1).trimEnd()}…` : t;
 };
 
-type WorldId = "blogs" | "events" | "portfolio" | "services" | "announcements" | "promotions";
+type WorldId = "blogs" | "events" | "impact" | BusinessId | "bulletin";
 type World = { id: WorldId; label: string; sub: string; color: ConstellationColor; count: number; list: string; dots: number; allLabel: string; cta: string };
 
+/** Events in the sky: what's coming up; when nothing is, the most recent ones (the rest are in the /events archive). */
+const RECENT_EVENTS = 5;
+
 export async function HighlightsHome() {
-	const [blogsRes, pinned, notices, upcoming, past, portfolio, services, promotions, seo] = await Promise.all([
+	const [blogsRes, pinned, notices, upcoming, past, portfolio, byggMain, byggList, digitalMain, digitalList, promotions, seo] = await Promise.all([
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
-		safe(getPublishedBlogs(1, 3, { tag: ANNOUNCEMENT_TAG }), { blogs: [] as BlogSummary[], total: 0 }),
+		safe(getPublishedBlogs(1, 6, { tag: ANNOUNCEMENT_TAG }), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [] as EventSummary[], total: 0 }),
-		safe(getPublicEvents("past", 1, 4), { events: [] as EventSummary[], total: 0 }),
+		safe(getPublicEvents("past", 1, RECENT_EVENTS), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicPortfolios(undefined, 1, PER_TYPE), { portfolios: [] as PortfolioSummary[], total: 0 }),
-		safe(getPublicServices(undefined, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
-		safe(getPublicPromotions("current", 1, PER_TYPE), { promotions: [] as PromotionSummary[], total: 0 }),
+		safe(getPublicServiceBySlug(BUSINESSES.bygg.slug), null),
+		safe(getPublicServices(BUSINESSES.bygg.category, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
+		safe(getPublicServiceBySlug(BUSINESSES.digital.slug), null),
+		safe(getPublicServices(BUSINESSES.digital.category, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
+		safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[], total: 0 }),
 		getSeoSettings(),
 	]);
 
-	// Stories: the pinned post first; announcements have their own section.
+	// Stories: the pinned post first; notices live on the Bulletin Board.
 	const noticeIds = new Set(notices.blogs.map((b) => b.id));
 	const stories = (pinned ? [pinned, ...blogsRes.blogs.filter((b) => b.id !== pinned.id)] : blogsRes.blogs).filter((b) => !noticeIds.has(b.id));
-	// Upcoming first; a few recent past events keep the section alive between seasons.
-	const events = [...upcoming.events, ...past.events].slice(0, PER_TYPE);
+	const live = upcoming.events.length > 0;
+	const events = live ? upcoming.events : past.events;
+	// Each business: its main service (the page's text) and its offerings (same category).
+	const biz = {
+		bygg: { b: BUSINESSES.bygg, main: byggMain, offerings: byggList.services.filter((s) => s.slug !== BUSINESSES.bygg.slug) },
+		digital: { b: BUSINESSES.digital, main: digitalMain, offerings: digitalList.services.filter((s) => s.slug !== BUSINESSES.digital.slug) },
+	} satisfies Record<BusinessId, { b: Business; main: Service | null; offerings: ServiceSummary[] }>;
+	const offerings = [...biz.bygg.offerings, ...biz.digital.offerings];
 
 	const worlds: World[] = (
 		[
-			{ id: "blogs", allLabel: "All stories", cta: "Read the full story", label: "Blogs", sub: "Stories about Filipino culture", color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
-			{ id: "events", allLabel: "All events", cta: "Event details", label: "Events", sub: "Festivals, pop-ups, gatherings", color: "red", count: upcoming.total + past.total, list: "/events", dots: 10, has: events.length },
-			{ id: "portfolio", allLabel: "All projects", cta: "View the project", label: "Portfolio", sub: "Projects and pop-ups, year by year", color: "sun", count: portfolio.total, list: "/portfolio", dots: 14, has: portfolio.portfolios.length },
-			{ id: "services", allLabel: "All services", cta: "About this service", label: "Services", sub: "Work we take on", color: "blue", count: services.total, list: "/services", dots: 8, has: services.services.length },
-			{ id: "announcements", allLabel: "All announcements", cta: "Read the announcement", label: "Announcements", sub: "Community notices", color: "coral", count: notices.total, list: `/blogs?tag=${encodeURIComponent(ANNOUNCEMENT_TAG)}`, dots: 6, has: notices.blogs.length },
-			{ id: "promotions", allLabel: "All offers", cta: "View the offer", label: "Promotions", sub: "Offers from friends of Merkado", color: "orange", count: promotions.total, list: "/promotions", dots: 6, has: promotions.promotions.length },
+			{ id: "blogs", allLabel: "All stories", cta: "Read the full story", label: "Blogs", sub: "Stories from Merkado PH and our community", color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
+			{
+				id: "events",
+				allLabel: live ? "All events" : "Events archive",
+				cta: "Event details",
+				label: "Events",
+				sub: live ? "Community and cultural events, pop-ups, festivals" : "Our most recent events",
+				color: "red",
+				count: live ? upcoming.total : past.total,
+				list: live ? "/events" : "/events?when=past",
+				dots: 10,
+				has: events.length,
+			},
+			{ id: "impact", allLabel: "All projects", cta: "View the project", label: "Community Impact", sub: "Projects that brought people together", color: "sun", count: portfolio.total, list: "/impact", dots: 14, has: portfolio.portfolios.length },
+			// The two businesses always show: their page is worth visiting even before offerings are listed.
+			{ id: "bygg", allLabel: "Visit Merkado PH Bygg", cta: "Read more", label: "Merkado PH Bygg", sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
+			{ id: "digital", allLabel: "Visit Merkado PH Digital", cta: "Read more", label: "Merkado PH Digital", sub: "Websites, webshops and branding", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
+			{ id: "bulletin", allLabel: "Bulletin Board", cta: "Read more", label: "Bulletin Board", sub: "Embassy news, notices and offers", color: "coral", count: notices.total + promotions.total, list: "/bulletin", dots: 6, has: notices.blogs.length + promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
 		.filter((w) => w.has > 0)
@@ -85,6 +108,38 @@ export async function HighlightsHome() {
 
 	/** A graph tile plus what the Highlight's preview panel shows. */
 	type Entry = Omit<ConstellationItem, "links"> & { id: string; tags: string[]; slug: string; excerpt: string; cover?: string; coverAlt: string };
+	const serviceEntry = (hub: BusinessId) => (s: ServiceSummary): Entry => ({
+		id: `service-${s.slug}`,
+		hub,
+		title: s.title,
+		note: s.price_label || undefined,
+		image: thumb(s.cover_image_url),
+		href: `/services/${s.slug}`,
+		tags: shownTags(s.tags),
+		slug: s.slug,
+		excerpt: clip(s.excerpt),
+		cover: s.cover_image_url ?? undefined,
+		coverAlt: s.cover_image_alt || "",
+	});
+	const businessEntries = (id: BusinessId): Entry[] => {
+		const { b, main } = biz[id];
+		return [
+			{
+				id: `business-${id}`,
+				hub: id,
+				title: b.name,
+				note: b.eyebrow,
+				image: thumb(main?.cover_image_url),
+				href: b.path,
+				tags: [],
+				slug: b.slug,
+				excerpt: clip(main?.excerpt || b.intro),
+				cover: main?.cover_image_url ?? undefined,
+				coverAlt: main?.cover_image_alt || "",
+			},
+			...biz[id].offerings.map(serviceEntry(id)),
+		];
+	};
 	const entries: Entry[] = [
 		...stories.map((b) => ({
 			id: `blog-${b.slug}`,
@@ -114,33 +169,22 @@ export async function HighlightsHome() {
 		})),
 		...portfolio.portfolios.map((p) => ({
 			id: `project-${p.slug}`,
-			hub: "portfolio",
+			hub: "impact",
 			title: p.title,
 			note: [p.completed_on?.slice(0, 4), p.location].filter(Boolean).join(" · ") || undefined,
 			image: thumb(portfolioCover(p)?.url),
-			href: `/portfolio/${p.slug}`,
+			href: `/impact/${p.slug}`,
 			tags: shownTags(p.tags),
 			slug: p.slug,
 			excerpt: clip(p.excerpt),
 			cover: portfolioCover(p)?.url,
 			coverAlt: portfolioCover(p)?.alt ?? "",
 		})),
-		...services.services.map((s) => ({
-			id: `service-${s.slug}`,
-			hub: "services",
-			title: s.title,
-			note: s.price_label || s.category || undefined,
-			image: thumb(s.cover_image_url),
-			href: `/services/${s.slug}`,
-			tags: shownTags(s.tags),
-			slug: s.slug,
-			excerpt: clip(s.excerpt),
-			cover: s.cover_image_url ?? undefined,
-			coverAlt: s.cover_image_alt || "",
-		})),
+		...businessEntries("bygg"),
+		...businessEntries("digital"),
 		...notices.blogs.map((b) => ({
 			id: `notice-${b.slug}`,
-			hub: "announcements",
+			hub: "bulletin",
 			title: b.title,
 			note: [b.author_name || "Merkado PH", b.published_at && formatDate(b.published_at, { month: "short", year: "numeric" })].filter(Boolean).join(" · "),
 			image: thumb(b.cover_image_url),
@@ -153,13 +197,13 @@ export async function HighlightsHome() {
 		})),
 		...promotions.promotions.map((p) => ({
 			id: `promo-${p.slug}`,
-			hub: "promotions",
+			hub: "bulletin",
 			title: p.title,
-			note: [p.discount_label, p.ends_at ? `until ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : null].filter(Boolean).join(" · ") || undefined,
+			note: ["Offer", p.discount_label, p.ends_at ? `until ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : null].filter(Boolean).join(" · "),
 			image: thumb(p.cover_image_url),
 			href: `/promotions/${p.slug}`,
 			tags: shownTags(p.tags),
-			slug: p.slug,
+			slug: `offer-${p.slug}`,
 			excerpt: clip(p.excerpt),
 			cover: p.cover_image_url ?? undefined,
 			coverAlt: p.cover_image_alt || "",
@@ -242,7 +286,7 @@ export async function HighlightsHome() {
 					description: seo.site_description,
 					parentOrganization: { "@id": `${SITE_URL}/#organization` },
 					...localBusinessDetails(seo),
-					knowsAbout: services.services.map((s) => s.title),
+					knowsAbout: [BUSINESSES.bygg.name, BUSINESSES.digital.name, ...offerings.map((s) => s.title)],
 				}}
 			/>
 			<main className={`${styles.root} ${plexMono.variable}`} aria-labelledby="hero-title">
@@ -362,8 +406,8 @@ export async function HighlightsHome() {
 								<>
 									Pista &amp; <em>pop-ups</em>
 								</>,
-								"Festivals, pop-ups and gatherings where the Filipino community in Sweden meets.",
-								"All events",
+								live ? "Community and cultural events, pop-ups and festivals with Merkado PH and friends." : "No events coming up right now. These are our most recent ones; follow the Bulletin Board for news.",
+								live ? "All events" : "Events archive",
 							)}
 							<div className={styles.events}>
 								{events.slice(0, 4).map((e, i) => (
@@ -387,16 +431,16 @@ export async function HighlightsHome() {
 					</section>
 				)}
 
-				{/* Portfolio */}
-				{W.portfolio && (
-					<section className={styles.world} id="portfolio" aria-labelledby="portfolio-title" style={style(W.portfolio)}>
+				{/* Community Impact */}
+				{W.impact && (
+					<section className={styles.world} id="impact" aria-labelledby="impact-title" style={style(W.impact)}>
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
-								"portfolio",
+								"impact",
 								<>
-									Three <em>years</em>
+									Sama-<em>sama</em>
 								</>,
-								"From a family need for Filipino groceries to a community in Gothenburg — the Merkado PH story.",
+								"Projects with impact: events and initiatives that brought the community together.",
 								"All projects",
 							)}
 							<div className={styles.timeline}>
@@ -405,140 +449,135 @@ export async function HighlightsHome() {
 									// A timeline: oldest first.
 									.sort((a, b) => (a.completed_on ?? "9999").localeCompare(b.completed_on ?? "9999"))
 									.map((p, i) => (
-									<article key={p.id} className={`${styles.year} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`project-${p.slug}`}>
-										<b aria-hidden={!p.completed_on}>{p.completed_on?.slice(0, 4) ?? "—"}</b>
-										<h3>
-											<Link href={`/portfolio/${p.slug}`} className={styles.stretch}>
-												{p.title}
-											</Link>
-										</h3>
-										{plain(p.excerpt) && <p>{plain(p.excerpt)}</p>}
-										{p.location && <span className={`${styles.tag} ${styles.mono}`}>{p.location}</span>}
-									</article>
-								))}
-							</div>
-						</div>
-					</section>
-				)}
-
-				{/* Services */}
-				{W.services && (
-					<section className={styles.world} id="services" aria-labelledby="services-title" style={style(W.services)}>
-						<div className={`${styles.wrap} ${styles.zoom}`}>
-							{head(
-								"services",
-								<>
-									Built <em>with</em> you
-								</>,
-								"Webshops, brands and construction — the work Merkado PH takes on.",
-								"All services",
-							)}
-							<div className={styles.services}>
-								{services.services.slice(0, 4).map((s, i) => {
-									const chips = [s.category, s.price_label, ...shownTags(s.tags).map(cap)].filter((c, j, a): c is string => !!c && a.indexOf(c) === j).slice(0, 3);
-									return (
-										<article key={s.id} className={`${styles.service} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`service-${s.slug}`}>
-											<span className={`${styles.num} ${styles.mono}`}>{String(i + 1).padStart(2, "0")}</span>
+										<article key={p.id} className={`${styles.year} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`project-${p.slug}`}>
+											<b aria-hidden={!p.completed_on}>{p.completed_on?.slice(0, 4) ?? "—"}</b>
 											<h3>
-												<Link href={`/services/${s.slug}`} className={styles.stretch}>
-													{s.title}
-												</Link>
-											</h3>
-											{plain(s.excerpt) && <p>{plain(s.excerpt)}</p>}
-											{chips.length > 0 && (
-												<ul>
-													{chips.map((c) => (
-														<li key={c}>{c}</li>
-													))}
-												</ul>
-											)}
-										</article>
-									);
-								})}
-							</div>
-						</div>
-					</section>
-				)}
-
-				{/* Announcements: posts tagged "Announcement" */}
-				{W.announcements && (
-					<section className={styles.world} id="announcements" aria-labelledby="announcements-title" style={style(W.announcements)}>
-						<div className={`${styles.wrap} ${styles.zoom}`}>
-							{head(
-								"announcements",
-								<>
-									Mga <em>Paalala</em>
-								</>,
-								"Community notices and updates for Filipinos in Sweden.",
-								"All announcements",
-							)}
-							<div className={styles.notices}>
-								{notices.blogs.map((b, i) => (
-									<article key={b.id} className={`${styles.notice} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`notice-${b.slug}`}>
-										<div className={`${styles.src} ${styles.mono}`}>
-											<span>{b.author_name || "Merkado PH"}</span>
-											{b.published_at && <time dateTime={b.published_at}>{formatDate(b.published_at, { month: "short", year: "numeric" })}</time>}
-										</div>
-										<h3>
-											<Link href={`/blogs/${b.slug}`} className={styles.stretch}>
-												{b.title}
-											</Link>
-										</h3>
-										{plain(b.excerpt) && <p>{plain(b.excerpt)}</p>}
-										<span className={`${styles.badge} ${styles.mono}`}>{cap(firstTag(b.tags) ?? "Notice")}</span>
-									</article>
-								))}
-							</div>
-						</div>
-					</section>
-				)}
-
-				{/* Promotions */}
-				{W.promotions && (
-					<section className={styles.world} id="promotions" aria-labelledby="promotions-title" style={style(W.promotions)}>
-						<div className={`${styles.wrap} ${styles.zoom}`}>
-							{head(
-								"promotions",
-								<>
-									Para <em>sa</em> inyo
-								</>,
-								"Offers from friends of Merkado PH.",
-								"All offers",
-							)}
-							<div className={styles.promos}>
-								{(() => {
-									const card = (p: PromotionSummary, i: number) => (
-										<article key={p.id} className={styles.promo} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`promo-${p.slug}`}>
-											{cover(p.cover_image_url, p.cover_image_alt || "", i === 0 ? "(max-width: 860px) 100vw, 760px" : "(max-width: 860px) 100vw, 540px", undefined, i + 1)}
-											<span className={styles.scrim} aria-hidden="true" />
-											<span className={`${styles.promoKicker} ${styles.mono}`}>{p.discount_label || "Offer"}</span>
-											<h3>
-												<Link href={`/promotions/${p.slug}`} className={styles.stretch}>
+												<Link href={`/impact/${p.slug}`} className={styles.stretch}>
 													{p.title}
 												</Link>
 											</h3>
 											{plain(p.excerpt) && <p>{plain(p.excerpt)}</p>}
-											{i === 0 && (
-												<span className={`${styles.btn} ${styles.promoCta}`} aria-hidden="true">
-													{p.ends_at ? `Until ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : "View offer"} →
-												</span>
-											)}
+											{p.location && <span className={`${styles.tag} ${styles.mono}`}>{p.location}</span>}
 										</article>
-									);
-									const [first, ...rest] = promotions.promotions.slice(0, 3);
-									return (
-										<>
-											{card(first!, 0)}
-											{rest.length > 0 && <div className={styles.promoStack}>{rest.map((p, i) => card(p, i + 1))}</div>}
-										</>
-									);
-								})()}
+									))}
 							</div>
 						</div>
 					</section>
 				)}
 
-				{/* Contact (service and promotion buttons link to /#contact) */}
+				{/* The two businesses: Merkado PH Bygg and Merkado PH Digital */}
+				{(["bygg", "digital"] as const).map((id) => {
+					const w = W[id];
+					const { b, main, offerings: list } = biz[id];
+					if (!w) return null;
+					return (
+						<section key={id} className={styles.world} id={id} aria-labelledby={`${id}-title`} style={style(w)}>
+							<div className={`${styles.wrap} ${styles.zoom}`}>
+								{head(
+									id,
+									<>
+										Merkado PH <em>{id === "bygg" ? "Bygg" : "Digital"}</em>
+									</>,
+									plain(main?.excerpt) || b.intro,
+									w.allLabel,
+								)}
+								{list.length > 0 && (
+									<div className={styles.services}>
+										{list.slice(0, 4).map((s, i) => {
+											const chips = [s.price_label, ...shownTags(s.tags).map(cap)].filter((c, j, a): c is string => !!c && a.indexOf(c) === j).slice(0, 3);
+											return (
+												<article key={s.id} className={`${styles.service} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`service-${s.slug}`}>
+													<span className={`${styles.num} ${styles.mono}`}>{String(i + 1).padStart(2, "0")}</span>
+													<h3>
+														<Link href={`/services/${s.slug}`} className={styles.stretch}>
+															{s.title}
+														</Link>
+													</h3>
+													{plain(s.excerpt) && <p>{plain(s.excerpt)}</p>}
+													{chips.length > 0 && (
+														<ul>
+															{chips.map((c) => (
+																<li key={c}>{c}</li>
+															))}
+														</ul>
+													)}
+												</article>
+											);
+										})}
+									</div>
+								)}
+							</div>
+						</section>
+					);
+				})}
+
+				{/* Bulletin Board: notices (posts tagged "Announcement") and current partner offers */}
+				{W.bulletin && (
+					<section className={styles.world} id="bulletin" aria-labelledby="bulletin-title" style={style(W.bulletin)}>
+						<div className={`${styles.wrap} ${styles.zoom}`}>
+							{head(
+								"bulletin",
+								<>
+									Mga <em>Paalala</em>
+								</>,
+								"News from the Philippine Embassy in Sweden, community notices and offers from friends of Merkado PH.",
+								"Bulletin Board",
+							)}
+							{notices.blogs.length > 0 && (
+								<div className={styles.notices}>
+									{notices.blogs.slice(0, 3).map((b, i) => (
+										<article key={b.id} className={`${styles.notice} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`notice-${b.slug}`}>
+											<div className={`${styles.src} ${styles.mono}`}>
+												<span>{b.author_name || "Merkado PH"}</span>
+												{b.published_at && <time dateTime={b.published_at}>{formatDate(b.published_at, { month: "short", year: "numeric" })}</time>}
+											</div>
+											<h3>
+												<Link href={`/blogs/${b.slug}`} className={styles.stretch}>
+													{b.title}
+												</Link>
+											</h3>
+											{plain(b.excerpt) && <p>{plain(b.excerpt)}</p>}
+											<span className={`${styles.badge} ${styles.mono}`}>{cap(firstTag(b.tags) ?? "Notice")}</span>
+										</article>
+									))}
+								</div>
+							)}
+							{promotions.promotions.length > 0 && (
+								<div className={styles.promos}>
+									{(() => {
+										const card = (p: PromotionSummary, i: number) => (
+											<article key={p.id} className={styles.promo} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`promo-offer-${p.slug}`}>
+												{cover(p.cover_image_url, p.cover_image_alt || "", i === 0 ? "(max-width: 860px) 100vw, 760px" : "(max-width: 860px) 100vw, 540px", undefined, i + 1)}
+												<span className={styles.scrim} aria-hidden="true" />
+												<span className={`${styles.promoKicker} ${styles.mono}`}>{p.discount_label || "Offer"}</span>
+												<h3>
+													<Link href={`/promotions/${p.slug}`} className={styles.stretch}>
+														{p.title}
+													</Link>
+												</h3>
+												{plain(p.excerpt) && <p>{plain(p.excerpt)}</p>}
+												{i === 0 && (
+													<span className={`${styles.btn} ${styles.promoCta}`} aria-hidden="true">
+														{p.ends_at ? `Until ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : "View offer"} →
+													</span>
+												)}
+											</article>
+										);
+										const [first, ...rest] = promotions.promotions.slice(0, 3);
+										return (
+											<>
+												{card(first!, 0)}
+												{rest.length > 0 && <div className={styles.promoStack}>{rest.map((p, i) => card(p, i + 1))}</div>}
+											</>
+										);
+									})()}
+								</div>
+							)}
+						</div>
+					</section>
+				)}
+
+				{/* Contact (the business pages' default button links to /#contact) */}
 				<section className={styles.contact} id="contact" aria-labelledby="contact-title">
 					<div className={`${styles.wrap} ${styles.contactGrid}`}>
 						<div>
@@ -551,7 +590,7 @@ export async function HighlightsHome() {
 							</p>
 						</div>
 						<div className={styles.form}>
-							<ContactForm topics={services.services.map((s) => s.title)} />
+							<ContactForm topics={[BUSINESSES.bygg.name, BUSINESSES.digital.name, ...offerings.map((s) => s.title)]} />
 						</div>
 					</div>
 				</section>

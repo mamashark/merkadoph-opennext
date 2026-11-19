@@ -56,3 +56,6 @@ next-env.d.ts
 
 # Personal Claude Code instructions
 CLAUDE.local.md
+
+# Kay's Web Studio agents (kept local, like /local)
+/.claude/agents/

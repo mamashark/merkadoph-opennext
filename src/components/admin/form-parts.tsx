@@ -135,8 +135,8 @@ export function PublishCard({ row, noun }: { row?: Base; noun: string }) {
 				label="Publish date"
 				hint={
 					state === "scheduled"
-						? "Scheduled — it goes live automatically at this time (PH time)."
-						: "PH time. Leave blank to use the moment you publish. A future date schedules it."
+						? "Scheduled — it goes live automatically at this time (Swedish time)."
+						: "Swedish time. Leave blank to use the moment you publish. A future date schedules it."
 				}
 			>
 				<input id="published_at" name="published_at" type="datetime-local" defaultValue={toDateTimeInput(row?.published_at)} className={inputClass} />

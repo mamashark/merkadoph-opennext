@@ -10,7 +10,7 @@ import { latestOp, logOp } from "@/lib/ops";
  * - Manual: the admin button, limited to once every 7 days.
  */
 export const KEEPALIVE_CRON = "0 3 * * 1,4"; // 03:00 UTC every Monday and Thursday — keep in sync with wrangler.jsonc
-export const KEEPALIVE_CRON_LABEL = "Mondays and Thursdays at 11:00 AM PH time";
+export const KEEPALIVE_CRON_LABEL = "Mondays and Thursdays at 03:00 UTC (4–5 AM Swedish time)";
 export const MANUAL_COOLDOWN_MS = 7 * 24 * 3600 * 1000;
 
 export async function runKeepAlive(source: "manual" | "cron", actorEmail: string | null) {

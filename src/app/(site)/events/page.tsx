@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, MapPin } from "lucide-react";
 import { EVENTS_PER_PAGE, getEventTags, getPublicEvents } from "@/lib/events";
 import { pageParam, param } from "@/lib/content";
-import { formatDate } from "@/lib/datetime";
+import { formatDate, formatStart } from "@/lib/datetime";
 import { pageMetadata } from "@/lib/seo";
 import { ChipFilter, ContentCard, EmptyNotice, LinkTabs, PageIntro, Pill } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
@@ -91,7 +91,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 									<div className="space-y-1">
 										<p className="flex items-center gap-1.5">
 											<CalendarDays className="h-3.5 w-3.5 shrink-0" aria-hidden />
-											<time dateTime={event.starts_at}>{formatDate(event.starts_at, { dateStyle: "full", timeStyle: "short" })}</time>
+											<time dateTime={event.starts_at}>{formatStart(event.starts_at)}</time>
 										</p>
 										{event.venue_name && (
 											<p className="flex items-center gap-1.5">

@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { CalendarDays, Clock, MapPin, Ticket, Users } from "lucide-react";
 import { getPublicEventBySlug, isPastEvent } from "@/lib/events";
 import { summarize } from "@/lib/content";
-import { formatRange } from "@/lib/datetime";
+import { formatRange, schemaDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
 import { BackFooter, Body, CoverFigure, CtaLink, DetailHeader, Facts } from "@/components/site/detail";
 import { JsonLd } from "@/components/site/json-ld";
@@ -48,8 +48,8 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 						"@type": "Event",
 						name: event.title,
 						description: summarize(event),
-						startDate: event.starts_at,
-						endDate: event.ends_at ?? undefined,
+						startDate: schemaDate(event.starts_at),
+						endDate: schemaDate(event.ends_at),
 						eventStatus: "https://schema.org/EventScheduled",
 						eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
 						image: event.cover_image_url ? [event.cover_image_url] : undefined,
@@ -89,7 +89,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 						},
 						{ icon: Ticket, label: "Admission", value: event.price_info },
 						{ icon: Users, label: "Organizer", value: event.organizer },
-						{ icon: Clock, label: "Timezone", value: "Philippine Time (UTC+8)" },
+						{ icon: Clock, label: "Timezone", value: "Swedish time (CET/CEST)" },
 					]}
 				>
 					{!past && event.registration_url && <CtaLink href={event.registration_url}>Register</CtaLink>}

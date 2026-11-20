@@ -24,7 +24,7 @@ export function PromotionForm({ promotion }: { promotion?: Promotion }) {
 							</Field>
 						</div>
 						<div className="grid gap-4 sm:grid-cols-2">
-							<Field id="starts_at" label="Valid from" hint="PH time. Leave blank to start immediately.">
+							<Field id="starts_at" label="Valid from" hint="Swedish time. Leave blank to start immediately.">
 								<input id="starts_at" name="starts_at" type="datetime-local" defaultValue={toDateTimeInput(p?.starts_at)} className={inputClass} />
 							</Field>
 							<Field id="ends_at" label="Valid until" hint="Leave blank for no end date.">

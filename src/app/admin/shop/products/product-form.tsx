@@ -43,7 +43,7 @@ export function ProductForm({ product, categories, currency, tax }: { product?: 
 							<Field id="sale_price" label="Sale price" hint="Optional. Must be lower than the regular price.">
 								<input id="sale_price" name="sale_price" type="number" min={0} step="0.01" inputMode="decimal" defaultValue={p?.sale_price ?? ""} className={inputClass} />
 							</Field>
-							<Field id="sale_starts_at" label="Sale starts" hint="PH time. Blank = starts now.">
+							<Field id="sale_starts_at" label="Sale starts" hint="Swedish time. Blank = starts now.">
 								<input id="sale_starts_at" name="sale_starts_at" type="datetime-local" defaultValue={toDateTimeInput(p?.sale_starts_at)} className={inputClass} />
 							</Field>
 							<Field id="sale_ends_at" label="Sale ends" hint="Blank = no end date.">

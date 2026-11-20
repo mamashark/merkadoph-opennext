@@ -15,7 +15,7 @@ export function EventForm({ event }: { event?: EventItem }) {
 
 					<FormCard title="When">
 						<div className="grid gap-4 sm:grid-cols-2">
-							<Field id="starts_at" label="Starts" hint="PH time.">
+							<Field id="starts_at" label="Starts" hint="Swedish time.">
 								<input id="starts_at" name="starts_at" type="datetime-local" required defaultValue={toDateTimeInput(event?.starts_at)} className={inputClass} />
 							</Field>
 							<Field id="ends_at" label="Ends" hint="Optional.">

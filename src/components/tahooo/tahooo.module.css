@@ -115,6 +115,10 @@
 	grid-template-columns: 1fr 1fr;
 	min-height: clamp(520px, 52vw, 860px);
 }
+/* Occasion sections are linked to (/tahooo#festivaler): clear the site header. */
+.split[id] {
+	scroll-margin-top: 64px;
+}
 .panel {
 	display: flex;
 	flex-direction: column;

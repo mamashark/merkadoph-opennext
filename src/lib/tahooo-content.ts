@@ -13,13 +13,13 @@ export const TAHOOO = {
 	/** The Highlight's name in the menu, constellation and search (Kay, 2026-11-20); the booking page stays Tahooo Corner. */
 	highlight: "Project Taho",
 	metaTitle: "Tahooo Corner: taho for your event in Gothenburg",
-	metaDescription: "The taho corner for birthdays, weddings, baptisms and company events in Gothenburg. Eight flavours, warm or chilled, made fresh and served cup by cup.",
+	metaDescription: "The taho corner for birthdays, weddings, baptisms, company events and festivals in Gothenburg. Eight flavours, warm or chilled, served cup by cup.",
 	brand: "Tahooo by Merkado PH",
 	area: "Göteborg",
 
 	hero: {
 		eyebrow: { sv: "Nu bokningsbart", en: "Now booking" },
-		lead: { sv: "Taho-hörnan för kalas, bröllop, dop, community- och företagsevent.", en: "The taho corner for birthdays, weddings, baptisms and company events in Göteborg." },
+		lead: { sv: "Taho-hörnan för kalas, bröllop, dop, community- och företagsevent.", en: "The taho corner for birthdays, weddings, baptisms, company events and festivals in Göteborg." },
 		cart: { src: "/tahooo/cart.webp", alt: "The Tahooo cart: a wooden cart with lit banig-weave panels and a “Tahooo! @ Merkado PH” sign, two steel pots, clear cups and wooden spoons on top", width: 1200, height: 1155 },
 	},
 
@@ -104,6 +104,14 @@ export const TAHOOO = {
 			examples: "Kontorsfika, kickoffer, mässor och julbord.",
 			image: img("company", "Guests mingling at a company event behind a table of small desserts in glasses", 1100, 1007),
 		},
+		{
+			id: "festivaler",
+			sv: "Festivaler",
+			en: "Community & cultural events",
+			line: { sv: "En smak av hemma för föreningen, kulturdagen och festivalen.", en: "A taste of home for community gatherings, cultural celebrations and festivals." },
+			examples: "Föreningsträffar, kulturfestivaler, marknader och stadsfester",
+			image: img("festival", "Visitors browsing market stalls under a white tent hung with Philippine flag bunting", 892, 818),
+		},
 	],
 
 	howToBook: {
@@ -120,8 +128,8 @@ export const TAHOOO = {
 	book: {
 		eyebrow: { sv: "Boka nu!", en: "Book now!" },
 		title: { sv: "Boka ditt Tahooo Corner", en: "Book your Tahooo Corner" },
-		occasions: "Kalas · Bröllop · Dop · Företagsevents",
-		line: "Birthdays, weddings and baptisms, even company events, in Göteborg.",
+		occasions: "Kalas · Bröllop · Dop · Företagsevents · Festivaler",
+		line: "Birthdays, weddings and baptisms, company events and festivals, in Göteborg.",
 		image: img("cups", "Six glass cups of taho in different flavours: mango, ube with corn flakes, matcha, strawberry, pandan, and one tipped over spilling arnibal and pearls", 1100, 1241),
 	},
 

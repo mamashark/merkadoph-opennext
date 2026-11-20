@@ -1,9 +1,7 @@
 /**
  * The two businesses under Merkado PH, each with its own page and homepage Highlight.
  * - Bygg (/bygg): Merkado Byggnadsavdelning, a fixed page in Swedish; its content is in src/lib/bygg-content.ts.
- * - Digital (/digital): its words live in Admin → Services. The service with slug `slug` is the page's main text
- *   (excerpt, body, cover, call to action, SEO fields); every other live service with category `category` is listed.
- *   `intro` is only shown until that main service is published, so it states nothing beyond what the business is.
+ * - Digital (/digital): Merkado PH Digital, a fixed page in English; its content is in src/lib/digital-content.ts.
  */
 export const BUSINESSES = {
 	bygg: {
@@ -17,23 +15,14 @@ export const BUSINESSES = {
 	digital: {
 		id: "digital",
 		path: "/digital",
-		slug: "merkado-ph-digital",
-		category: "Digital",
 		name: "Merkado PH Digital",
 		lang: "en",
-		eyebrow: "Websites · Webshops · Branding",
-		intro: "Websites, webshops and branding, from Merkado PH.",
-		ctaDefault: "Get in touch",
-		servicesHeading: "Our services",
-		contactHeading: "Get in touch",
-		contactLede: "Tell us about your project and we’ll get back to you.",
+		eyebrow: "Branding · Marketing · Websites · Consulting",
 	},
 } as const;
 
 export type BusinessId = keyof typeof BUSINESSES;
 export type Business = (typeof BUSINESSES)[BusinessId];
-/** A business whose page is built from Admin → Services. */
-export type ServiceBusiness = typeof BUSINESSES.digital;
 
 /**
  * Official links for the Philippine Embassy in Sweden, shown on the Bulletin Board.

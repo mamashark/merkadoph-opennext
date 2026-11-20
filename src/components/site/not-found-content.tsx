@@ -5,7 +5,7 @@ const sections = [
 	{ href: "/services", label: "Services", hint: "Roofing, renovation & construction", icon: BriefcaseBusiness },
 	{ href: "/promotions", label: "Promotions", hint: "Current offers and discounts", icon: TicketPercent },
 	{ href: "/events", label: "Events", hint: "Community gatherings & workshops", icon: CalendarDays },
-	{ href: "/blogs", label: "Blog", hint: "Guides, stories and news", icon: FileText },
+	{ href: "/blogs", label: "Blogs", hint: "Guides, stories and news", icon: FileText },
 ];
 
 /** Public 404 body, styled like the rest of the site. Wrapped by SiteShell (root) or the (site) layout. */

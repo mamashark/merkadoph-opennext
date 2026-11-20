@@ -15,7 +15,7 @@ export function ServiceForm({ service, categories }: { service?: Service; catego
 
 					<FormCard title="Service details">
 						<div className="grid gap-4 sm:grid-cols-2">
-							<Field id="category" label="Category" hint="“Digital” lists it on /digital; the service with the slug merkado-ph-digital is that page’s main text. (The Bygg page, /bygg, is edited in code.)">
+							<Field id="category" label="Category" hint="Optional grouping, e.g. “Roofing”. (The Merkado PH Digital and Bygg pages, /digital and /bygg, are edited in code.)">
 								<input id="category" name="category" list="service-categories" maxLength={60} defaultValue={s?.category ?? ""} placeholder="Digital" className={inputClass} />
 								<datalist id="service-categories">
 									{categories.map((c) => (

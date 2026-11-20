@@ -5,12 +5,12 @@
 export type NavHighlight = { href: string; label: string; sub: string; swatch: string };
 
 export const NAV_HIGHLIGHTS: NavHighlight[] = [
-	{ href: "/blogs", label: "Blog", sub: "Stories from Merkado PH and our community", swatch: "bg-brand-teal" },
+	{ href: "/blogs", label: "Blogs", sub: "Stories from Merkado PH and our community", swatch: "bg-brand-teal" },
 	{ href: "/events", label: "Events", sub: "Community and cultural events, pop-ups, festivals", swatch: "bg-brand-red" },
 	{ href: "/impact", label: "Community Impact", sub: "Projects that brought people together", swatch: "bg-brand-yellow" },
 	{ href: "/bygg", label: "Merkado Byggnadsavdelning", sub: "Construction by Tindero Pedro", swatch: "bg-brand-orange" },
-	{ href: "/digital", label: "Merkado PH Digital", sub: "Websites, webshops and branding", swatch: "bg-blue-600" },
-	{ href: "/tahooo", label: "Tahooo Corner", sub: "Taho for your event in Gothenburg", swatch: "bg-tahooo-caramel" },
+	{ href: "/digital", label: "Merkado PH Digital", sub: "Branding, marketing, websites and consulting", swatch: "bg-blue-600" },
+	{ href: "/tahooo", label: "Project Taho", sub: "Tahooo Corner: taho for your event in Gothenburg", swatch: "bg-tahooo-caramel" },
 	{ href: "/bulletin", label: "Bulletin Board", sub: "Embassy news, notices and offers", swatch: "bg-brand-promo" },
 ];
 

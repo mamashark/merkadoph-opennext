@@ -7,6 +7,7 @@ import { searchPublicPortfolios } from "@/lib/portfolio";
 import { searchPublicServices } from "@/lib/services";
 import { searchPublicPromotions } from "@/lib/promotions";
 import { BYGG } from "@/lib/bygg-content";
+import { DIGITAL } from "@/lib/digital-content";
 import { TAHOOO } from "@/lib/tahooo-content";
 import { BUSINESSES } from "@/lib/businesses";
 import { param, searchTerm, toPlainText } from "@/lib/content";
@@ -59,6 +60,14 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 			.filter((h) => `${h.title} ${h.text}`.toLowerCase().includes(needle))
 			.map((h) => ({ ...h, text: short(h.text), lang: "sv" }));
 
+		// Merkado PH Digital is fixed content too.
+		const digital: Hit[] = [
+			{ href: BUSINESSES.digital.path, title: BUSINESSES.digital.name, text: `${DIGITAL.lede} ${DIGITAL.intro}` },
+			...DIGITAL.services.map((s) => ({ href: `${BUSINESSES.digital.path}#${s.slug}`, title: s.title, text: `${s.text} ${s.includes.join(", ")}.` })),
+		]
+			.filter((h) => `${h.title} ${h.text}`.toLowerCase().includes(needle))
+			.map((h) => ({ ...h, text: short(h.text) }));
+
 		const tahooo: Hit[] = [
 			{ href: "/tahooo", title: TAHOOO.name, text: `${TAHOOO.hero.lead.en} ${TAHOOO.whatIsTaho.meet} ${TAHOOO.whatIsTaho.meetLine} ${TAHOOO.occasions.map((o) => `${o.sv} ${o.en}`).join(", ")}. Taho Tahooo` },
 			...TAHOOO.flavours.map((f) => ({ href: `/tahooo#${f.id}`, title: f.name, text: `Taho flavour: ${f.line}. ${f.ingredients.join(", ")}.` })),
@@ -67,11 +76,12 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 			.map((h) => ({ ...h, text: short(h.text.replace(" Taho Tahooo", "")) }));
 
 		groups = [
-			{ id: "blogs", label: "Blog", swatch: "bg-brand-teal", hits: blogs.map((b) => ({ href: `/blogs/${b.slug}`, title: b.title, text: short(b.excerpt), meta: b.published_at ? formatDate(b.published_at) : undefined })) },
+			{ id: "blogs", label: "Blogs", swatch: "bg-brand-teal", hits: blogs.map((b) => ({ href: `/blogs/${b.slug}`, title: b.title, text: short(b.excerpt), meta: b.published_at ? formatDate(b.published_at) : undefined })) },
 			{ id: "events", label: "Events", swatch: "bg-brand-red", hits: events.map((e) => ({ href: `/events/${e.slug}`, title: e.title, text: short(e.excerpt), meta: e.starts_at ? formatDate(e.starts_at) : undefined })) },
 			{ id: "impact", label: "Community Impact", swatch: "bg-brand-yellow", hits: projects.map((p) => ({ href: `/impact/${p.slug}`, title: p.title, text: short(p.excerpt), meta: p.completed_on?.slice(0, 4) })) },
 			{ id: "bygg", label: BUSINESSES.bygg.name, swatch: "bg-brand-orange", hits: bygg },
-			{ id: "tahooo", label: TAHOOO.name, swatch: "bg-tahooo-caramel", hits: tahooo },
+			{ id: "digital", label: BUSINESSES.digital.name, swatch: "bg-blue-600", hits: digital },
+			{ id: "tahooo", label: TAHOOO.highlight, swatch: "bg-tahooo-caramel", hits: tahooo },
 			{ id: "services", label: "Services", swatch: "bg-blue-600", hits: services.map((s) => ({ href: `/services/${s.slug}`, title: s.title, text: short(s.excerpt), meta: s.category ?? undefined })) },
 			{ id: "offers", label: "Offers", swatch: "bg-brand-promo", hits: offers.map((p) => ({ href: `/promotions/${p.slug}`, title: p.title, text: short(p.excerpt), meta: p.ends_at ? `Until ${formatDate(p.ends_at)}` : undefined })) },
 		].filter((g) => g.hits.length > 0);

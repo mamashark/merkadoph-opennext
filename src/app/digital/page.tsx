@@ -1,11 +1,10 @@
-import { BUSINESSES } from "@/lib/businesses";
-import { BusinessPage, businessMetadata } from "@/components/site/business-page";
+import { DigitalPage, digitalMetadata } from "@/components/site/digital-page";
 
-// Cached as an ISR page; refreshed every 5 minutes or when services are saved / purged in Admin → Cache.
+// Static content (src/lib/digital-content.ts), served from the cache and refreshed every 5 minutes like the other pages.
 export const revalidate = 300;
 
-export const generateMetadata = () => businessMetadata(BUSINESSES.digital);
+export const generateMetadata = digitalMetadata;
 
 export default function Page() {
-	return <BusinessPage business={BUSINESSES.digital} />;
+	return <DigitalPage />;
 }

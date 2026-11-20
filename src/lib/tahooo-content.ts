@@ -10,6 +10,8 @@ const img = (name: string, alt: string, width: number, height: number): TahoooIm
 
 export const TAHOOO = {
 	name: "Tahooo Corner",
+	/** The Highlight's name in the menu, constellation and search (Kay, 2026-11-20); the booking page stays Tahooo Corner. */
+	highlight: "Project Taho",
 	metaTitle: "Tahooo Corner: taho for your event in Gothenburg",
 	metaDescription: "The taho corner for birthdays, weddings, baptisms and company events in Gothenburg. Eight flavours, warm or chilled, made fresh and served cup by cup.",
 	brand: "Tahooo by Merkado PH",

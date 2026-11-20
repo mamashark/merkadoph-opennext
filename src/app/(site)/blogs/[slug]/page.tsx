@@ -56,7 +56,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 						keywords: blog.tags.join(", ") || undefined,
 					},
 					breadcrumbs([
-						{ name: "Blog", path: "/blogs" },
+						{ name: "Blogs", path: "/blogs" },
 						{ name: blog.title, path },
 					]),
 				]}

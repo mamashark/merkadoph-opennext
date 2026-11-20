@@ -4,9 +4,9 @@ import { ANNOUNCEMENT_TAG, getPublishedBlogs, PINNED_BLOG_TITLE, getPublishedBlo
 import { getPublicEvents, type EventSummary } from "@/lib/events";
 import { entryYear, getImpactTimeline, portfolioCover, type PortfolioSummary } from "@/lib/portfolio";
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
-import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
+import { DIGITAL } from "@/lib/digital-content";
 import { TAHOOO, FLAVOUR_RATIO, flavourImage } from "@/lib/tahooo-content";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
@@ -55,29 +55,16 @@ const RECENT_EVENTS = 5;
 /** One thing a business offers, as the homepage shows it (tile, preview, card). */
 type Offering = { id: string; slug: string; title: string; excerpt: string; image?: string; imageAlt: string; price?: string; tags: string[]; href: string };
 type Biz = { b: Business; excerpt: string; cover?: string; coverAlt: string; offerings: Offering[] };
-const fromService = (s: ServiceSummary): Offering => ({
-	id: s.id,
-	slug: s.slug,
-	title: s.title,
-	excerpt: s.excerpt ?? "",
-	image: s.cover_image_url ?? undefined,
-	imageAlt: s.cover_image_alt || "",
-	price: s.price_label || undefined,
-	tags: shownTags(s.tags),
-	href: `/services/${s.slug}`,
-});
 
 export async function HighlightsHome() {
-	const [blogsRes, pinned, notices, upcoming, past, impact, digitalMain, digitalList, promotions, seo] = await Promise.all([
+	const [blogsRes, pinned, notices, upcoming, past, impact, promotions, seo] = await Promise.all([
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
 		safe(getPublishedBlogs(1, 6, { tag: ANNOUNCEMENT_TAG }), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicEvents("past", 1, RECENT_EVENTS), { events: [] as EventSummary[], total: 0 }),
 		safe(getImpactTimeline(), [] as PortfolioSummary[]),
-		safe(getPublicServiceBySlug(BUSINESSES.digital.slug), null),
-		safe(getPublicServices(BUSINESSES.digital.category, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
-		safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[], total: 0 }),
+safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[], total: 0 }),
 		getSeoSettings(),
 	]);
 
@@ -87,7 +74,7 @@ export async function HighlightsHome() {
 	const live = upcoming.events.length > 0;
 	const events = live ? upcoming.events : past.events;
 	// Each business: its main service (the page's text) and its offerings (same category).
-	// Bygg is a fixed Swedish page (src/lib/bygg-content.ts); Digital comes from Admin → Services.
+	// Both are fixed pages: Bygg in Swedish (src/lib/bygg-content.ts), Digital in English (src/lib/digital-content.ts).
 	const biz: Record<BusinessId, Biz> = {
 		bygg: {
 			b: BUSINESSES.bygg,
@@ -98,10 +85,9 @@ export async function HighlightsHome() {
 		},
 		digital: {
 			b: BUSINESSES.digital,
-			excerpt: plain(digitalMain?.excerpt) || BUSINESSES.digital.intro,
-			cover: digitalMain?.cover_image_url ?? undefined,
-			coverAlt: digitalMain?.cover_image_alt || "",
-			offerings: digitalList.services.filter((s) => s.slug !== BUSINESSES.digital.slug).map(fromService),
+			excerpt: DIGITAL.lede,
+			coverAlt: "",
+			offerings: DIGITAL.services.map((s) => ({ id: s.slug, slug: s.slug, title: s.title, excerpt: s.text, imageAlt: "", tags: [], href: `${BUSINESSES.digital.path}#${s.slug}` })),
 		},
 	};
 	const offerings = [...biz.bygg.offerings, ...biz.digital.offerings];
@@ -130,8 +116,8 @@ export async function HighlightsHome() {
 			{ id: "impact", allLabel: "All of Community Impact", cta: "View the entry", label: "Community Impact", sub: "Every year, the same community", color: "sun", count: impact.length, list: "/impact", dots: 8, has: impactYears.length },
 			// The two businesses always show: their page is worth visiting even before offerings are listed.
 			{ id: "bygg", allLabel: `Visit ${BUSINESSES.bygg.name}`, cta: "Read more", label: BUSINESSES.bygg.name, sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
-			{ id: "digital", allLabel: `Visit ${BUSINESSES.digital.name}`, cta: "Read more", label: BUSINESSES.digital.name, sub: "Websites, webshops and branding", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
-			{ id: "tahooo", allLabel: "Visit Tahooo Corner", cta: "Read more", label: TAHOOO.name, sub: "Taho for your event in Gothenburg", color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
+			{ id: "digital", allLabel: `Visit ${BUSINESSES.digital.name}`, cta: "Read more", label: BUSINESSES.digital.name, sub: "Branding, marketing, websites and consulting", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
+			{ id: "tahooo", allLabel: "Visit Tahooo Corner", cta: "Read more", label: TAHOOO.highlight, sub: "Tahooo Corner: taho for your event in Gothenburg", color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
 			{ id: "bulletin", allLabel: "Bulletin Board", cta: "Read more", label: "Bulletin Board", sub: "Embassy news, notices and offers", color: "coral", count: notices.total + promotions.total, list: "/bulletin", dots: 6, has: notices.blogs.length + promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
@@ -621,16 +607,16 @@ export async function HighlightsHome() {
 					);
 				})}
 
-				{/* Tahooo Corner */}
+				{/* Project Taho (its booking page is Tahooo Corner) */}
 				{W.tahooo && (
 					<section className={styles.world} id="tahooo" aria-labelledby="tahooo-title" style={style(W.tahooo)}>
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
 								"tahooo",
 								<>
-									Tahooo <em>Corner</em>
+									Project <em>Taho</em>
 								</>,
-								`${TAHOOO.howItWorks.line.en} ${TAHOOO.book.line}`,
+								`Tahooo Corner: ${TAHOOO.howItWorks.line.en.toLowerCase()} ${TAHOOO.book.line}`,
 								W.tahooo.allLabel,
 							)}
 							<div className={styles.services}>

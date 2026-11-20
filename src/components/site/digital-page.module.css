@@ -1,0 +1,241 @@
+/*
+ * Merkado PH Digital (/digital) in the homepage's theme. Sits inside the homepage's .root
+ * (highlights.module.css), so it uses the same tokens: day sky in light mode, night sky in dark mode,
+ * brand palette, Bricolage + IBM Plex Mono. Accent: the Digital Highlight's blue (--c).
+ */
+
+/* Hero: a small four-star constellation (the four services) behind the title */
+.hero {
+	position: relative;
+	isolation: isolate;
+	min-height: clamp(520px, calc(100svh - 64px), 880px);
+	display: flex;
+	align-items: flex-end;
+	overflow: hidden;
+	background: radial-gradient(ellipse 70% 60% at 75% 35%, color-mix(in srgb, var(--c) 16%, transparent), transparent 70%);
+}
+/* Kept to the upper right, above the text, so no line or star crosses the words. */
+.sky {
+	position: absolute;
+	top: 6%;
+	right: 4%;
+	z-index: -1;
+	width: min(52%, 720px);
+	height: 46%;
+}
+@media (max-width: 760px) {
+	.sky {
+		top: 4%;
+		right: 0;
+		width: 88%;
+		height: 28%;
+	}
+}
+.lines line {
+	stroke: var(--c);
+	stroke-width: 0.6;
+	stroke-opacity: 0.45;
+}
+.nodes rect {
+	fill: var(--c);
+}
+.nodes rect:first-child {
+	fill: var(--sun);
+}
+.heroText {
+	width: 100%;
+	padding-bottom: clamp(36px, 6vw, 72px);
+}
+.heroText h1 {
+	margin: 14px 0 0;
+	font-size: clamp(2.8rem, 9vw, 6.5rem);
+	font-weight: 700;
+	line-height: 0.92;
+	letter-spacing: -0.03em;
+}
+.heroText h1 em {
+	font-style: normal;
+	color: var(--c);
+}
+.lede {
+	margin: 18px 0 0;
+	max-width: 48ch;
+	color: var(--ink-2);
+	font-size: clamp(16px, 1.4vw, 19px);
+}
+.heroActions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 12px;
+	margin-top: 26px;
+}
+.jump {
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 22px;
+	margin: 30px 0 0;
+	padding: 18px 0 0;
+	border-top: 1px solid var(--line);
+}
+.jump a {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-height: 32px;
+	color: var(--ink);
+	font-weight: 600;
+	text-decoration: none;
+}
+.jump a span {
+	font-size: 12px;
+	color: var(--c);
+}
+.jump a:hover,
+.jump a:focus-visible {
+	text-decoration: underline;
+	text-underline-offset: 4px;
+}
+
+/* Services: four cards, two per row on wide screens */
+.services {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: clamp(14px, 1.8vw, 22px);
+}
+.service {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	padding: clamp(24px, 3vw, 40px);
+	scroll-margin-top: 90px;
+}
+.serviceHead {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 8px;
+}
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 52px;
+	height: 52px;
+	border-radius: 14px;
+	color: var(--c);
+	background: color-mix(in srgb, var(--c) 14%, transparent);
+}
+.icon svg {
+	width: 26px;
+	height: 26px;
+}
+.service h3 {
+	margin: 0;
+	font-size: clamp(26px, 2.6vw, 36px);
+	font-weight: 700;
+	letter-spacing: -0.025em;
+	line-height: 1.05;
+}
+.tagline {
+	margin: 0;
+	font-family: var(--font-mono);
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--c);
+}
+.service p {
+	margin: 0;
+	color: var(--ink-2);
+}
+.includes {
+	list-style: none;
+	margin: 10px 0 0;
+	padding: 0;
+	border-top: 1px solid var(--line);
+}
+.includes li {
+	position: relative;
+	padding: 10px 0 10px 22px;
+	border-bottom: 1px solid var(--line);
+	font-size: 15px;
+}
+.includes li::before {
+	content: "";
+	position: absolute;
+	left: 2px;
+	top: calc(10px + 0.55em);
+	width: 8px;
+	height: 8px;
+	background: var(--c);
+}
+@media (max-width: 860px) {
+	.services {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* How we work: four steps */
+.steps {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(4, minmax(0, 1fr));
+	gap: clamp(14px, 1.6vw, 20px);
+}
+.step {
+	display: grid;
+	align-content: start;
+	gap: 10px;
+	padding: 24px;
+}
+.step h3 {
+	margin: 6px 0 0;
+	font-size: 22px;
+	font-weight: 700;
+	letter-spacing: -0.01em;
+}
+.step p {
+	margin: 0;
+	color: var(--ink-2);
+	font-size: 15px;
+}
+@media (max-width: 1000px) {
+	.steps {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (max-width: 560px) {
+	.steps {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* Contact */
+.mail {
+	display: grid;
+	gap: 4px;
+	margin: 24px 0 0;
+}
+.mail span {
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+.mail a {
+	color: var(--ink);
+	font-size: clamp(20px, 2vw, 26px);
+	font-weight: 600;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 5px;
+	overflow-wrap: anywhere;
+}
+.formTitle {
+	margin: 0 0 18px;
+	font-size: 20px;
+	font-weight: 700;
+}

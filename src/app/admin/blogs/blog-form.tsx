@@ -1,6 +1,6 @@
 import { saveBlog } from "./actions";
 import type { Blog } from "@/lib/blogs";
-import { BasicsSection, ContentForm, ContentSection, CoverCard, Field, FormCard, PublishCard, SeoCard, TagsCard } from "@/components/admin/form-parts";
+import { BasicsSection, ContentForm, ContentSection, CoverCard, Field, PublishCard, SeoCard, TagsCard } from "@/components/admin/form-parts";
 import { inputClass } from "@/lib/ui";
 
 /** Server-rendered blog form. `defaultAuthor` pre-fills the byline for new posts. */

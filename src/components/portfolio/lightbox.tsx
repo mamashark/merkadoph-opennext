@@ -50,10 +50,12 @@ export function PortfolioLightbox({ images, title, index, onIndex, onClose }: { 
 	// Never leave the page scroll-locked (e.g. if the viewer unmounts while open).
 	useEffect(() => () => void (document.documentElement.style.overflow = ""), []);
 
-	// Stop the slideshow whenever the viewer closes.
-	useEffect(() => {
+	// Stop the slideshow whenever the viewer closes (state adjusted during render, as React recommends, not in an effect).
+	const [wasOpen, setWasOpen] = useState(open);
+	if (open !== wasOpen) {
+		setWasOpen(open);
 		if (!open) setPlaying(false);
-	}, [open]);
+	}
 
 	// Slideshow.
 	useEffect(() => {

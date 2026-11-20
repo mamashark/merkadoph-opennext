@@ -48,8 +48,7 @@ export default async function AuditPage({ searchParams }: PageProps<"/admin/audi
 	const values = { q: param(params, "q").trim(), kind: param(params, "kind"), area: param(params, "area"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
-	let loadError = "";
-	const { rows, total } = await listAuditLogs({ ...values, page, perPage: PER_PAGE }).catch((e: Error) => ((loadError = e.message), { rows: [], total: 0 }));
+	const { rows, total, error: loadError } = await listAuditLogs({ ...values, page, perPage: PER_PAGE }).then((r) => ({ ...r, error: "" }), (e: Error) => ({ rows: [], total: 0, error: e.message }));
 	const filtered = !!(values.q || values.kind || values.area);
 
 	return (

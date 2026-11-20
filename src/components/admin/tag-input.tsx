@@ -12,8 +12,8 @@ export function TagInput({ id, name, defaultValue, placeholder, suggestions, des
 	const [value, setValue] = useState(defaultValue ?? "");
 	const listId = useId();
 
-	const parts = value.split(",");
-	const fragment = parts[parts.length - 1].trim().toLowerCase();
+	// The tag being typed: the text after the last comma.
+	const fragment = value.slice(value.lastIndexOf(",") + 1).trim().toLowerCase();
 	const chosen = useMemo(() => new Set(value.split(",").map((p) => p.trim().toLowerCase()).filter(Boolean)), [value]);
 
 	const matches = useMemo(() => {
@@ -25,7 +25,7 @@ export function TagInput({ id, name, defaultValue, placeholder, suggestions, des
 	}, [fragment, suggestions, chosen]);
 
 	const pick = (tag: string) => {
-		const kept = parts.slice(0, -1).map((p) => p.trim()).filter(Boolean);
+		const kept = value.split(",").slice(0, -1).map((p) => p.trim()).filter(Boolean);
 		setValue([...kept, tag].join(", ") + ", ");
 		document.getElementById(id)?.focus();
 	};

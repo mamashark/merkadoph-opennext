@@ -4,8 +4,8 @@ Every agent reads this before starting and updates it when a task is finished or
 Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get a severity · decisions for Kay get a recommended option · one Log line per change · no personal data in this file · anything not checked is "unverified".
 
 **Phase:** Content & launch prep. The site is built and deployed behind the staging gate (visitors see "coming soon"). Kay is filling in the content.
-**% complete (launch prep):** 4 of 16 tasks done ≈ 25%. Counted from the task lists below; update when tasks move.
-**Last updated:** 2026-11-19 by Dex (OPS)
+**% complete (launch prep):** 6 of 17 tasks done ≈ 35%. Counted from the task lists below; update when tasks move.
+**Last updated:** 2026-11-20 by Sol (SEO)
 
 ---
 
@@ -26,7 +26,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | Review the Merkado PH Digital page copy (src/lib/digital-content.ts): first draft by Claude, no prices or client claims; add prices/packages, photos or examples if wanted | Kay + Sol (SEO) | Page built 2026-11-20 (branding, marketing, website development & design, consulting). |
 | Official Philippine Embassy in Sweden links (website, Facebook) for the Bulletin Board | Kay | Add to `EMBASSY_LINKS` in `src/lib/businesses.ts` once checked on the Embassy's own site. The DFA sites refused automated checks on 2026-11-19, so nothing is shown yet. |
 | Tag Embassy and community notices with `Announcement` so they appear on the Bulletin Board | Kay / Sol (SEO) | Each Embassy notice links to its official source (Strict rule 15). |
-| **Tahooo:** create the tag `Tahooo` (Admin → Tags) and use it on every Tahooo item | Sol (SEO) | Threads the items together in the homepage constellation; filters /blogs; search finds them all. |
+| **Tahooo:** create the tag `Tahooo` (Admin → Tags) and use it on every Tahooo item | Sol (SEO) | **In progress 2026-11-20.** Tag `Tahooo` created in production with SQL on Kay's OK (id `497b7960-3191-491c-98af-d1ad8cc7fba4`). No items tagged yet: there are no confirmed Tahooo items, and the 2 borderline rows wait on Needs Kay #11. Threads the items together in the homepage constellation; filters /blogs; search finds them all. |
 | **Tahooo:** Blog post, behind the scenes of building the Taho cart | Sol (SEO) | Waits for Kay's notes and photos (Needs Kay #8). Tag `Tahooo`. |
 | **Tahooo:** Blog series "Taho Lab", the R&D of the taho flavours (one post per round) | Sol (SEO) | Waits for Kay's notes (Needs Kay #8). Tag `Tahooo`. |
 | **Tahooo:** Community Impact project "Tahooo by Merkado PH" with photo gallery | Sol (SEO) | Links to the posts and events. Tag `Tahooo`. |
@@ -37,7 +37,6 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | Add 301 redirects for old Shopify URLs (Admin → SEO → Redirects) | Sol (SEO) | Old URLs return 404. |
 | Review the rewritten legal pages (privacy, terms, cookies) before launch | Kay | Rewritten 2026-11-20 in src/lib/legal-defaults.ts for the no-shop site; not legal advice. |
 | Check Workers Logs for "Error 1102" (resource limits) | Dex (OPS) | Seen once in the 16 Nov audit. Needs Cloudflare dashboard access (no token locally). Once monitoring runs, a repeat 1102 shows up as `/api/health` down. |
-| Fix the ESLint setup | Finn (FE) | See bug B1. |
 | Community Impact content: one entry per event per year, with the date, photos (1600px+) and the same tag every year for recurring events (Spring Market, Autumn Market, Christmas Market, Independence Day, Anniversary, Tambayan Sessions) | Kay | The Independence Day 2025 entry shows the Sarap Without Waste photos: check. Spring Market 2024 photos are only 480px: replace if bigger ones exist. |
 | Homepage: jump straight to the next Highlight from inside one ("Next Highlight →", spatial move between hubs) | Finn (FE) + Uma (UX) | Later; from the ChatGPT constellation spec review (2026-11-20). After the depth/hand-over work has been tried on real phones. |
 | Ally check of the constellation motion update (reduced motion, Lighthouse, real devices) | Ally (A11Y) | Emulated checks only so far (2026-11-20). |
@@ -54,6 +53,8 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 
 | Task | Owner | Date | Ref |
 |---|---|---|---|
+| Fix the lint findings (Kay's OK): all 17 errors fixed, cheap warnings cleaned, legacy shop-only files excluded from lint; `npm run lint` exits 0 (1 warning left) | Finn (FE) | 2026-11-20 | not committed |
+| Fix the ESLint setup (B1): flat config without FlatCompat, `lint` script runs the ESLint CLI | Finn (FE) | 2026-11-20 | not committed |
 | Constellation motion: star layers with depth (parallax) during zoom and hover, smooth spotlight fade + focused Highlight grows, world title hands over from the zoomed Highlight, motion tokens (`motion.ts`), drift/pulse pause off screen or in a background tab | Finn (FE) | 2026-11-20 | not committed |
 | Zoom into a Highlight (entry constellation + side panel), full-screen hero, header hidden until the About section | Finn (FE) | 2026-11-17 | `1e61085` |
 | Security update: `next` 16.4.6, `zod` 4.6.7 (CI audit was failing) | Dex (OPS) | 2026-11-16 | `971ef16` |
@@ -66,7 +67,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 
 | # | Bug | Severity | Owner | Status |
 |---|---|---|---|---|
-| B1 | `npm run lint` / ESLint crashes on its own config ("Converting circular structure to JSON") before checking any file | Minor | Finn (FE) | Open |
+| B1 | `npm run lint` / ESLint crashes on its own config ("Converting circular structure to JSON") before checking any file | Minor | Finn (FE) | Fixed 2026-11-20 (not committed): `eslint.config.mjs` spreads eslint-config-next 16's flat configs directly instead of going through FlatCompat; `lint` is now `eslint .` (`next lint` was removed in Next 16). Lint runs on 275 files. |
 | B2 | Home JS 183 KB, over the 170 KB budget; one 245 ms long task | Major | Finn (FE) | Open (16 Nov audit) |
 | B3 | Old Shopify URLs return 404 | Major | Sol (SEO) | Open |
 | B4 | Legal pages describe a shop | Major | Dana (DATA) | Open |
@@ -89,6 +90,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 8. **Notes and photos for the Tahooo posts** (taho cart build, flavour R&D). Sol writes from these; nothing is invented.
 9. **Tahooo Corner facts:** price or "from" price, what's included, servings, area beyond Gothenburg, lead time. (Flavours, sizes and allergens are from the Brand Guide; occasions from Kay.) Or paste the Facebook launch post text.
 10. **Cloudflare Workers plan.** The free plan caps KV cache writes per day; a deploy plus the 5-minute page refreshes used it up on 2026-11-19 (code 10048), and it may explain the earlier Error 1102. Recommended: Workers Paid ($5/month). Kay chose to wait for now.
+11. **`Tahooo` tag (Sol, 2026-11-20).** The tag was created 2026-11-20 with SQL on Kay's OK, so there's no audit log row for it. Still to decide: two rows mention taho, but neither is clearly a Tahooo item. Please decide each one: (a) blog "Bagong yugto: the next chapter for Merkado PH" (`3c30ee7f-eb24-4a90-bfc1-ca2d315fe09d`) is a general post that names Project Tahooo once, and it's tagged `sample`, so it gets unpublished before launch. Recommended: don't tag it. (b) event "Julmarknad på Torslanda torg 2026" (`a7aa755d-0622-49af-afbb-4c15e2009af3`, 28 Nov) lists "Warm Taho" on the menu next to lomi and lumpia. Recommended: tag it only if the Tahooo cart or brand is there. To tag a row: open it in Admin → Events/Blogs and add `Tahooo` (that keeps the other tags). Or run `update public.events set tags = array_append(tags, 'Tahooo') where id = '<id>' and not tags @> array['Tahooo'];`.
 ---
 
 ## Log
@@ -134,3 +136,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-20 · FE · Phone hero (portrait ≤767px, Kay's spec): title and intro above a framed constellation panel (16/20px gutters), Open/Fold in its own row, Highlights in fixed staggered rows with labels under their markers (long names on two lines), at most 2 photos per Highlight (rest are dots, still links), leaves above their markers, no drag on touch so swipes scroll, a Highlight opens as a full-screen view above the header. Phones held sideways and wider screens unchanged. Checked headless Chrome at 320/360/375/390/414/430: everything inside the panel's 16px clearance, no label covered, no horizontal scroll, every marker and label tap opens its Highlight, swipe on the panel scrolls; B5/B6 tap test 40/40; no exceptions. Real phones unverified. Not committed
 2026-11-20 · SEC · Security review (Kay asked): no secrets in code or history (only the public anon key; service-role key never committed), RLS on all 26 tables, requireAdmin on every admin page/action, rate limits on login (5/min) and forms (10/min), reCAPTCHA + honeypot, HSTS/CSP/X-Frame-Options/nosniff live, Cloudflare in front (DDoS), cron needs its secret (401 checked). Found: http:// not redirected to https:// (Needs Kay: Cloudflare → SSL/TLS → Edge Certificates → Always Use HTTPS); 3 moderate npm warnings in the build tool only; backup workflow runs not checked (unverified)
 2026-11-20 · SEC · Two-step login now required for every admin: without an authenticator only Admin → Security opens (to add one). Old shop closed in code (src/lib/shop-gate.ts): shop pages 404, checkout return/cancel, Stripe webhook and product feed 404, all 28 shop server actions refuse to run. Checked locally (routes); the admin MFA flow needs a logged-in check (unverified). Not committed
+2026-11-20 · FE · B1 fixed: ESLint crashed because FlatCompat was given eslint-config-next 16's flat configs, and `next lint` no longer exists in Next 16. `eslint.config.mjs` now imports `eslint-config-next/core-web-vitals` + `/typescript` directly (as the Next 16 docs show) and ignores .next, .open-next, .wrangler, local, public and generated types; `lint` script is `eslint .`. No packages changed. Lint now runs: 17 errors, 27 warnings (pre-existing code, not fixed; new To do task). `tsc` passes. Not committed
+2026-11-20 · SEO · Tahooo tag: checked production read-only. There's no `Tahooo` tag. Searched every text column in blogs, events, promotions, services and portfolios for "taho" and got 2 rows, both borderline (a sample blog post, and the Torslanda Christmas market event, whose menu has warm taho). Nothing written; waiting for Kay's OK and decisions (Needs Kay #11)
+2026-11-20 · SEO · Created tag `Tahooo` in public.tags with direct SQL on Kay's OK (no audit log row). No items tagged yet.
+2026-11-20 · FE · Lint findings fixed (Kay's OK): `npm run lint` exits 0 with 1 warning left (anonymous default export in cloudflare-worker.js). Shop-only files (nothing outside the shop imports them) excluded in eslint.config.mjs; shop files used by shared code still linted. Errors fixed without behaviour change: admin list pages return the load error instead of reassigning a variable (audit, inbox, redirects, supabase), tag input and Markdown editor memoization, Markdown toolbar as data so refs are only read in click handlers, lightbox stops the slideshow on close during render instead of in an effect, reveal header measures in one function, admin footer “Public blog” uses Link. Two eslint-disable lines with reasons (media page Date.now in a Server Component; @ts-ignore on the build-generated worker import). Unused imports/vars and 4 stale eslint-disable comments in highlights-stage.tsx removed (comments only); `_`-prefixed names allowed as unused. `tsc` passes; dev server: /, /impact, /tahooo, /digital, /events 200, /admin 307 to login, no new errors in the log. Admin screens, the Markdown editor, tag input and lightbox not clicked through (need login / not checked in a browser): unverified. Not committed

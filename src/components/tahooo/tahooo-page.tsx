@@ -189,7 +189,7 @@ export function TahoooPage() {
 			</section>
 
 			{/* Perfect for */}
-			{T.occasions.map((o, i) => (
+			{T.occasions.map((o) => (
 				<section key={o.id} id={o.id} className={s.split} aria-labelledby={`${o.id}-title`}>
 					<div className={s.panel}>
 						<div className={s.panelTop}>

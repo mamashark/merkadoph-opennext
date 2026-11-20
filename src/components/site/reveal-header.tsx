@@ -12,13 +12,11 @@ export function RevealHeader({ revealAt, className, children }: { revealAt: stri
 
 	useEffect(() => {
 		const target = document.getElementById(revealAt);
-		if (!target) {
-			setShown(true);
-			return;
-		}
 		// Shown once the section's top has come into the viewport, and while it (or anything after it) is on screen.
-		const check = () => setShown(target.getBoundingClientRect().top < window.innerHeight * 0.9);
+		// No such section on the page: always shown.
+		const check = () => setShown(!target || target.getBoundingClientRect().top < window.innerHeight * 0.9);
 		check();
+		if (!target) return;
 		window.addEventListener("scroll", check, { passive: true });
 		window.addEventListener("resize", check);
 		return () => {

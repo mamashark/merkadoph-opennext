@@ -339,7 +339,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			setCam();
 			busyRef.current = false;
 		},
-		[worlds, camera, closePeek, setWorld], // eslint-disable-line react-hooks/exhaustive-deps
+		[worlds, camera, closePeek, setWorld],
 	);
 
 	const leaveWorld = useCallback(async () => {
@@ -379,7 +379,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		if (canGoBack() && level(worldRef.current) === 1) return history.back();
 		writeUrl(null, "replace");
 		void leaveWorld();
-	}, [leaveWorld]); // eslint-disable-line react-hooks/exhaustive-deps
+	}, [leaveWorld]);
 
 	const goEntry = useCallback(
 		(slug: string | null, how: "open" | "step" | "list") => {
@@ -390,7 +390,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			writeUrl(next, how === "open" && !cur.entry ? "push" : "replace");
 			setWorld(next);
 		},
-		[setWorld], // eslint-disable-line react-hooks/exhaustive-deps
+		[setWorld],
 	);
 
 	/** Open a group (a year), optionally straight to one of its entries; or back to all groups (null). */
@@ -406,7 +406,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			} else writeUrl(next, "replace");
 			setWorld(next);
 		},
-		[setWorld], // eslint-disable-line react-hooks/exhaustive-deps
+		[setWorld],
 	);
 
 	// Browser Back / Forward between the sky, a Highlight, a group and an entry.

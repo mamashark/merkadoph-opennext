@@ -8,6 +8,19 @@ import { buttonClass, cn, inputClass, labelClass } from "@/lib/ui";
 
 type Props = { name: string; defaultValue?: string; required?: boolean };
 
+/** Toolbar buttons: `wrap` = text around the selection (before, after, placeholder); `prefix` = added to each selected line. */
+type Tool = { icon: typeof Bold; label: string; wrap?: [string, string?, string?]; prefix?: string | ((i: number) => string) };
+const TOOLS: Tool[] = [
+	{ icon: Heading2, label: "Heading", prefix: "## " },
+	{ icon: Heading3, label: "Subheading", prefix: "### " },
+	{ icon: Bold, label: "Bold (Ctrl+B)", wrap: ["**"] },
+	{ icon: Italic, label: "Italic (Ctrl+I)", wrap: ["_"] },
+	{ icon: Link2, label: "Link", wrap: ["[", "](https://)", "link text"] },
+	{ icon: List, label: "Bulleted list", prefix: "- " },
+	{ icon: ListOrdered, label: "Numbered list", prefix: (i) => `${i + 1}. ` },
+	{ icon: Quote, label: "Quote", prefix: "> " },
+];
+
 /**
  * Markdown body editor. The textarea is a normal named form field, so the surrounding
  * server-rendered form submits it like any other input.
@@ -18,7 +31,7 @@ export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
 	const [tab, setTab] = useState<"write" | "preview">("write");
 	const [picking, setPicking] = useState(false);
 	const [pending, setPending] = useState<PickedMedia | null>(null);
-	const closePicker = useCallback(() => setPicking(false), []);
+	const closePicker = useCallback(() => setPicking(false), [setPicking]);
 
 	/** Inserts text at the cursor, keeping the browser's undo history where supported. */
 	const insert = (text: string, selectFrom?: number, selectTo?: number) => {
@@ -60,16 +73,8 @@ export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
 		requestAnimationFrame(() => insert(`${lead}![${alt}](${pending.url.replace(/ /g, "%20")})\n\n`));
 	};
 
-	const tools = [
-		{ icon: Heading2, label: "Heading", run: () => prefixLines("## ") },
-		{ icon: Heading3, label: "Subheading", run: () => prefixLines("### ") },
-		{ icon: Bold, label: "Bold (Ctrl+B)", run: () => wrap("**") },
-		{ icon: Italic, label: "Italic (Ctrl+I)", run: () => wrap("_") },
-		{ icon: Link2, label: "Link", run: () => wrap("[", "](https://)", "link text") },
-		{ icon: List, label: "Bulleted list", run: () => prefixLines("- ") },
-		{ icon: ListOrdered, label: "Numbered list", run: () => prefixLines((i) => `${i + 1}. `) },
-		{ icon: Quote, label: "Quote", run: () => prefixLines("> ") },
-	];
+	// Toolbar buttons are plain data; runTool (an event handler) reads the textarea ref, never render.
+	const runTool = (tool: Tool) => (tool.wrap ? wrap(...tool.wrap) : prefixLines(tool.prefix ?? ""));
 
 	const words = value.trim() ? value.trim().split(/\s+/).length : 0;
 
@@ -89,17 +94,17 @@ export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
 						</button>
 					))}
 				</div>
-				{tools.map(({ icon: Icon, label, run }) => (
+				{TOOLS.map((tool) => (
 					<button
-						key={label}
+						key={tool.label}
 						type="button"
-						onClick={run}
+						onClick={() => runTool(tool)}
 						disabled={tab !== "write"}
 						className="rounded-md p-1.5 text-slate-500 dark:text-slate-400 hover:bg-white hover:text-slate-900 dark:hover:text-white disabled:opacity-40"
-						aria-label={label}
-						title={label}
+						aria-label={tool.label}
+						title={tool.label}
 					>
-						<Icon className="h-4 w-4" aria-hidden />
+						<tool.icon className="h-4 w-4" aria-hidden />
 					</button>
 				))}
 				<span className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-800" aria-hidden />
@@ -117,8 +122,14 @@ export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
 				onInput={(e) => setValue(e.currentTarget.value)}
 				onKeyDown={(e) => {
 					if (!(e.ctrlKey || e.metaKey)) return;
-					if (e.key === "b") (e.preventDefault(), wrap("**"));
-					if (e.key === "i") (e.preventDefault(), wrap("_"));
+					if (e.key === "b") {
+						e.preventDefault();
+						wrap("**");
+					}
+					if (e.key === "i") {
+						e.preventDefault();
+						wrap("_");
+					}
 				}}
 				placeholder={"Write your story in Markdown…\n\n## A heading\nRegular paragraph text with **bold** and _italic_.\n\nUse the Image button to add pictures with captions."}
 				className={cn("block min-h-[420px] w-full resize-y border-0 px-4 py-3 font-mono text-sm leading-relaxed text-slate-800 dark:text-slate-200 focus:outline-none", tab !== "write" && "hidden")}

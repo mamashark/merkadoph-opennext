@@ -33,9 +33,8 @@ export default async function RedirectsPage({ searchParams }: PageProps<"/admin/
 	const page = pageParam(params);
 	const returnTo = new URLSearchParams({ ...listParams(values), ...(page > 1 ? { page: String(page) } : {}) }).toString();
 
-	let loadError = "";
-	const [{ rows, total }, editing] = await Promise.all([
-		listRedirects({ ...values, page, perPage: PER_PAGE }).catch((e: Error) => ((loadError = e.message), { rows: [], total: 0 })),
+	const [{ rows, total, error: loadError }, editing] = await Promise.all([
+		listRedirects({ ...values, page, perPage: PER_PAGE }).then((r) => ({ ...r, error: "" }), (e: Error) => ({ rows: [], total: 0, error: e.message })),
 		getRedirect(param(params, "edit")).catch(() => null),
 	]);
 	const filtered = !!(values.q || values.source || values.status);

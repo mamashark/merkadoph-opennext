@@ -288,9 +288,9 @@ export function AdminShell({ user, defaultCollapsed, children }: { user: ShellUs
 					<div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2">
 						<p>© {new Date().getFullYear()} Merkado PH. All rights reserved.</p>
 						<div className="flex gap-4">
-							<a href="/blogs" className="hover:text-slate-900 dark:hover:text-white">
+							<Link href="/blogs" className="hover:text-slate-900 dark:hover:text-white">
 								Public blog
-							</a>
+							</Link>
 							<Link href="/" className="hover:text-slate-900 dark:hover:text-white">
 								Home
 							</Link>

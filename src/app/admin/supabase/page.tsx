@@ -23,13 +23,13 @@ export default async function SupabasePage({ searchParams }: PageProps<"/admin/s
 	const values = { q: param(params, "q").trim(), source: param(params, "source"), status: param(params, "status"), sort: param(params, "sort") };
 	const page = pageParam(params);
 
-	let tableError = "";
 	const [logs, lastAny, lastCron, nextManual] = await Promise.all([
-		listOps({ kind: "keepalive", ...values, page, perPage: PER_PAGE }).catch((e: Error) => ((tableError = e.message), { rows: [], total: 0 })),
+		listOps({ kind: "keepalive", ...values, page, perPage: PER_PAGE }).then((r) => ({ ...r, error: "" }), (e: Error) => ({ rows: [], total: 0, error: e.message })),
 		latestOp("keepalive", { status: "success" }).catch(() => null),
 		latestOp("keepalive", { source: "cron" }).catch(() => null),
 		nextManualAt().catch(() => null),
 	]);
+	const tableError = logs.error;
 
 	const stats = [
 		{ icon: Activity, label: "Last successful ping", value: ago(lastAny?.created_at), hint: lastAny ? (lastAny.source === "cron" ? "by the scheduler" : `by ${lastAny.actor_email ?? "admin"}`) : "" },

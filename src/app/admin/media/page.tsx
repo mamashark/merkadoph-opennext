@@ -52,6 +52,7 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 	const page = pageParam(params);
 	// "Uploaded" filter: within the last 7 or 30 days, or older than 30 days.
 	const uploaded = ["7d", "30d", "older"].includes(str("uploaded")) ? str("uploaded") : "";
+	// eslint-disable-next-line react-hooks/purity -- async Server Component: renders once per request, never re-renders, so reading the clock here is safe.
 	const ageDays = (iso: string | null) => (iso ? (Date.now() - new Date(iso).getTime()) / 86_400_000 : Infinity);
 	const files = (listing?.files ?? [])
 		.filter((f) => !q || f.name.toLowerCase().includes(q))

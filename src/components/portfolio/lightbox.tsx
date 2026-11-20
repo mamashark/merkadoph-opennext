@@ -9,14 +9,27 @@ import { cn } from "@/lib/ui";
 const SLIDE_MS = 4500;
 
 /**
+ * The real pixel size of a loaded next/image (sizes="100vw"). naturalWidth is divided by the srcset density
+ * (requested width ÷ viewport width), and the optimizer returns the original when it's smaller than requested,
+ * so multiply the density back in.
+ */
+function realSize(el: HTMLImageElement) {
+	const requested = Number(new URL(el.currentSrc || el.src, location.href).searchParams.get("w")) || 0;
+	const density = requested && window.innerWidth ? requested / window.innerWidth : 1;
+	return { w: Math.round(el.naturalWidth * density), h: Math.round(el.naturalHeight * density) };
+}
+
+/**
  * Full-screen photo viewer for portfolio images. Built on the native <dialog> (modal: background inert,
  * focus kept inside, Esc closes). Previous/next buttons, ← → keys, swipe, thumbnails, slideshow.
- * Photos are shown whole (contain) here; the page grids crop them (cover).
+ * Photos are shown whole (contain) here, and never larger than their real size (small photos would turn pixelated).
  */
 export function PortfolioLightbox({ images, title, index, onIndex, onClose }: { images: PortfolioImage[]; title: string; index: number | null; onIndex: (i: number) => void; onClose: () => void }) {
 	const ref = useRef<HTMLDialogElement>(null);
 	const thumbs = useRef<Array<HTMLButtonElement | null>>([]);
 	const [playing, setPlaying] = useState(false);
+	/** Real size of the shown photo (the optimizer never enlarges, so this is at most the original), to cap the display size. */
+	const [natural, setNatural] = useState<{ url: string; w: number; h: number } | null>(null);
 	const swipeX = useRef<number | null>(null);
 	const open = index !== null;
 	const count = images.length;
@@ -121,7 +134,25 @@ export function PortfolioLightbox({ images, title, index, onIndex, onClose }: { 
 							if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
 						}}
 					>
-						<Image key={img.url} src={img.url} alt={img.alt || `${title} — photo ${index! + 1}`} fill sizes="100vw" className="object-contain" priority />
+						<div className="absolute inset-0 flex items-center justify-center">
+							<div
+								className={cn("relative h-full w-full transition-opacity duration-200", natural?.url === img.url ? "opacity-100" : "opacity-0")}
+								style={natural?.url === img.url ? { maxWidth: natural.w, maxHeight: natural.h } : undefined}
+							>
+								<Image
+									key={img.url}
+									src={img.url}
+									alt={img.alt || `${title} — photo ${index! + 1}`}
+									fill
+									sizes="100vw"
+									className="object-contain"
+									priority
+									onLoad={(e) => setNatural({ url: img.url, ...realSize(e.currentTarget) })}
+																		// Never leave the photo hidden: on an error, show the frame without a size cap.
+																		onError={() => setNatural({ url: img.url, w: 100000, h: 100000 })}
+								/>
+							</div>
+						</div>
 						{count > 1 && (
 							<>
 								<button

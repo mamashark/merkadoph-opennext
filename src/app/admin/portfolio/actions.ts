@@ -49,7 +49,9 @@ export async function savePortfolio(formData: FormData) {
 	const problem =
 		resolved.status !== "published"
 			? null
-			: images.length === 0
+			: !dateOnly(formData.get("completed_on"))
+				? "Add the date it took place before publishing — it puts the entry under its year."
+				: images.length === 0
 				? "Add at least one image before publishing."
 				: missingAlt
 					? `Add alt text to ${missingAlt === 1 ? "1 image" : `${missingAlt} images`} before publishing — it describes the photo for screen readers and Google.`

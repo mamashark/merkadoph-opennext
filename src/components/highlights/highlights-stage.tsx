@@ -6,6 +6,7 @@ import { DEFAULT_LINES } from "@/components/constellation/constellation";
 import type { ConstellationEngine } from "@/components/constellation/engine";
 import type { ConstellationHub, ConstellationItem } from "@/components/constellation/types";
 import { HighlightsWorld, type WorldInfo } from "./highlights-world";
+import { MOTION } from "./motion";
 import styles from "./highlights.module.css";
 
 export const UNFOLDED_HINT = "Hover a category · click to zoom in · drag to rearrange";
@@ -20,11 +21,23 @@ type Props = {
 	worlds: WorldInfo[];
 };
 
-/** Which Highlight is zoomed into (and which entry is open). Mirrored in the URL: ?world=blogs&entry=<slug>. */
-type WorldView = { id: string; entry: string | null; leaving: boolean; instant: boolean };
-/** Our history entries carry their depth (1 = inside a Highlight, 2 = an entry), so "back" buttons can use history.back(). */
-const level = (v: { entry: string | null } | null) => (!v ? 0 : v.entry ? 2 : 1);
-const ZOOM = 3.4;
+/**
+ * Which Highlight is zoomed into, which group (Community Impact: a year) and which entry is open.
+ * Mirrored in the URL: ?world=blogs&entry=<slug>, or ?world=impact&year=2025&entry=<slug>.
+ */
+type WorldView = { id: string; group: string | null; entry: string | null; leaving: boolean; instant: boolean; anchor?: { x: number; y: number } };
+/** Our history entries carry their depth (1 = inside a Highlight, +1 for a group, +1 for an entry), so "back" buttons can use history.back(). */
+const level = (v: { group?: string | null; entry: string | null } | null) => (!v ? 0 : 1 + (v.group ? 1 : 0) + (v.entry ? 1 : 0));
+/** Reads ?world / ?year / ?entry against what exists (unknown values are ignored). */
+const readView = (worlds: WorldInfo[], q: URLSearchParams) => {
+	const w = worlds.find((x) => x.id === q.get("world"));
+	if (!w) return null;
+	const group = w.groups?.some((g) => g.slug === q.get("year")) ? q.get("year") : null;
+	const e = w.entries.find((x) => x.slug === q.get("entry"));
+	// In a grouped Highlight an entry only opens inside its own group.
+	const entry = e && (!w.groups || e.group === group) ? e.slug : null;
+	return { w, group, entry };
+};
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -39,6 +52,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	const router = useRouter();
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
+	const skyRef = useRef<SVGSVGElement>(null);
 	const tipRef = useRef<HTMLDivElement>(null);
 	const warpRef = useRef<HTMLDivElement>(null);
 	const engineRef = useRef<ConstellationEngine | null>(null);
@@ -62,27 +76,54 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 
 	/* ------------------------------ Camera ------------------------------ */
 
-	const camera = useCallback((x: number, y: number, s: number) => {
-		const svg = svgRef.current, stage = stageRef.current;
-		if (!svg || !stage) return;
-		if (s === 1) {
-			svg.style.transform = "";
-			return;
+	/**
+	 * Points the camera: graph point (x, y) moves to (ax, ay) on screen at zoom s. The background star layers
+	 * travel only part of the way (MOTION.depth), so the sky has depth: near things rush past, far ones barely move.
+	 */
+	const place = useCallback((x: number, y: number, s: number, ax: number, ay: number) => {
+		const t = (d: number) => {
+			if (s === 1) return "";
+			const k = 1 + (s - 1) * d;
+			return `translate(${x + d * (ax - x) - k * x}px, ${y + d * (ay - y) - k * y}px) scale(${k})`;
+		};
+		if (svgRef.current) svgRef.current.style.transform = t(1);
+		skyRef.current?.querySelectorAll<SVGGElement>("g[data-depth]").forEach((g) => (g.style.transform = t(Number(g.dataset.depth))));
+	}, []);
+	/** Camera centred on (x, y) at zoom s; s = 1 is the overview. */
+	const camera = useCallback(
+		(x: number, y: number, s: number) => {
+			const stage = stageRef.current;
+			if (!stage) return;
+			const { width, height } = stage.getBoundingClientRect();
+			place(x, y, s, width / 2, height / 2);
+		},
+		[place],
+	);
+	const stageCentre = () => {
+		const r = stageRef.current?.getBoundingClientRect();
+		return { x: (r?.width ?? 0) / 2, y: (r?.height ?? 0) / 2 };
+	};
+	/** The camera's transition style ("dive", "none", or the default), on the graph and the star layers alike. */
+	const setCam = (v?: "dive" | "none") => {
+		for (const el of [svgRef.current, skyRef.current]) {
+			if (!el) continue;
+			if (v) el.dataset.cam = v;
+			else delete el.dataset.cam;
 		}
-		const { width, height } = stage.getBoundingClientRect();
-		svg.style.transform = `translate(${width / 2 - s * x}px, ${height / 2 - s * y}px) scale(${s})`;
-	}, []);
+	};
 
-	const lean = useCallback((id: string) => {
-		const p = engineRef.current?.hubPoint(id), svg = svgRef.current;
-		if (!p || !svg || reduced()) return;
-		// Scale around the hovered category, so it stays under the pointer while the sky leans in.
-		const s = 1.06;
-		svg.style.transform = `translate(${p.x * (1 - s)}px, ${p.y * (1 - s)}px) scale(${s})`;
-	}, []);
+	const lean = useCallback(
+		(id: string) => {
+			const p = engineRef.current?.hubPoint(id);
+			if (!p || reduced()) return;
+			// Scale around the hovered category, so it stays under the pointer while the sky leans in.
+			place(p.x, p.y, MOTION.lean, p.x, p.y);
+		},
+		[place],
+	);
 	const unlean = useCallback(() => {
-		if (!busyRef.current && svgRef.current) svgRef.current.style.transform = "";
-	}, []);
+		if (!busyRef.current) place(0, 0, 1, 0, 0);
+	}, [place]);
 
 	/* --------------------------- Hover preview --------------------------- */
 
@@ -154,7 +195,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 				card.dataset.flash = "";
 				setTimeout(() => delete card.dataset.flash, 2400);
 			},
-			reduced() ? 0 : 450,
+			reduced() ? 0 : MOTION.arrive.card,
 		);
 	}, []);
 
@@ -168,7 +209,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			const heroInView = stage.getBoundingClientRect().bottom > innerHeight * 0.6;
 			if (reduced() || foldedRef.current || !p || !heroInView) {
 				sec.scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
-				setTimeout(() => arrive(sec, key), reduced() ? 0 : 650);
+				setTimeout(() => arrive(sec, key), reduced() ? 0 : MOTION.dive.scroll);
 				return;
 			}
 			busyRef.current = true;
@@ -176,22 +217,22 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			closePeek();
 			if (tipRef.current) tipRef.current.hidden = true;
 			const sr = stage.getBoundingClientRect();
-			svg.dataset.cam = "dive";
-			camera(p.x, p.y, 7);
+			setCam("dive");
+			camera(p.x, p.y, MOTION.zoomDive);
 			setWarp(hubColor(id), sr.left + sr.width / 2, sr.top + sr.height / 2, "armed");
-			await wait(520);
+			await wait(MOTION.dive.approach);
 			warp.dataset.state = "open";
-			await wait(760);
+			await wait(MOTION.dive.warp);
 			sec.scrollIntoView({ behavior: "instant" as ScrollBehavior });
-			svg.dataset.cam = "none";
+			setCam("none");
 			camera(0, 0, 1);
 			engineRef.current?.reset();
 			void svg.getBoundingClientRect();
-			delete svg.dataset.cam;
+			setCam();
 			stage.classList.remove(styles.diving);
 			arrive(sec, key);
 			warp.dataset.state = "fading";
-			await wait(620);
+			await wait(MOTION.dive.fade);
 			setWarp("", 0, 0);
 			busyRef.current = false;
 			// Keyboard users continue inside the section.
@@ -214,19 +255,19 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			setWarp(hubColor(fromId), innerWidth / 2, innerHeight / 2, "full");
 			await wait(20);
 			window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-			svg.dataset.cam = "none";
-			camera(p.x, p.y, 7);
+			setCam("none");
+			camera(p.x, p.y, MOTION.zoomDive);
 			void svg.getBoundingClientRect();
-			delete svg.dataset.cam;
+			setCam();
 			await wait(30);
-			svg.dataset.cam = "dive";
+			setCam("dive");
 			camera(0, 0, 1);
 			const sr = stage.getBoundingClientRect();
 			setWarp(hubColor(fromId), sr.left + p.x, sr.top + p.y, "full");
 			void warp.offsetWidth;
 			warp.dataset.state = "closing";
-			await wait(1150);
-			delete svg.dataset.cam;
+			await wait(MOTION.climb.pull);
+			setCam();
 			setWarp("", 0, 0);
 			busyRef.current = false;
 			engineRef.current?.hubElement(fromId)?.focus({ preventScroll: true });
@@ -236,11 +277,13 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 
 	/* ------------------------ Zoom into a Highlight ------------------------ */
 
-	const writeUrl = (v: { id: string; entry: string | null } | null, mode: "push" | "replace") => {
+	const writeUrl = (v: { id: string; group?: string | null; entry: string | null } | null, mode: "push" | "replace") => {
 		const p = new URLSearchParams(location.search);
 		p.delete("world");
+		p.delete("year");
 		p.delete("entry");
 		if (v) p.set("world", v.id);
+		if (v?.group) p.set("year", v.group);
 		if (v?.entry) p.set("entry", v.entry);
 		const qs = p.toString();
 		try {
@@ -256,12 +299,14 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	const canGoBack = () => (history.state as { hl?: number } | null)?.hl === level(worldRef.current);
 
 	const enterWorld = useCallback(
-		async (id: string, entry: string | null = null, push = true) => {
+		async (id: string, entry: string | null = null, push = true, group: string | null = null) => {
 			const stage = stageRef.current, svg = svgRef.current;
 			if (!stage || !svg || busyRef.current || worldRef.current || !worlds.some((w) => w.id === id)) return;
 			scrollBeforeWorld.current = window.scrollY;
+			// One history entry per level, so Back climbs out one level at a time.
 			if (push) writeUrl({ id, entry: null }, "push");
-			if (push && entry) writeUrl({ id, entry }, "push");
+			if (push && group) writeUrl({ id, group, entry: null }, "push");
+			if (push && entry) writeUrl({ id, group, entry }, "push");
 			closePeek();
 			if (tipRef.current) tipRef.current.hidden = true;
 			// The stage is the first thing on the page; make sure all of it is on screen.
@@ -269,22 +314,23 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			const p = engineRef.current?.hubPoint(id);
 			if (reduced() || !p) {
 				stage.dataset.world = "open";
-				setWorld({ id, entry, leaving: false, instant: false });
+				setWorld({ id, group, entry, leaving: false, instant: false });
 				return;
 			}
 			busyRef.current = true;
 			stage.dataset.world = "zoom";
-			svg.dataset.cam = "dive";
-			camera(p.x, p.y, ZOOM);
-			await wait(380);
-			setWorld({ id, entry, leaving: false, instant: false });
-			await wait(760);
+			setCam("dive");
+			camera(p.x, p.y, MOTION.zoomWorld);
+			await wait(MOTION.world.approach);
+			// The camera ends with the Highlight in the middle of the stage: the world view's title takes over from there.
+			setWorld({ id, group, entry, leaving: false, instant: false, anchor: stageCentre() });
+			await wait(MOTION.world.settle);
 			stage.dataset.world = "open";
-			svg.dataset.cam = "none";
+			setCam("none");
 			camera(0, 0, 1);
 			engineRef.current?.reset();
 			void svg.getBoundingClientRect();
-			delete svg.dataset.cam;
+			setCam();
 			busyRef.current = false;
 		},
 		[worlds, camera, closePeek, setWorld], // eslint-disable-line react-hooks/exhaustive-deps
@@ -295,28 +341,29 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		if (!cur || cur.leaving || !stage || !svg) return;
 		const keyboard = !!document.activeElement?.closest(`.${styles.wRoot}`)?.matches(":focus-within") && document.activeElement?.matches(":focus-visible");
 		busyRef.current = true;
-		setWorld({ ...cur, leaving: true });
 		// Arrived by link: the sky is still folded, so open it on the way out.
 		if (foldedRef.current) engineRef.current?.setFolded(false);
 		const p = engineRef.current?.hubPoint(cur.id);
+		// The title flies back to the middle, where the zoomed-in sky shows its Highlight again.
+		setWorld({ ...cur, leaving: true, anchor: p && !reduced() ? stageCentre() : undefined });
 		if (reduced() || !p) {
-			await wait(reduced() ? 0 : 380);
+			await wait(reduced() ? 0 : MOTION.leave.instant);
 			delete stage.dataset.world;
 		} else {
-			svg.dataset.cam = "none";
-			camera(p.x, p.y, ZOOM);
+			setCam("none");
+			camera(p.x, p.y, MOTION.zoomWorld);
 			stage.dataset.world = "zoom";
 			void svg.getBoundingClientRect();
-			await wait(240);
-			svg.dataset.cam = "dive";
+			await wait(MOTION.leave.hold);
+			setCam("dive");
 			delete stage.dataset.world;
 			camera(0, 0, 1);
-			await wait(420);
+			await wait(MOTION.leave.pull);
 		}
 		setWorld(null);
 		window.scrollTo({ top: scrollBeforeWorld.current, behavior: "instant" as ScrollBehavior });
-		await wait(reduced() || !p ? 0 : 700);
-		delete svg.dataset.cam;
+		await wait(reduced() || !p ? 0 : MOTION.leave.settle);
+		setCam();
 		busyRef.current = false;
 		if (keyboard) engineRef.current?.hubElement(cur.id)?.focus({ preventScroll: true });
 	}, [camera, setWorld]);
@@ -340,20 +387,33 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		[setWorld], // eslint-disable-line react-hooks/exhaustive-deps
 	);
 
-	// Browser Back / Forward between the sky, a Highlight and an entry.
+	/** Open a group (a year), optionally straight to one of its entries; or back to all groups (null). */
+	const goGroup = useCallback(
+		(group: string | null, how: "open" | "list", entry?: string) => {
+			const cur = worldRef.current;
+			if (!cur || cur.leaving) return;
+			if (how === "list" && canGoBack()) return history.back();
+			const next = { ...cur, group, entry: entry ?? null };
+			if (how === "open") {
+				writeUrl({ ...cur, group, entry: null }, "push");
+				if (entry) writeUrl(next, "push");
+			} else writeUrl(next, "replace");
+			setWorld(next);
+		},
+		[setWorld], // eslint-disable-line react-hooks/exhaustive-deps
+	);
+
+	// Browser Back / Forward between the sky, a Highlight, a group and an entry.
 	useEffect(() => {
 		const sync = () => {
-			const q = new URLSearchParams(location.search);
-			const id = q.get("world");
-			const w = worlds.find((x) => x.id === id);
-			const entry = w?.entries.some((e) => e.slug === q.get("entry")) ? q.get("entry") : null;
+			const v = readView(worlds, new URLSearchParams(location.search));
 			const cur = worldRef.current;
-			if (!w) {
+			if (!v) {
 				if (cur) void leaveWorld();
 				return;
 			}
-			if (cur && cur.id === w.id && !cur.leaving) setWorld({ ...cur, entry });
-			else if (!cur) void enterWorld(w.id, entry, false);
+			if (cur && cur.id === v.w.id && !cur.leaving) setWorld({ ...cur, group: v.group, entry: v.entry });
+			else if (!cur) void enterWorld(v.w.id, v.entry, false, v.group);
 		};
 		window.addEventListener("popstate", sync);
 		return () => window.removeEventListener("popstate", sync);
@@ -370,6 +430,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			engineRef.current = mountConstellation({
 				stage,
 				svg,
+				sky: skyRef.current ? { svg: skyRef.current, depths: [MOTION.depth.near, MOTION.depth.far] } : undefined,
 				tip,
 				hubs,
 				items,
@@ -394,11 +455,17 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 						unlean();
 					}
 				},
-				// A tile zooms into its Highlight with that entry open.
+				// A tile zooms into its Highlight with that entry (or group, e.g. a year) open.
 				onItemActivate: (item) => {
-					const entry = worlds.find((w) => w.id === item.hub)?.entries.find((e) => e.itemId === item.id);
+					const w = worlds.find((x) => x.id === item.hub);
+					const group = w?.groups?.find((g) => g.itemId === item.id);
+					if (group) {
+						void enterWorld(item.hub, null, true, group.slug);
+						return true;
+					}
+					const entry = w?.entries.find((e) => e.itemId === item.id);
 					if (!entry) return false;
-					void enterWorld(item.hub, entry.slug);
+					void enterWorld(item.hub, entry.slug, true, entry.group ?? null);
 					return true;
 				},
 			});
@@ -451,14 +518,12 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		const sec = deep && hubs.some((h) => h.id === deep) ? document.getElementById(deep) : null;
 		if (sec) arrive(sec);
 
-		// Links into a Highlight (/?world=blogs&entry=<slug>) open it straight away.
-		const q = new URLSearchParams(location.search);
-		const w = worlds.find((x) => x.id === q.get("world"));
+		// Links into a Highlight (/?world=blogs&entry=<slug>, /?world=impact&year=2025) open it straight away.
+		const v = readView(worlds, new URLSearchParams(location.search));
 		const stage = stageRef.current;
-		if (w && stage) {
-			const entry = w.entries.some((e) => e.slug === q.get("entry")) ? q.get("entry") : null;
+		if (v && stage) {
 			stage.dataset.world = "open";
-			queueMicrotask(() => setWorld({ id: w.id, entry, leaving: false, instant: true }));
+			queueMicrotask(() => setWorld({ id: v.w.id, group: v.group, entry: v.entry, leaving: false, instant: true }));
 		}
 
 		return () => {
@@ -478,6 +543,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
 			// The whole sky opens the graph; keyboard users have the Open button.
 		>
+			<svg ref={skyRef} className={styles.sky} aria-hidden="true" />
 			<svg ref={svgRef} className={styles.graph} role="group" aria-label={label} />
 			<div className={styles.hint}>
 				<span className={styles.hintText} aria-live="polite">
@@ -537,7 +603,10 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 					entry={world.entry}
 					leaving={world.leaving}
 					instant={world.instant}
+					anchor={world.anchor}
+					group={world.group}
 					onEntry={goEntry}
+					onGroup={goGroup}
 					onClose={closeWorld}
 				/>
 			)}

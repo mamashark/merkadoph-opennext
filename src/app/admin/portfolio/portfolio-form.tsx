@@ -13,26 +13,27 @@ export function PortfolioForm({ portfolio }: { portfolio?: Portfolio }) {
 			id={p?.id}
 			main={
 				<>
-					<BasicsSection row={p} publicPath="/impact" titlePlaceholder="e.g. Philippine Independence Day 2025" />
+					<BasicsSection row={p} publicPath="/impact" titlePlaceholder="e.g. Spring Market 2026 at Torslanda Torg" />
 
-					<FormCard title="Project images">
+					<FormCard title="Photos">
 						<GalleryField
 							name="images"
 							defaultValue={p?.images ?? []}
 							max={40}
 							withDescription
-							addLabel="Add project image"
-							hint="Upload WebP images in Media first. The order here is the order on the site; the first image is used on cards when no cover is set. Alt text is required to publish."
+							addLabel="Add photo"
+							minWidth={1200}
+							hint="Upload WebP photos in Media first, ideally 1600px wide or more so they stay sharp (smaller ones are flagged). The order here is the order on the site; the first photo is used on cards and in the constellation when no cover is set. Alt text is required to publish."
 						/>
 					</FormCard>
 
-					<FormCard title="Project details">
+					<FormCard title="When and where">
 						<div className="grid gap-4 sm:grid-cols-2">
-							<Field id="location" label="Location" hint="Optional, e.g. “Täby, Stockholm”.">
-								<input id="location" name="location" maxLength={120} defaultValue={p?.location ?? ""} className={inputClass} />
-							</Field>
-							<Field id="completed_on" label="Completed" hint="Optional completion date.">
+							<Field id="completed_on" label="Date" hint="The day it took place (the first day if it ran longer). Required to publish: it puts the entry under its year.">
 								<input id="completed_on" name="completed_on" type="date" defaultValue={p?.completed_on ?? ""} className={inputClass} />
+							</Field>
+							<Field id="location" label="Location" hint="Optional, e.g. “Torslanda Torg, Göteborg”.">
+								<input id="location" name="location" maxLength={120} defaultValue={p?.location ?? ""} className={inputClass} />
 							</Field>
 						</div>
 					</FormCard>
@@ -42,9 +43,9 @@ export function PortfolioForm({ portfolio }: { portfolio?: Portfolio }) {
 			}
 			aside={
 				<>
-					<PublishCard row={p} noun="project" />
+					<PublishCard row={p} noun="entry" />
 					<CoverCard row={p} title="Cover image (optional)" />
-					<TagsCard row={p} placeholder="roofing, renovation" />
+					<TagsCard row={p} placeholder="Spring Market, Christmas Market, Tambayan Sessions" />
 					<SeoCard row={p} pathPrefix="/impact/" />
 				</>
 			}

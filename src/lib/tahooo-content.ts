@@ -134,3 +134,5 @@ export const TAHOOO = {
 
 export type TahoooFlavour = (typeof TAHOOO.flavours)[number];
 export const flavourImage = (id: string) => `/tahooo/flavour-${id}.webp`;
+/** Flavour photos are cropped from the menu slides at 720 × 898 (± 1px). */
+export const FLAVOUR_RATIO = 720 / 898;

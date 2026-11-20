@@ -282,3 +282,11 @@ body {
 .grecaptcha-badge {
 	visibility: hidden;
 }
+
+/* Community Impact photo pile (src/components/portfolio/photo-table.tsx): a print slides back onto the pile. */
+@keyframes pile-in {
+	from {
+		transform: translate(-115%, -6%) rotate(-14deg);
+		opacity: 0;
+	}
+}

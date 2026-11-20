@@ -25,6 +25,11 @@ import type { ConstellationHub, ConstellationItem, ConstellationLine } from "./t
 export type MountOptions = {
 	stage: HTMLElement;
 	svg: SVGSVGElement;
+	/**
+	 * Optional background layer for the stars, behind `svg`. Stars are split over one <g data-depth> per depth,
+	 * so the page's camera can move each layer by a different amount (parallax). Without it, stars go in `svg`.
+	 */
+	sky?: { svg: SVGSVGElement; depths: readonly number[] };
 	tip: HTMLElement;
 	hubs: ConstellationHub[];
 	items: ConstellationItem[];
@@ -95,6 +100,9 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 
 	let folded = true;
 	let busy = false;
+	/** Off screen or in a background tab: the drift and the pulse stop (saves battery). */
+	let asleep = false;
+	let onScreen = true;
 	let sim: Simulation<GNode, GLink> | undefined;
 	let drift: Timer | undefined;
 	let api:
@@ -208,11 +216,20 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			defs.append("clipPath").attr("id", `clip-${h.id}`).append("rect").attr("x", -13).attr("y", -13).attr("width", 26).attr("height", 26);
 		});
 
-		const stars = svg.append("g").attr("aria-hidden", "true");
-		for (let i = 0; i < 70; i++) {
-			stars.append("circle").attr("cx", Math.random() * width).attr("cy", Math.random() * height)
-				.attr("r", Math.random() * 0.9 + 0.3).attr("fill", STAR).attr("opacity", Math.random() * 0.5 + 0.1);
-		}
+		const layers = o.sky?.depths.length ? o.sky.depths : [1];
+		const skySvg = o.sky ? select(o.sky.svg) : null;
+		skySvg?.selectAll("*").remove();
+		skySvg?.attr("viewBox", `0 0 ${width} ${height}`);
+		layers.forEach((depth, li) => {
+			const g = (skySvg ?? svg).append("g").attr("aria-hidden", "true");
+			if (skySvg) g.attr("data-depth", depth);
+			// Further layers: smaller, fainter stars.
+			const near = layers.length > 1 ? 1 - li / (layers.length - 1) : 1;
+			for (let i = 0; i < Math.round(70 / layers.length); i++) {
+				g.append("circle").attr("cx", Math.random() * width).attr("cy", Math.random() * height)
+					.attr("r", (Math.random() * 0.9 + 0.3) * (0.7 + 0.3 * near)).attr("fill", STAR).attr("opacity", (Math.random() * 0.5 + 0.1) * (0.6 + 0.4 * near));
+			}
+		});
 
 		const root = svg.append("g");
 		const baseOp = (d: GLink) => (d.kind === "cross" ? (o.randomThreads ? 0.13 : 0.2) : d.kind === "core" ? 0.28 : 0.55);
@@ -307,10 +324,12 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			});
 			linkSel.attr("stroke-opacity", (l) => (!linkShown(l) ? 0 : l.hub === h.hub ? 0.95 : crossLit(l) ? 0.6 : 0.04));
 			nodeSel.attr("opacity", (n) => (!n.shown ? 0 : n.kind === "center" || lit.has(n) ? 1 : reached.has(n) ? 0.75 : 0.15));
+			hubs.attr("data-hot", (n) => (n === h ? "" : null));
 		};
 		const reset = () => {
 			linkSel.attr("stroke-opacity", (l) => (linkShown(l) ? baseOp(l) : 0));
 			nodeSel.attr("opacity", (n) => (n.shown ? 1 : 0));
+			hubs.attr("data-hot", null);
 		};
 		let dragging = false;
 		hubs.on("mouseenter focus", (e: Event, h) => {
@@ -410,7 +429,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		}
 		if (!reduceMotion) {
 			drift = interval(() => {
-				if (folded || busy) return;
+				if (folded || busy || asleep) return;
 				leaves.forEach((n) => {
 					n.vx = (n.vx ?? 0) + (Math.random() - 0.5) * 0.8;
 					n.vy = (n.vy ?? 0) + (Math.random() - 0.5) * 0.8;
@@ -552,6 +571,18 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 	};
 	const scheme = window.matchMedia("(prefers-color-scheme: dark)");
 
+	const updateSleep = () => {
+		asleep = !onScreen || document.hidden;
+		if (asleep) svgEl.pauseAnimations();
+		else svgEl.unpauseAnimations();
+	};
+	const io = new IntersectionObserver(([en]) => {
+		onScreen = en.isIntersecting;
+		updateSleep();
+	});
+	io.observe(stage);
+	document.addEventListener("visibilitychange", updateSleep);
+
 	stage.addEventListener("click", onStageClick);
 	window.addEventListener("resize", onResize);
 	scheme.addEventListener("change", rebuild);
@@ -565,12 +596,15 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		destroy() {
 			stage.removeEventListener("click", onStageClick);
 			window.removeEventListener("resize", onResize);
+			io.disconnect();
+			document.removeEventListener("visibilitychange", updateSleep);
 			scheme.removeEventListener("change", rebuild);
 			clearTimeout(resizeT);
 			timeouts.forEach(clearTimeout);
 			sim?.stop();
 			drift?.stop();
 			select(svgEl).selectAll("*").interrupt().remove();
+			if (o.sky) select(o.sky.svg).selectAll("*").remove();
 		},
 	};
 }

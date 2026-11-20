@@ -44,15 +44,38 @@ export function portfolioCover(p: Pick<Portfolio, "cover_image_url" | "cover_ima
 	return first ? { url: first.url, alt: first.alt || p.title } : null;
 }
 
-/** Newest first (by publish date). Optional tag filter. */
-export const getPublicPortfolios = cached(async (tag: string | undefined, page: number = 1, perPage: number = PORTFOLIO_PER_PAGE) => {
+/** The year an entry took place ("2025"), from its date. Entries without a date have no year. */
+export const entryYear = (p: Pick<Portfolio, "completed_on">) => p.completed_on?.slice(0, 4) ?? null;
+
+/** Newest first (by the date it took place, then publish date). Optional tag and year filters. */
+export const getPublicPortfolios = cached(async (tag: string | undefined, page: number = 1, perPage: number = PORTFOLIO_PER_PAGE, year?: string) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("portfolios").select(SUMMARY, { count: "exact" }));
 	if (tag) query = query.contains("tags", [tag]);
-	const { data, count, error } = await query.order("published_at", { ascending: false }).range(from, from + perPage - 1);
+	if (year && /^\d{4}$/.test(year)) query = query.gte("completed_on", `${year}-01-01`).lte("completed_on", `${year}-12-31`);
+	const { data, count, error } = await query
+		.order("completed_on", { ascending: false, nullsFirst: false })
+		.order("published_at", { ascending: false })
+		.range(from, from + perPage - 1);
 	if (error) throw new Error(`Failed to load portfolio: ${error.message}`);
 	return { portfolios: (data ?? []) as PortfolioSummary[], total: count ?? 0 };
 }, "portfolio:getPublicPortfolios", ["portfolio"]);
+
+/** Every live entry with a date, newest first: the Community Impact years on the homepage (one cached read). */
+export const getImpactTimeline = cached(async (): Promise<PortfolioSummary[]> => {
+	const { data, error } = await onlyLive(createPublicClient().from("portfolios").select(SUMMARY))
+		.not("completed_on", "is", null)
+		.order("completed_on", { ascending: false })
+		.limit(300);
+	if (error) throw new Error(`Failed to load Community Impact years: ${error.message}`);
+	return (data ?? []) as PortfolioSummary[];
+}, "portfolio:getImpactTimeline", ["portfolio"]);
+
+/** Years that have at least one live entry, newest first (for the /impact year filter). */
+export const getImpactYears = cached(async (): Promise<string[]> => {
+	const { data } = await onlyLive(createPublicClient().from("portfolios").select("completed_on")).not("completed_on", "is", null).limit(1000);
+	return Array.from(new Set((data ?? []).map((r) => String(r.completed_on).slice(0, 4)))).sort((a, b) => b.localeCompare(a));
+}, "portfolio:getImpactYears", ["portfolio"]);
 
 /** Distinct tags of live projects (for the URL filter on /portfolio). */
 export const getPortfolioTags = cached(async (): Promise<string[]> => {
@@ -79,15 +102,28 @@ export const getRelatedPortfolios = cached(async (excludeId: string, limit: numb
 	return (data ?? []) as PortfolioSummary[];
 }, "portfolio:getRelatedPortfolios", ["portfolio"]);
 
+/** The same event in other years: live entries sharing a tag (e.g. "Spring Market"), by date, newest first. */
+export const getSameEventOtherYears = cached(async (excludeId: string, tags: string[], limit: number = 6): Promise<PortfolioSummary[]> => {
+	if (!tags.length) return [];
+	const { data } = await onlyLive(createPublicClient().from("portfolios").select(SUMMARY))
+		.neq("id", excludeId)
+		.overlaps("tags", tags.slice(0, 10))
+		.order("completed_on", { ascending: false, nullsFirst: false })
+		.limit(limit);
+	return (data ?? []) as PortfolioSummary[];
+}, "portfolio:getSameEventOtherYears", ["portfolio"]);
+
 /* ------------------------------ Admin ------------------------------ */
 
 export const PORTFOLIO_SORTS = {
+	date: { column: "completed_on", ascending: false },
 	newest: { column: "published_at", ascending: false },
 	updated: { column: "updated_at", ascending: false },
 	title: { column: "title", ascending: true },
 } as const;
 
-export function adminListPortfolios(opts: { q?: string; status?: string; tag?: string; sort?: string; page?: number; perPage?: number }) {
+export function adminListPortfolios(opts: { q?: string; status?: string; tag?: string; year?: string; sort?: string; page?: number; perPage?: number }) {
+	const year = opts.year && /^\d{4}$/.test(opts.year) ? opts.year : opts.year === "none" ? "none" : "";
 	return adminList<PortfolioSummary>("portfolios", {
 		columns: SUMMARY,
 		q: opts.q,
@@ -96,8 +132,19 @@ export function adminListPortfolios(opts: { q?: string; status?: string; tag?: s
 		page: opts.page,
 		perPage: opts.perPage,
 		order: PORTFOLIO_SORTS[opts.sort as keyof typeof PORTFOLIO_SORTS] ?? PORTFOLIO_SORTS.updated,
-		refine: (query) => (opts.tag ? query.contains("tags", [opts.tag]) : query),
+		refine: (query) => {
+			let q = opts.tag ? query.contains("tags", [opts.tag]) : query;
+			if (year === "none") q = q.is("completed_on", null);
+			else if (year) q = q.gte("completed_on", `${year}-01-01`).lte("completed_on", `${year}-12-31`);
+			return q;
+		},
 	});
+}
+
+/** Years with any entry (published or not), newest first, for the admin year filter. */
+export async function adminPortfolioYears(): Promise<string[]> {
+	const { data } = await createAdminClient().from("portfolios").select("completed_on").not("completed_on", "is", null).limit(1000);
+	return Array.from(new Set((data ?? []).map((r) => String(r.completed_on).slice(0, 4)))).sort((a, b) => b.localeCompare(a));
 }
 
 /** All tags used by any project (admin filter). */

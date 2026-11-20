@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { ANNOUNCEMENT_TAG, getPublishedBlogs, PINNED_BLOG_TITLE, getPublishedBlogByTitle, type BlogSummary } from "@/lib/blogs";
 import { getPublicEvents, type EventSummary } from "@/lib/events";
-import { getPublicPortfolios, portfolioCover, type PortfolioSummary } from "@/lib/portfolio";
+import { entryYear, getImpactTimeline, portfolioCover, type PortfolioSummary } from "@/lib/portfolio";
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
 import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
-import { TAHOOO, flavourImage } from "@/lib/tahooo-content";
+import { TAHOOO, FLAVOUR_RATIO, flavourImage } from "@/lib/tahooo-content";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -68,13 +68,13 @@ const fromService = (s: ServiceSummary): Offering => ({
 });
 
 export async function HighlightsHome() {
-	const [blogsRes, pinned, notices, upcoming, past, portfolio, digitalMain, digitalList, promotions, seo] = await Promise.all([
+	const [blogsRes, pinned, notices, upcoming, past, impact, digitalMain, digitalList, promotions, seo] = await Promise.all([
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
 		safe(getPublishedBlogs(1, 6, { tag: ANNOUNCEMENT_TAG }), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicEvents("past", 1, RECENT_EVENTS), { events: [] as EventSummary[], total: 0 }),
-		safe(getPublicPortfolios(undefined, 1, PER_TYPE), { portfolios: [] as PortfolioSummary[], total: 0 }),
+		safe(getImpactTimeline(), [] as PortfolioSummary[]),
 		safe(getPublicServiceBySlug(BUSINESSES.digital.slug), null),
 		safe(getPublicServices(BUSINESSES.digital.category, 1, PER_TYPE), { services: [] as ServiceSummary[], total: 0 }),
 		safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[], total: 0 }),
@@ -106,6 +106,12 @@ export async function HighlightsHome() {
 	};
 	const offerings = [...biz.bygg.offerings, ...biz.digital.offerings];
 
+	// Community Impact by year: newest year first; within a year, in calendar order.
+	const impactYears = [...new Set(impact.map(entryYear).filter((y): y is string => !!y))];
+	const ofYear = (y: string) => impact.filter((p) => entryYear(p) === y).sort((a, b) => (a.completed_on ?? "").localeCompare(b.completed_on ?? ""));
+	const yearCover = (y: string) => ofYear(y).map((p) => portfolioCover(p)).find(Boolean)?.url;
+	const entriesWord = (n: number) => `${n} ${n === 1 ? "entry" : "entries"}`;
+
 	const worlds: World[] = (
 		[
 			{ id: "blogs", allLabel: "All stories", cta: "Read the full story", label: "Blogs", sub: "Stories from Merkado PH and our community", color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
@@ -121,7 +127,7 @@ export async function HighlightsHome() {
 				dots: 10,
 				has: events.length,
 			},
-			{ id: "impact", allLabel: "All projects", cta: "View the project", label: "Community Impact", sub: "Projects that brought people together", color: "sun", count: portfolio.total, list: "/impact", dots: 14, has: portfolio.portfolios.length },
+			{ id: "impact", allLabel: "All of Community Impact", cta: "View the entry", label: "Community Impact", sub: "Every year, the same community", color: "sun", count: impact.length, list: "/impact", dots: 8, has: impactYears.length },
 			// The two businesses always show: their page is worth visiting even before offerings are listed.
 			{ id: "bygg", allLabel: `Visit ${BUSINESSES.bygg.name}`, cta: "Read more", label: BUSINESSES.bygg.name, sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
 			{ id: "digital", allLabel: `Visit ${BUSINESSES.digital.name}`, cta: "Read more", label: BUSINESSES.digital.name, sub: "Websites, webshops and branding", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
@@ -136,7 +142,7 @@ export async function HighlightsHome() {
 	/* ------------------------- Graph: hubs + tiles ------------------------- */
 
 	/** A graph tile plus what the Highlight's preview panel shows. */
-	type Entry = Omit<ConstellationItem, "links"> & { id: string; tags: string[]; slug: string; excerpt: string; cover?: string; coverAlt: string };
+	type Entry = Omit<ConstellationItem, "links"> & { id: string; tags: string[]; slug: string; excerpt: string; cover?: string; coverAlt: string; coverRatio?: number; group?: string };
 	const offeringEntry = (hub: BusinessId) => (o: Offering): Entry => ({
 		id: `service-${o.slug}`,
 		hub,
@@ -184,18 +190,18 @@ export async function HighlightsHome() {
 			cover: e.cover_image_url ?? undefined,
 			coverAlt: e.cover_image_alt || "",
 		})),
-		...portfolio.portfolios.map((p) => ({
-			id: `project-${p.slug}`,
+		// Community Impact shows its years in the big sky; the entries are inside each year.
+		...impactYears.map((y) => ({
+			id: `impact-year-${y}`,
 			hub: "impact",
-			title: p.title,
-			note: [p.completed_on?.slice(0, 4), p.location].filter(Boolean).join(" · ") || undefined,
-			image: thumb(portfolioCover(p)?.url),
-			href: `/impact/${p.slug}`,
-			tags: shownTags(p.tags),
-			slug: p.slug,
-			excerpt: clip(p.excerpt),
-			cover: portfolioCover(p)?.url,
-			coverAlt: portfolioCover(p)?.alt ?? "",
+			title: y,
+			note: entriesWord(ofYear(y).length),
+			image: thumb(yearCover(y)),
+			href: `/impact?year=${y}`,
+			tags: [],
+			slug: `year-${y}`,
+			excerpt: "",
+			coverAlt: "",
 		})),
 		...businessEntries("bygg"),
 		...businessEntries("digital"),
@@ -212,6 +218,7 @@ export async function HighlightsHome() {
 			excerpt: `${TAHOOO.hero.lead.en} ${TAHOOO.howItWorks.line.en}`,
 			cover: TAHOOO.hero.cart.src,
 			coverAlt: TAHOOO.hero.cart.alt,
+			coverRatio: TAHOOO.hero.cart.width / TAHOOO.hero.cart.height,
 		},
 		// Each flavour, with its photo from the menu.
 		...TAHOOO.flavours.map((f) => ({
@@ -226,6 +233,8 @@ export async function HighlightsHome() {
 			excerpt: `${f.ingredients.join(", ")}.`,
 			cover: flavourImage(f.id),
 			coverAlt: `${f.name} taho: ${f.ingredients.join(", ").toLowerCase()}`,
+			// Menu photos are portrait: show each one whole in the side panel.
+			coverRatio: FLAVOUR_RATIO,
 		})),
 		...notices.blogs.map((b) => ({
 			id: `notice-${b.slug}`,
@@ -260,6 +269,23 @@ export async function HighlightsHome() {
 		const links = entries.slice(i + 1).filter((o) => o.tags.some((t) => mine.has(t.toLowerCase()))).map((o) => o.id);
 		return { ...e, links };
 	});
+	// Inside Community Impact: each year, then that year's entries.
+	const impactEntries: Entry[] = impactYears.flatMap((y) =>
+		ofYear(y).map((p) => ({
+			id: `project-${p.slug}`,
+			hub: "impact",
+			title: p.title,
+			note: [p.completed_on && formatDate(p.completed_on, { day: "numeric", month: "short" }), p.location].filter(Boolean).join(" · ") || undefined,
+			image: thumb(portfolioCover(p)?.url),
+			href: `/impact/${p.slug}`,
+			tags: shownTags(p.tags),
+			slug: p.slug,
+			excerpt: clip(p.excerpt),
+			cover: portfolioCover(p)?.url,
+			coverAlt: portfolioCover(p)?.alt ?? "",
+			group: y,
+		})),
+	);
 	// What you see when you zoom into a Highlight.
 	const worldInfo: WorldInfo[] = worlds.map((w) => ({
 		id: w.id,
@@ -271,9 +297,24 @@ export async function HighlightsHome() {
 		list: w.list,
 		allLabel: w.allLabel,
 		cta: w.cta,
-		entries: entries
-			.filter((e) => e.hub === w.id)
-			.map((e) => ({ slug: e.slug, itemId: e.id, title: e.title, note: e.note || undefined, thumb: e.image, cover: e.cover, coverAlt: e.coverAlt, excerpt: e.excerpt, href: e.href!, tags: e.tags })),
+		entries: (w.id === "impact" ? impactEntries : entries.filter((e) => e.hub === w.id)).map((e) => ({
+			slug: e.slug,
+			itemId: e.id,
+			title: e.title,
+			note: e.note || undefined,
+			thumb: e.image,
+			cover: e.cover,
+			coverAlt: e.coverAlt,
+			coverRatio: e.coverRatio,
+			group: e.group,
+			excerpt: e.excerpt,
+			href: e.href!,
+			tags: e.tags,
+		})),
+		...(w.id === "impact" && {
+			groupsLabel: "All years",
+			groups: impactYears.map((y) => ({ slug: y, itemId: `impact-year-${y}`, title: y, note: entriesWord(ofYear(y).length), thumb: thumb(yearCover(y)), href: `/impact?year=${y}` })),
+		}),
 	}));
 	const hubs: ConstellationHub[] = worlds.map((w) => ({ id: w.id, label: w.label, color: w.color, count: w.count, dots: w.dots, description: w.sub }));
 	const label = `Highlights of Merkado PH: ${worlds.map((w) => `${w.label} (${w.count})`).join(", ")}. The same content is listed below.`;
@@ -485,26 +526,40 @@ export async function HighlightsHome() {
 								<>
 									Sama-<em>sama</em>
 								</>,
-								"Projects with impact: events and initiatives that brought the community together.",
-								"All projects",
+								"Every year, the same community: the markets, Independence Day, our anniversaries and Tambayan Sessions, year by year.",
+								"All of Community Impact",
 							)}
 							<div className={styles.timeline}>
-								{portfolio.portfolios
+								{/* A timeline of the latest four years, oldest first; each year lists what happened. */}
+								{impactYears
 									.slice(0, 4)
-									// A timeline: oldest first.
-									.sort((a, b) => (a.completed_on ?? "9999").localeCompare(b.completed_on ?? "9999"))
-									.map((p, i) => (
-										<article key={p.id} className={`${styles.year} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`project-${p.slug}`}>
-											<b aria-hidden={!p.completed_on}>{p.completed_on?.slice(0, 4) ?? "—"}</b>
-											<h3>
-												<Link href={`/impact/${p.slug}`} className={styles.stretch}>
-													{p.title}
-												</Link>
-											</h3>
-											{plain(p.excerpt) && <p>{plain(p.excerpt)}</p>}
-											{p.location && <span className={`${styles.tag} ${styles.mono}`}>{p.location}</span>}
-										</article>
-									))}
+									.reverse()
+									.map((y, i) => {
+										const list = ofYear(y);
+										return (
+											<article key={y} className={`${styles.year} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`impact-year-${y}`}>
+												<h3 className={styles.yearHead}>
+													<Link href={`/impact?year=${y}`}>
+														<b>{y}</b>
+														<span className={styles.mono}>{entriesWord(list.length)} →</span>
+													</Link>
+												</h3>
+												<ul className={styles.yearList}>
+													{list.slice(0, 5).map((p) => (
+														<li key={p.id}>
+															<Link href={`/impact/${p.slug}`}>{p.title}</Link>
+															{p.completed_on && <span className={styles.mono}>{formatDate(p.completed_on, { day: "numeric", month: "short" })}</span>}
+														</li>
+													))}
+												</ul>
+												{list.length > 5 && (
+													<Link href={`/impact?year=${y}`} className={`${styles.tag} ${styles.mono}`}>
+														+ {list.length - 5} more
+													</Link>
+												)}
+											</article>
+										);
+									})}
 							</div>
 						</div>
 					</section>

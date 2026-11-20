@@ -1,36 +1,49 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getPortfolioTags, getPublicPortfolios, PORTFOLIO_PER_PAGE, portfolioCover } from "@/lib/portfolio";
+import { getImpactYears, getPortfolioTags, getPublicPortfolios, PORTFOLIO_PER_PAGE, portfolioCover } from "@/lib/portfolio";
 import { pageParam, param } from "@/lib/content";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, pageMetadata } from "@/lib/seo";
-import { ContentCard, EmptyNotice, LinkTabs, PageIntro } from "@/components/site/content-card";
+import { ChipFilter, ContentCard, EmptyNotice, LinkTabs, PageIntro } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 import { JsonLd } from "@/components/site/json-ld";
 
-// Renders per request (it reads the tag/page from the URL); the data itself comes from the cache.
+// Renders per request (it reads the year/tag/page from the URL); the data itself comes from the cache.
+
+/** /impact with the given filters (empty ones left out). */
+const impactHref = (f: { year?: string; tag?: string; page?: number }) => {
+	const q = new URLSearchParams();
+	if (f.year) q.set("year", f.year);
+	if (f.tag) q.set("tag", f.tag);
+	if (f.page && f.page > 1) q.set("page", String(f.page));
+	const qs = q.toString();
+	return qs ? `/impact?${qs}` : "/impact";
+};
 
 const description = "Community projects by Merkado PH and friends: events, pop-ups and initiatives that brought people together, with photos and the story behind each one.";
 
 export async function generateMetadata({ searchParams }: PageProps<"/impact">): Promise<Metadata> {
 	const params = await searchParams;
 	const tag = param(params, "tag");
+	const years = await getImpactYears().catch(() => [] as string[]);
+	const year = years.includes(param(params, "year")) ? param(params, "year") : "";
 	const page = pageParam(params);
 	const meta = await pageMetadata({
-		title: `${tag ? `${tag} projects` : "Community Impact"}${page > 1 ? ` — Page ${page}` : ""}`,
-		description,
-		path: page > 1 ? `/impact?page=${page}` : "/impact",
+		title: `${tag || "Community Impact"}${year ? ` ${year}` : ""}${page > 1 ? ` — Page ${page}` : ""}`,
+		description: year ? `What Merkado PH and the community did together in ${year}: events, markets and initiatives, with photos.` : description,
+		path: impactHref({ year, page }),
 	});
-	// Tag filters are views of the same list: keep them out of the index (seo.md A-3).
+	// A year is its own page (indexed); tag filters are views of the same list, so they stay out of the index (seo.md A-3).
 	return tag ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
 export default async function PortfolioPage({ searchParams }: PageProps<"/impact">) {
 	const params = await searchParams;
 	const page = pageParam(params);
-	const tags = await getPortfolioTags();
+	const [tags, years] = await Promise.all([getPortfolioTags(), getImpactYears()]);
 	const tag = tags.includes(param(params, "tag")) ? param(params, "tag") : "";
-	const { portfolios, total } = await getPublicPortfolios(tag || undefined, page);
+	const year = years.includes(param(params, "year")) ? param(params, "year") : "";
+	const { portfolios, total } = await getPublicPortfolios(tag || undefined, page, PORTFOLIO_PER_PAGE, year || undefined);
 	if (page > 1 && portfolios.length === 0) notFound();
 
 	return (
@@ -40,9 +53,9 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 					{
 						"@context": "https://schema.org",
 						"@type": "CollectionPage",
-						name: "Community Impact",
+						name: year ? `Community Impact ${year}` : "Community Impact",
 						description,
-						url: absoluteUrl("/impact"),
+						url: absoluteUrl(impactHref({ year })),
 						mainEntity: {
 							"@type": "ItemList",
 							itemListElement: portfolios.map((p, i) => ({ "@type": "ListItem", position: (page - 1) * PORTFOLIO_PER_PAGE + i + 1, url: absoluteUrl(`/impact/${p.slug}`), name: p.title })),
@@ -51,18 +64,22 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 					breadcrumbs([{ name: "Community Impact", path: "/impact" }]),
 				]}
 			/>
-			<PageIntro eyebrow="Community Impact" title="What we built together" description={description} />
+			<PageIntro eyebrow="Community Impact" title={year ? `What we did together in ${year}` : "What we built together"} description={description} />
 
-			{tags.length > 1 && (
+			{years.length > 0 && (
 				<LinkTabs
-					label="Project types"
-					current={tag}
-					tabs={[{ label: "All", value: "", href: "/impact" }, ...tags.map((t) => ({ label: t, value: t, href: `/impact?tag=${encodeURIComponent(t)}` }))]}
+					label="Years"
+					current={year}
+					tabs={[{ label: "All years", value: "", href: impactHref({ tag }) }, ...years.map((y) => ({ label: y, value: y, href: impactHref({ year: y, tag }) }))]}
 				/>
 			)}
+			{tags.length > 1 && <ChipFilter label="Events and themes" allLabel="Everything" items={tags} current={tag} href={(t) => impactHref({ year, tag: t })} />}
 
 			{portfolios.length === 0 ? (
-				<EmptyNotice title="Our community projects are being put together." description="Abangan! New projects are coming soon." />
+				<EmptyNotice
+					title={year || tag ? "Nothing here yet for this filter." : "Our community projects are being put together."}
+					description={year || tag ? "Try another year, or show everything." : "Abangan! New projects are coming soon."}
+				/>
 			) : (
 				<>
 					<div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -81,7 +98,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 									meta={
 										<p>
 											{p.images.length} photo{p.images.length === 1 ? "" : "s"}
-											{p.completed_on ? ` · Completed ${formatDate(p.completed_on, { month: "long", year: "numeric" })}` : ""}
+											{p.completed_on ? ` · ${formatDate(p.completed_on, { day: "numeric", month: "long", year: "numeric" })}` : ""}
 										</p>
 									}
 								/>
@@ -89,7 +106,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 						})}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={PORTFOLIO_PER_PAGE} total={total} basePath="/impact" params={tag ? { tag } : {}} />
+						<Pagination page={page} perPage={PORTFOLIO_PER_PAGE} total={total} basePath="/impact" params={{ ...(year && { year }), ...(tag && { tag }) }} />
 					</div>
 				</>
 			)}

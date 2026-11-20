@@ -19,6 +19,7 @@ export function GalleryField({
 	withDescription = false,
 	hint = "Shown under the main image on the product page.",
 	addLabel = "Add gallery image",
+	minWidth,
 }: {
 	name: string;
 	defaultValue?: Item[];
@@ -27,8 +28,12 @@ export function GalleryField({
 	withDescription?: boolean;
 	hint?: string;
 	addLabel?: string;
+	/** Flags photos narrower than this (px): they look blurry when shown large. */
+	minWidth?: number;
 }) {
 	const [items, setItems] = useState<Item[]>(defaultValue);
+	/** Real pixel width of each picked image, read from the preview once it loads. */
+	const [widths, setWidths] = useState<Record<string, number>>({});
 	const [open, setOpen] = useState(false);
 	const close = useCallback(() => setOpen(false), []);
 
@@ -49,7 +54,20 @@ export function GalleryField({
 					{items.map((it, i) => (
 						<li key={`${it.url}-${i}`} className="flex items-start gap-2 rounded-lg border border-slate-200 p-2 dark:border-slate-800">
 							{/* eslint-disable-next-line @next/next/no-img-element -- preview of an arbitrary storage URL */}
-							<img src={it.url} alt="" className={`${withDescription ? "h-20 w-20" : "h-12 w-12"} shrink-0 rounded object-cover`} />
+							<img
+								src={it.url}
+								alt=""
+								onLoad={
+																	minWidth
+																		? (e) => {
+																				// Read it now: React clears currentTarget before the state updater runs.
+																				const width = e.currentTarget.naturalWidth;
+																				setWidths((w) => ({ ...w, [it.url]: width }));
+																			}
+																		: undefined
+																}
+								className={`${withDescription ? "h-20 w-20" : "h-12 w-12"} shrink-0 rounded object-cover`}
+							/>
 							<div className="min-w-0 flex-1 space-y-1.5">
 								<label className="sr-only" htmlFor={`${name}-alt-${i}`}>
 									Alt text for image {i + 1}
@@ -62,6 +80,11 @@ export function GalleryField({
 									placeholder={withDescription ? "Alt text — required to publish: what's in the image" : "Alt text: what's in the image"}
 									className={`${inputClass} h-9 py-1 ${withDescription && !it.alt.trim() ? "border-amber-400 dark:border-amber-600" : ""}`}
 								/>
+								{minWidth && widths[it.url] > 0 && widths[it.url] < minWidth && (
+									<p className="text-xs font-medium text-amber-700 dark:text-amber-300">
+										Only {widths[it.url]}px wide: it will look blurry when shown large. Use a bigger version (1600px or more) if you have one.
+									</p>
+								)}
 								{withDescription && (
 									<>
 										<label className="sr-only" htmlFor={`${name}-desc-${i}`}>
@@ -73,7 +96,7 @@ export function GalleryField({
 											maxLength={500}
 											rows={2}
 											onChange={(e) => update(i, { description: e.target.value })}
-											placeholder="Description shown on hover, e.g. “New standing-seam roof, Täby”"
+											placeholder="Caption, e.g. “Lumpia queue at the Spring Market”"
 											className={`${inputClass} py-1.5 text-sm`}
 										/>
 									</>

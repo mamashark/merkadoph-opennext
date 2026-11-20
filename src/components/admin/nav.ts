@@ -51,8 +51,8 @@ export const adminNav: NavSection[] = [
 				label: "Community Impact",
 				icon: GalleryHorizontalEnd,
 				children: [
-					{ label: "All projects", href: "/admin/portfolio" },
-					{ label: "New project", href: "/admin/portfolio/new" },
+					{ label: "All entries", href: "/admin/portfolio" },
+					{ label: "New entry", href: "/admin/portfolio/new" },
 				],
 			},
 			{ label: "Tags", icon: Tag, href: "/admin/tags" },

@@ -11,7 +11,7 @@ import { DangerZone, saveNotices, UUID } from "@/components/admin/form-parts";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass } from "@/lib/ui";
 
-export const metadata: Metadata = { title: "Edit project" };
+export const metadata: Metadata = { title: "Edit Community Impact entry" };
 
 export default async function EditPortfolioPage({ params, searchParams }: PageProps<"/admin/portfolio/[id]/edit">) {
 	await requireAdmin();
@@ -28,7 +28,7 @@ export default async function EditPortfolioPage({ params, searchParams }: PagePr
 				title={portfolio.title}
 				breadcrumbs={[
 					{ label: "Admin", href: "/admin" },
-					{ label: "Portfolio", href: "/admin/portfolio" },
+					{ label: "Community Impact", href: "/admin/portfolio" },
 					{ label: "Edit" },
 				]}
 				actions={
@@ -44,8 +44,8 @@ export default async function EditPortfolioPage({ params, searchParams }: PagePr
 			</div>
 			<PortfolioForm key={portfolio.updated_at} portfolio={portfolio} />
 			<DangerZone
-				title="Delete this project"
-				description="This permanently removes the project page and its homepage tab. Images stay in Media."
+				title="Delete this entry"
+				description="This permanently removes the entry and its page. Photos stay in Media."
 				confirm={`Delete “${portfolio.title}”? This cannot be undone.`}
 				action={deletePortfolio}
 				id={portfolio.id}

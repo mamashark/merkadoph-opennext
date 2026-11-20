@@ -17,9 +17,25 @@ export type WorldEntry = {
 	thumb?: string;
 	cover?: string;
 	coverAlt: string;
+	/** Width / height. When set, the panel shows the whole photo at this shape instead of a 16:10 crop. */
+	coverRatio?: number;
+	/** The group it belongs to (e.g. its year), when the Highlight has groups. */
+	group?: string;
 	excerpt: string;
 	href: string;
 	tags: string[];
+};
+
+/** A level between the Highlight and its entries (Community Impact: a year). */
+export type WorldGroup = {
+	slug: string;
+	/** The graph tile for this group in the big sky. */
+	itemId: string;
+	title: string;
+	note?: string;
+	thumb?: string;
+	/** Its own page, e.g. /impact?year=2025. */
+	href: string;
 };
 
 /** A Highlight (category) as shown when you zoom into it. */
@@ -35,15 +51,25 @@ export type WorldInfo = {
 	/** Label of the link to an entry's own page, e.g. "Read the full story". */
 	cta: string;
 	entries: WorldEntry[];
+	/** When set, zooming in shows these groups first; choosing one shows its entries (entries carry `group`). */
+	groups?: WorldGroup[];
+	/** "All years" — the back link from a group to the groups. */
+	groupsLabel?: string;
 };
 
 type Props = {
 	world: WorldInfo;
 	entry: string | null;
+	/** The open group (e.g. "2025"), when the Highlight has groups. */
+	group: string | null;
 	leaving: boolean;
 	/** Opened from a link (no zoom), e.g. /?world=blogs. */
 	instant: boolean;
+	/** Where the zoomed-in Highlight sits on the stage (px). The title starts there and flies to its place, and back when leaving. */
+	anchor?: { x: number; y: number };
 	onEntry: (slug: string | null, how: "open" | "step" | "list") => void;
+	/** Open a group (optionally straight to one of its entries), or go back to the groups (null). */
+	onGroup: (slug: string | null, how: "open" | "list", entry?: string) => void;
 	onClose: () => void;
 };
 
@@ -59,7 +85,7 @@ type Wire = { x1: number; y1: number; x2: number; y2: number };
  * on phones). Choosing an entry slides the panel over to a preview with a link to the entry's page.
  * The list and the preview are the accessible path; the stars are a pointer-only mirror of the list.
  */
-export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClose }: Props) {
+export function HighlightsWorld({ world, entry, group, leaving, instant, anchor, onEntry, onGroup, onClose }: Props) {
 	const rootRef = useRef<HTMLDivElement>(null);
 	const skyRef = useRef<HTMLDivElement>(null);
 	const panelRef = useRef<HTMLElement>(null);
@@ -71,7 +97,23 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 	const [hot, setHot] = useState<string | null>(null);
 	const [wire, setWire] = useState<Wire | null>(null);
 
-	const { entries } = world;
+	const groupTitleRef = useRef<HTMLHeadingElement>(null);
+	const groups = world.groups;
+	const inGroup = groups && group ? (groups.find((g) => g.slug === group) ?? null) : null;
+	const atGroups = !!groups && !inGroup;
+	const entries = useMemo(() => (groups ? (inGroup ? world.entries.filter((e) => e.group === inGroup.slug) : []) : world.entries), [groups, inGroup, world.entries]);
+	/** What the sky and the list show: the entries, or (at the top of a grouped Highlight) the groups. */
+	const nodes = useMemo(
+		() => (atGroups ? groups!.map((g) => ({ slug: g.slug, title: g.title, note: g.note, thumb: g.thumb, href: g.href })) : entries),
+		[atGroups, groups, entries],
+	);
+	// Zooming a level in or out re-lays the sky: remember which way, for the animation.
+	const [lastGroup, setLastGroup] = useState(group);
+	const [move, setMove] = useState<"in" | "out" | null>(null);
+	if (group !== lastGroup) {
+		setLastGroup(group);
+		setMove(group ? "in" : "out");
+	}
 	const current = entry ? entries.findIndex((e) => e.slug === entry) : -1;
 	const active = current >= 0 ? entries[current] : null;
 	// Keep the last preview on screen while the panel slides back to the list.
@@ -105,11 +147,11 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 	// Stars on a golden-angle spiral around the Highlight, stretched to the shape of the sky.
 	const stars = useMemo(() => {
 		if (!sky) return [];
-		const n = entries.length;
+		const n = nodes.length;
 		const m = Math.min(sky.w, sky.h);
 		const stretch = Math.min(1.5, Math.max(1, sky.w / sky.h));
 		const rot = [...world.id].reduce((a, c) => a + c.charCodeAt(0), 0) % 7;
-		return entries.map((e, i) => {
+		return nodes.map((e, i) => {
 			const r = m * (0.17 + 0.25 * Math.sqrt((i + 1) / Math.max(n, 1)));
 			const a = rot + i * GOLDEN;
 			return {
@@ -118,7 +160,37 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 				y: Math.min(Math.max(sky.h / 2 + Math.sin(a) * r, 36), sky.h - 44),
 			};
 		});
-	}, [sky, entries, world.id]);
+	}, [sky, nodes, world.id]);
+
+	/* ---- Grouped Highlight, top level: each group's entries as dots around it, same-tag dots threaded across groups ---- */
+
+	const [hotTags, setHotTags] = useState<string[]>([]);
+	const orbit = useMemo(() => {
+		if (!atGroups || !groups) return { dots: [], threads: [] };
+		const dots = stars.flatMap((s) => {
+			const mine = world.entries.filter((e) => e.group === s.slug);
+			return mine.map((e, j) => {
+				const a = -Math.PI / 2 + (j / Math.max(mine.length, 1)) * Math.PI * 2;
+				return { slug: e.slug, group: s.slug, title: e.title, tags: e.tags.map((t) => t.toLowerCase()), x: s.x + Math.cos(a) * 46, y: s.y + Math.sin(a) * 46 };
+			});
+		});
+		// One thread per tag between consecutive groups (groups are listed newest first).
+		const order = new Map(groups.map((g, i) => [g.slug, i]));
+		const byTag = new Map<string, typeof dots>();
+		dots.forEach((d) => d.tags.forEach((t) => byTag.set(t, [...(byTag.get(t) ?? []), d])));
+		const threads: { key: string; tag: string; d: string }[] = [];
+		byTag.forEach((list, tag) => {
+			const seen = new Map<string, (typeof dots)[number]>();
+			list.forEach((d) => !seen.has(d.group) && seen.set(d.group, d));
+			const chain = [...seen.values()].sort((a, b) => (order.get(a.group) ?? 0) - (order.get(b.group) ?? 0));
+			for (let k = 1; k < chain.length; k++) {
+				const p = chain[k - 1], q = chain[k];
+				const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2 - 30;
+				threads.push({ key: `${tag}-${p.slug}-${q.slug}`, tag, d: `M${p.x} ${p.y} Q${mx} ${my} ${q.x} ${q.y}` });
+			}
+		});
+		return { dots, threads };
+	}, [atGroups, groups, stars, world.entries]);
 	const cx = (sky?.w ?? 0) / 2, cy = (sky?.h ?? 0) / 2;
 
 	/* ------------------- The thread from the panel to a star ------------------- */
@@ -148,8 +220,20 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 	/* ------------------------------ Actions ------------------------------ */
 
 	const show = (slug: string, how: "open" | "step") => {
+		if (atGroups) return openGroup(slug);
 		onEntry(slug, how);
 		window.setTimeout(() => entryTitleRef.current?.focus({ preventScroll: true }), how === "open" ? 420 : 0);
+	};
+	const openGroup = (slug: string, entrySlug?: string) => {
+		onGroup(slug, "open", entrySlug);
+		window.setTimeout(() => (entrySlug ? entryTitleRef : groupTitleRef).current?.focus({ preventScroll: true }), 420);
+	};
+	const backToGroups = () => {
+		const slug = group;
+		onGroup(null, "list");
+		window.setTimeout(() => {
+			if (slug) listRef.current?.querySelector<HTMLElement>(`[data-slug="${CSS.escape(slug)}"]`)?.focus({ preventScroll: true });
+		}, 420);
 	};
 	const backToList = () => {
 		const slug = active?.slug;
@@ -161,7 +245,7 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 	// Escape steps out one level, wherever focus is.
 	const escRef = useRef(() => {});
 	useEffect(() => {
-		escRef.current = () => (active ? backToList() : onClose());
+		escRef.current = () => (active ? backToList() : inGroup ? backToGroups() : onClose());
 	});
 	useEffect(() => {
 		const onKey = (e: KeyboardEvent) => {
@@ -188,8 +272,11 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 			{/* The zoomed-in sky (pointer only: the list is the accessible path) */}
 			<div ref={skyRef} className={styles.wSky} aria-hidden="true">
 				{sky && (
-					<>
+					<div key={inGroup?.slug ?? "top"} className={styles.wLevel} data-move={move ?? undefined}>
 						<svg className={styles.wLines} width={sky.w} height={sky.h}>
+							{orbit.threads.map((t) => (
+								<path key={t.key} className={styles.wThread} d={t.d} data-lit={hotTags.includes(t.tag) ? "" : undefined} />
+							))}
 							{stars.map((s, i) => (
 								<line
 									key={s.slug}
@@ -203,15 +290,39 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 								/>
 							))}
 						</svg>
-						<div className={styles.wCore} style={{ left: cx, top: cy }}>
+						<div
+							className={styles.wCore}
+							style={
+								{
+									left: cx,
+									top: cy,
+									...(anchor && { "--ax": `${anchor.x - sky.ox - cx}px`, "--ay": `${anchor.y - sky.oy - cy}px` }),
+								} as React.CSSProperties
+							}
+						>
 							<i />
 							<span>
-								{world.label}
-								<sup>{world.count}</sup>
+								{inGroup ? `${world.label} · ${inGroup.title}` : world.label}
+								<sup>{inGroup ? entries.length : world.count}</sup>
 							</span>
 						</div>
+						{orbit.dots.map((d) => (
+							<button
+								key={`${d.group}-${d.slug}`}
+								type="button"
+								tabIndex={-1}
+								className={styles.wDot}
+								data-lit={d.tags.some((t) => hotTags.includes(t)) ? "" : undefined}
+								style={{ left: d.x, top: d.y } as React.CSSProperties}
+								onClick={() => openGroup(d.group, d.slug)}
+								onMouseEnter={() => setHotTags(d.tags)}
+								onMouseLeave={() => setHotTags([])}
+							>
+								<span className={styles.wDotLabel}>{d.title}</span>
+							</button>
+						))}
 						{stars.map((s, i) => {
-							const e = entries[i];
+							const e = nodes[i];
 							return (
 								<div
 									key={s.slug}
@@ -232,7 +343,7 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 								</div>
 							);
 						})}
-					</>
+					</div>
 				)}
 			</div>
 
@@ -259,8 +370,19 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 				</div>
 				<div className={styles.wSlider}>
 					<div className={styles.wPane} inert={!!active} onScroll={measure}>
-						<ol ref={listRef} className={styles.wList}>
-							{entries.map((e, i) => (
+						{inGroup && (
+							<div className={styles.wGroupHead}>
+								<button type="button" className={`${styles.wBack} ${styles.mono}`} onClick={backToGroups}>
+									← {world.groupsLabel ?? "Back"}
+								</button>
+								<h3 ref={groupTitleRef} tabIndex={-1}>
+									{inGroup.title}
+									{inGroup.note && <small className={styles.mono}>{inGroup.note}</small>}
+								</h3>
+							</div>
+						)}
+						<ol ref={listRef} className={styles.wList} key={inGroup?.slug ?? "top"}>
+							{nodes.map((e, i) => (
 								<li key={e.slug} style={{ "--i": i } as React.CSSProperties}>
 									<a
 										href={e.href}
@@ -285,19 +407,28 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 								</li>
 							))}
 						</ol>
-						<Link href={world.list} className={`${styles.btn} ${styles.wAll}`}>
-							{world.count > entries.length ? `${world.allLabel} (${world.count})` : world.allLabel} →
-						</Link>
+						{inGroup ? (
+							<Link href={inGroup.href} className={`${styles.btn} ${styles.wAll}`}>
+								All of {inGroup.title} →
+							</Link>
+						) : (
+							<Link href={world.list} className={`${styles.btn} ${styles.wAll}`}>
+								{world.count > nodes.length && !groups ? `${world.allLabel} (${world.count})` : world.allLabel} →
+							</Link>
+						)}
 					</div>
 
 					<div className={styles.wPane} inert={!active} onScroll={measure}>
 						{shown && (
 							<article className={styles.wEntry} aria-labelledby="world-entry-title">
 								<button type="button" className={`${styles.wBack} ${styles.mono}`} onClick={backToList}>
-									← {world.label}
+									← {inGroup ? `${world.label} ${inGroup.title}` : world.label}
 								</button>
 								{shown.cover ? (
-									<div className={`${styles.cover} ${styles.wCover}`}>
+									<div
+										className={`${styles.cover} ${styles.wCover} ${shown.coverRatio ? styles.wCoverWhole : ""}`}
+										style={shown.coverRatio ? ({ "--ar": shown.coverRatio } as React.CSSProperties) : undefined}
+									>
 										<Image key={shown.slug} src={shown.cover} alt={shown.coverAlt} fill sizes="(max-width: 760px) 100vw, 400px" />
 									</div>
 								) : (
@@ -321,7 +452,7 @@ export function HighlightsWorld({ world, entry, leaving, instant, onEntry, onClo
 									{world.cta} →
 								</Link>
 								{entries.length > 1 && (
-									<nav className={styles.wStep} aria-label={`More in ${world.label}`}>
+									<nav className={styles.wStep} aria-label={`More in ${inGroup ? `${world.label} ${inGroup.title}` : world.label}`}>
 										<button type="button" className={`${styles.btn}`} disabled={current <= 0} onClick={() => show(entries[current - 1].slug, "step")}>
 											← Previous
 										</button>

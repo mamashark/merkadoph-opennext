@@ -221,8 +221,14 @@
 	stroke-opacity: 1;
 }
 
+/* The box the sky is drawn in: the whole stage here; a framed panel on phones (below). */
+.panel {
+	position: absolute;
+	inset: 0;
+}
 .intro {
 	position: absolute;
+	z-index: 2;
 	left: 0;
 	right: 0;
 	bottom: 0;
@@ -1892,4 +1898,86 @@
 .long {
 	hyphens: auto;
 	overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------------------------ */
+/* Phones held upright (PHONE_QUERY in constellation/types.ts): the title */
+/* above, a control row, then the sky as a framed panel with its own     */
+/* fixed layout (engine.ts). Phones held sideways keep the full screen.  */
+/* ------------------------------------------------------------------ */
+@media (max-width: 767px) and (orientation: portrait) {
+	.stage {
+		--side: 20px;
+		height: auto;
+		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		padding-top: max(28px, env(safe-area-inset-top, 0px));
+	}
+	.intro {
+		position: static;
+		padding: 0 var(--side);
+		max-width: none;
+		pointer-events: auto;
+	}
+	.intro h1 {
+		font-size: clamp(2.5rem, 13vw, 3.6rem);
+		white-space: nowrap;
+		text-shadow: none;
+	}
+	.lede {
+		text-shadow: none;
+	}
+	/* "Open" / "Fold again" in its own row, so it never sits on a Highlight. */
+	.hint {
+		position: static;
+		justify-content: flex-end;
+		min-height: 68px;
+		padding: 16px var(--side) 8px;
+	}
+	.panel {
+		--panel-bg: color-mix(in srgb, var(--night-2) 55%, var(--night));
+		position: relative;
+		height: 780px;
+		margin: 0 var(--side) 28px;
+		border: 1px solid var(--line-2);
+		border-radius: 18px;
+		overflow: hidden;
+		background: var(--panel-bg);
+	}
+	/* A swipe that starts on the sky still scrolls the page. */
+	.graph {
+		touch-action: pan-y;
+	}
+	/* Labels sit under their markers; a halo in the panel colour keeps lines from running through the letters. */
+	.graph :global(.lbl) {
+		paint-order: stroke;
+		stroke: var(--panel-bg);
+		stroke-width: 4px;
+		stroke-linejoin: round;
+	}
+	/* Inside a Highlight: a full-screen view (the page itself is taller than the screen here).
+	   The stage is its own stacking layer, so while a Highlight is open it rises above the site header (z 30). */
+	.stage[data-world] {
+		z-index: 40;
+	}
+	.wRoot {
+		position: fixed;
+		inset: 0;
+		z-index: 60;
+		background-color: var(--night);
+	}
+	.wPane {
+		overscroll-behavior: contain;
+	}
+	/* The Highlight's name is the sheet's big heading here; the small label at the centre of its stars would
+	   only collide with the photos around it. */
+	.wCore span {
+		display: none;
+	}
+}
+@media (max-width: 359px) and (orientation: portrait) {
+	.stage {
+		--side: 16px;
+	}
 }

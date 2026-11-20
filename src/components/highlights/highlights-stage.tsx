@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEFAULT_LINES } from "@/components/constellation/constellation";
 import type { ConstellationEngine } from "@/components/constellation/engine";
-import type { ConstellationHub, ConstellationItem } from "@/components/constellation/types";
+import { PHONE_QUERY, type ConstellationHub, type ConstellationItem } from "@/components/constellation/types";
 import { HighlightsWorld, type WorldInfo } from "./highlights-world";
 import { MOTION } from "./motion";
 import styles from "./highlights.module.css";
@@ -42,6 +42,8 @@ const readView = (worlds: WorldInfo[], q: URLSearchParams) => {
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const canHover = () => window.matchMedia("(hover: hover)").matches;
+/** Phones held upright: the sky is a framed panel below the title, and a Highlight opens as a full-screen view. */
+const phone = () => window.matchMedia(PHONE_QUERY).matches;
 
 /**
  * Homepage hero: the constellation (folded sun → categories → items). Hovering a category previews
@@ -53,6 +55,8 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 	const skyRef = useRef<SVGSVGElement>(null);
+	/** The box the sky is drawn in: the whole stage, or (phones) the framed panel. The camera centres on it. */
+	const panelRef = useRef<HTMLDivElement>(null);
 	const tipRef = useRef<HTMLDivElement>(null);
 	const warpRef = useRef<HTMLDivElement>(null);
 	const engineRef = useRef<ConstellationEngine | null>(null);
@@ -92,9 +96,9 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	/** Camera centred on (x, y) at zoom s; s = 1 is the overview. */
 	const camera = useCallback(
 		(x: number, y: number, s: number) => {
-			const stage = stageRef.current;
-			if (!stage) return;
-			const { width, height } = stage.getBoundingClientRect();
+			const box = panelRef.current ?? stageRef.current;
+			if (!box) return;
+			const { width, height } = box.getBoundingClientRect();
 			place(x, y, s, width / 2, height / 2);
 		},
 		[place],
@@ -303,6 +307,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			const stage = stageRef.current, svg = svgRef.current;
 			if (!stage || !svg || busyRef.current || worldRef.current || !worlds.some((w) => w.id === id)) return;
 			scrollBeforeWorld.current = window.scrollY;
+			const onPhone = phone();
 			// One history entry per level, so Back climbs out one level at a time.
 			if (push) writeUrl({ id, entry: null }, "push");
 			if (push && group) writeUrl({ id, group, entry: null }, "push");
@@ -310,9 +315,10 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			closePeek();
 			if (tipRef.current) tipRef.current.hidden = true;
 			// The stage is the first thing on the page; make sure all of it is on screen.
-			if (Math.abs(stage.getBoundingClientRect().top - stage.offsetTop) > 4) window.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" });
+			// (Phones: the Highlight opens as a full-screen view, so the page stays where it is.)
+			if (!onPhone && Math.abs(stage.getBoundingClientRect().top - stage.offsetTop) > 4) window.scrollTo({ top: 0, behavior: reduced() ? "auto" : "smooth" });
 			const p = engineRef.current?.hubPoint(id);
-			if (reduced() || !p) {
+			if (reduced() || !p || onPhone) {
 				stage.dataset.world = "open";
 				setWorld({ id, group, entry, leaving: false, instant: false });
 				return;
@@ -343,7 +349,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		busyRef.current = true;
 		// Arrived by link: the sky is still folded, so open it on the way out.
 		if (foldedRef.current) engineRef.current?.setFolded(false);
-		const p = engineRef.current?.hubPoint(cur.id);
+		const p = phone() ? null : engineRef.current?.hubPoint(cur.id);
 		// The title flies back to the middle, where the zoomed-in sky shows its Highlight again.
 		setWorld({ ...cur, leaving: true, anchor: p && !reduced() ? stageCentre() : undefined });
 		if (reduced() || !p) {
@@ -543,8 +549,12 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
 			// The whole sky opens the graph; keyboard users have the Open button.
 		>
-			<svg ref={skyRef} className={styles.sky} aria-hidden="true" />
-			<svg ref={svgRef} className={styles.graph} role="group" aria-label={label} />
+			{/* Title first: on phones it sits above the sky panel, in reading order (it's absolutely placed on wider screens). */}
+			<div className={styles.intro}>
+				<p className={styles.eyebrow}>{eyebrow}</p>
+				<h1 id="hero-title">{title}</h1>
+				<p className={styles.lede}>{lede}</p>
+			</div>
 			<div className={styles.hint}>
 				<span className={styles.hintText} aria-live="polite">
 					{hint}
@@ -562,12 +572,11 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 					</button>
 				)}
 			</div>
-			<div className={styles.intro}>
-				<p className={styles.eyebrow}>{eyebrow}</p>
-				<h1 id="hero-title">{title}</h1>
-				<p className={styles.lede}>{lede}</p>
+			<div ref={panelRef} className={styles.panel}>
+				<svg ref={skyRef} className={styles.sky} aria-hidden="true" />
+				<svg ref={svgRef} className={styles.graph} role="group" aria-label={label} />
+				<div ref={tipRef} className={styles.tip} hidden />
 			</div>
-			<div ref={tipRef} className={styles.tip} hidden />
 			<div
 				ref={peekRef}
 				className={`${styles.peek} ${peekOpen ? styles.peekOpen : ""}`}

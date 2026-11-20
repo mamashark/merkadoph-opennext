@@ -15,7 +15,7 @@ import {
 	type SimulationNodeDatum,
 	type Timer,
 } from "d3";
-import type { ConstellationHub, ConstellationItem, ConstellationLine } from "./types";
+import { PHONE_QUERY, type ConstellationHub, type ConstellationItem, type ConstellationLine } from "./types";
 
 /**
  * The D3 force graph behind <Constellation>. Loaded on demand (it pulls in d3), so pages only pay for
@@ -79,6 +79,9 @@ interface GNode extends SimulationNodeDatum {
 	len?: number;
 	item?: ConstellationItem;
 	tile?: boolean;
+	/** Phone layout: the label's lines (under the marker) and its half width, for keeping it inside the panel. */
+	lines?: string[];
+	halfW?: number;
 }
 interface GLink extends SimulationLinkDatum<GNode> {
 	kind: "core" | "spoke" | "cross";
@@ -128,9 +131,32 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		const INK = C("--ink"), BLUE = C("--blue"), SUN = C("--sun"), MUTED = C("--muted");
 		const TILE_BG = C("--tile-bg"), STAR = C("--star"), FONT_DISPLAY = C("--font-display");
 
-		const small = width < 560;
+		// Phones held upright: a fixed layout inside a framed panel (see PHONE_QUERY).
+		const phone = window.matchMedia(PHONE_QUERY).matches;
+		const small = width < 560 || phone;
+		/** Inner clearance of the phone panel: nothing (marker, label, tile) comes closer to its edge. */
+		const PAD = 16;
+		// Phone rows: two Highlights per row, the right one a little lower (staggered); an odd last one is centred.
+		// Rows fill the panel: the first marker leaves room for its photos above, the last for its label below.
+		const bands = Math.ceil(HUBS.length / 2);
+		const ROW_TOP = 78, ROW_BOTTOM = 112, STAGGER = 0.36;
+		const bandH = (height - ROW_TOP - ROW_BOTTOM) / Math.max(bands - 1, 1);
+		const phoneSpot = (i: number) => {
+			const row = Math.floor(i / 2), right = i % 2 === 1, alone = i === HUBS.length - 1 && HUBS.length % 2 === 1;
+			return { x: width * (alone ? 0.5 : right ? 0.73 : 0.27), y: ROW_TOP + row * bandH + (right ? bandH * STAGGER : 0) };
+		};
 		// Short screens (phones held sideways) lift the sun so its prompt clears the title at the bottom.
-		const cx = width / 2, cy = height * (small ? 0.42 : height < 440 ? 0.36 : 0.48);
+		// On a phone the sun sits between the middle rows, clear of every Highlight.
+		const cx = width / 2,
+			// Phone: halfway between the right marker of the row above the middle and the left marker below it.
+			cy = phone ? ROW_TOP + (Math.max(Math.floor(bands / 2), 1) - 1) * bandH + bandH * ((1 + STAGGER) / 2) : height * (small ? 0.42 : height < 440 ? 0.36 : 0.48);
+		/** Phone labels: long names on two lines, split at the space nearest the middle. */
+		const splitLabel = (s: string) => {
+			if (s.length <= 13 || !s.includes(" ")) return [s];
+			const spaces = [...s.matchAll(/ /g)].map((m) => m.index!);
+			const at = spaces.reduce((b, i) => (Math.abs(i - s.length / 2) < Math.abs(b - s.length / 2) ? i : b), spaces[0]);
+			return [s.slice(0, at), s.slice(at + 1)];
+		};
 		const rand = (a: number, b: number) => a + Math.random() * (b - a);
 		const sizeScale = small ? 0.4 : 1;
 
@@ -143,28 +169,50 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		HUBS.forEach((h, i) => {
 			const a = offset + (i / HUBS.length) * Math.PI * 2 + rand(-0.3, 0.3);
 			const reach = rand(0.5, 0.95);
-			const tx = cx + Math.cos(a) * width * 0.4 * reach;
-			const ty = cy + Math.sin(a) * height * 0.4 * reach;
+			// Phone: label lines + count, measured in IBM Plex Mono (0.6 em per character at 12px).
+			const lines = phone ? splitLabel(h.label) : undefined;
+			const halfW = lines ? (Math.max(...lines.map((l, k) => l.length + (k === lines.length - 1 ? 3 : 0))) * 7.3) / 2 : undefined;
+			const spot = phone ? phoneSpot(i) : null;
+			const tx = spot ? Math.min(Math.max(spot.x, PAD + Math.max(halfW!, 48)), width - PAD - Math.max(halfW!, 48)) : cx + Math.cos(a) * width * 0.4 * reach;
+			const ty = spot ? spot.y : cy + Math.sin(a) * height * 0.4 * reach;
 			const items = ITEMS.filter((it) => it.hub === h.id);
 			const dots = h.dots ? Math.max(3, Math.round(h.dots * sizeScale)) : 0;
 			const color = C(`--${h.color}`);
 			nodes.push({
-				id: `hub:${h.id}`, kind: "hub", hub: h.id, color, label: h.label,
+				id: `hub:${h.id}`, kind: "hub", hub: h.id, color, label: h.label, lines, halfW,
 				angle: Math.atan2(ty - cy, tx - cx), tx, ty, count: h.count ?? items.length + dots,
 				...(folded ? hidden() : { x: tx, y: ty, shown: true }),
 			});
 			links.push({ source: "center", target: `hub:${h.id}`, kind: "core", hub: h.id });
 			// Bigger clusters reach further, so they read as fuller stars
 			const reachLen = (small ? 30 : 55) + Math.sqrt(items.length + dots) * (small ? 8 : 14);
+			// Phone: at most two photo tiles per Highlight (the rest are dots, still links), and every leaf gets a
+			// spot on an arc above and beside its marker, so nothing lands on the label underneath.
+			const PHONE_TILES = 2;
+			let tiles = 0;
+			const count = items.length + dots;
+			// The half circle above the marker (from left to right, over the top): the label below stays clear.
+			const arc = Array.from({ length: count }, (_, k) => {
+				const from = Math.PI + 0.12, span = Math.PI - 0.24;
+				return from + (count > 1 ? (k / (count - 1)) * span : span / 2);
+			}).sort((p, q) => Math.abs(p - Math.PI * 1.5) - Math.abs(q - Math.PI * 1.5));
+			let slot = 0;
 			const addLeaf = (id: string, item?: ConstellationItem) => {
+				const wantsTile = !!item && item.shape !== "dot" && (!phone || (!!item.image && tiles < PHONE_TILES));
+				if (wantsTile && phone) tiles++;
+				// Tiles take the spots nearest the top of the arc; dots fill the sides.
+				const a2 = phone ? arc[slot++] : 0;
+				const r = phone ? (wantsTile ? 52 : 34 + (slot % 3) * 7) : 0;
 				nodes.push({
-					id, kind: "leaf", hub: h.id, color, item, tile: !!item && item.shape !== "dot",
-					len: reachLen * rand(0.45, 1.25),
+					id, kind: "leaf", hub: h.id, color, item, tile: wantsTile,
+					len: phone ? r : reachLen * rand(0.45, 1.25),
+					...(phone ? { tx: tx + Math.cos(a2) * r, ty: ty + Math.sin(a2) * r } : {}),
 					...(folded ? hidden() : { x: tx + rand(-3, 3), y: ty + rand(-3, 3), shown: true }),
 				});
 				links.push({ source: `hub:${h.id}`, target: id, kind: "spoke", hub: h.id });
 			};
-			items.forEach((it, j) => addLeaf(it.id ? `item:${it.id}` : `${h.id}-i${j}`, it));
+			// Items with a photo first, so the two phone tiles are photos.
+			[...items].sort((p, q) => Number(!!q.image) - Number(!!p.image)).forEach((it) => addLeaf(it.id ? `item:${it.id}` : `${h.id}-i${items.indexOf(it)}`, it));
 			for (let j = 0; j < dots; j++) addLeaf(`${h.id}-d${j}`);
 		});
 
@@ -193,9 +241,10 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			.force("link", forceLink<GNode, GLink>(links).id((d) => d.id)
 				.distance((l) => (l.kind === "spoke" ? (tgt(l).len ?? 0) : 0))
 				.strength((l) => (l.kind === "spoke" ? 0.7 : 0)))
-			.force("hubX", forceX<GNode>((d) => d.tx ?? cx).strength((d) => (d.kind === "hub" ? 0.18 : 0)))
-			.force("hubY", forceY<GNode>((d) => d.ty ?? cy).strength((d) => (d.kind === "hub" ? 0.18 : 0)))
-			.force("charge", forceManyBody<GNode>().strength((d) => (d.kind === "hub" ? -260 : d.tile ? -70 : d.item ? -45 : -34)))
+			// Phone: Highlights hold their row spots and leaves hold their arc spots (a fixed, readable layout).
+			.force("hubX", forceX<GNode>((d) => d.tx ?? cx).strength((d) => (d.kind === "hub" ? (phone ? 0.5 : 0.18) : phone && d.kind === "leaf" ? 0.3 : 0)))
+			.force("hubY", forceY<GNode>((d) => d.ty ?? cy).strength((d) => (d.kind === "hub" ? (phone ? 0.5 : 0.18) : phone && d.kind === "leaf" ? 0.3 : 0)))
+			.force("charge", forceManyBody<GNode>().strength((d) => (phone ? (d.kind === "hub" ? -40 : -8) : d.kind === "hub" ? -260 : d.tile ? -70 : d.item ? -45 : -34)))
 			.force("collide", forceCollide<GNode>((d) => (d.tile ? 20 : d.kind === "hub" ? 26 : d.item ? 8 : 5)));
 		sim = s;
 
@@ -305,10 +354,26 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			});
 		// An invisible 44px tap target around the 10px square (touch, B5).
 		hubs.append("circle").attr("r", 22).attr("fill", "transparent");
+		if (phone) {
+			// Phone: marker and label are one target; the label sits under the marker, centred.
+			hubs.append("rect").attr("class", "hit").attr("x", (d) => -(d.halfW ?? 40) - 6).attr("y", 6).attr("width", (d) => 2 * (d.halfW ?? 40) + 12)
+				.attr("height", (d) => (d.lines?.length ?? 1) * 15 + 14).attr("fill", "transparent");
+		}
 		hubs.append("rect").attr("x", -5).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", (d) => d.color ?? BLUE);
-		const label = hubs.append("text").attr("x", 13).attr("y", -9).attr("fill", INK).attr("font-size", small ? 12 : 14);
-		label.append("tspan").text((d) => d.label ?? "");
-		label.append("tspan").attr("dx", 5).attr("dy", -6).attr("font-size", small ? 9 : 10).attr("fill", MUTED).text((d) => d.count ?? "");
+		if (phone) {
+			const label = hubs.append("text").attr("class", "lbl").attr("text-anchor", "middle").attr("fill", INK).attr("font-size", 12);
+			label.each(function (d) {
+				const t = select(this);
+				(d.lines ?? [d.label ?? ""]).forEach((line, k, all) => {
+					const ts = t.append("tspan").attr("x", 0).attr("y", 24 + k * 15).text(line);
+					if (k === all.length - 1 && d.count) ts.append("tspan").attr("dx", 4).attr("font-size", 9).attr("fill", MUTED).attr("baseline-shift", "super").text(d.count);
+				});
+			});
+		} else {
+			const label = hubs.append("text").attr("x", 13).attr("y", -9).attr("fill", INK).attr("font-size", small ? 12 : 14);
+			label.append("tspan").text((d) => d.label ?? "");
+			label.append("tspan").attr("dx", 5).attr("dy", -6).attr("font-size", small ? 9 : 10).attr("fill", MUTED).text((d) => d.count ?? "");
+		}
 
 		let pinned: GNode | null = null;
 		const spotlight = (h: GNode) => {
@@ -399,7 +464,8 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			});
 		linked.on("focus", (_, d) => showTip(d)).on("blur", hideTip);
 
-		hubs.call(drag<SVGGElement, GNode>()
+		// Dragging a Highlight is a mouse thing: on touch screens it would stop a swipe from scrolling the page.
+		if (!phone && !window.matchMedia("(pointer: coarse)").matches) hubs.call(drag<SVGGElement, GNode>()
 			.on("start", (e, d) => { dragging = true; o.onHubHover?.(null, null); if (!e.active) s.alphaTarget(0.2).restart(); d.fx = d.x; d.fy = d.y; })
 			.on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
 			.on("end", (e, d) => { dragging = false; if (!e.active) s.alphaTarget(0); d.fx = null; d.fy = null; }));
@@ -407,6 +473,13 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 		const render = () => {
 			nodes.forEach((n) => {
+				if (phone) {
+					// Phone: everything (marker, label under it, tile) stays inside the panel's inner clearance.
+					const r = n.kind === "hub" ? Math.max(n.halfW ?? 0, 22) : n.tile ? 15 : 6;
+					n.x = clamp(n.x ?? cx, PAD + r, width - PAD - r);
+					n.y = clamp(n.y ?? cy, PAD + (n.kind === "hub" ? 22 : r), height - PAD - (n.kind === "hub" ? 24 + (n.lines?.length ?? 1) * 15 : r));
+					return;
+				}
 				// hubs keep room on the right for their label
 				n.x = clamp(n.x ?? cx, 16, width - (n.kind === "hub" ? 140 : 16));
 				n.y = clamp(n.y ?? cy, n.kind === "hub" ? 40 : 16, height - 16);

@@ -30,5 +30,11 @@ export type ConstellationItem = {
 	shape?: "tile" | "dot";
 };
 
+/**
+ * Phones held upright: the constellation is a framed panel below the title, with a fixed layout
+ * (Highlights in staggered rows, labels under their markers). Wider screens and phones held sideways keep the full-screen sky.
+ */
+export const PHONE_QUERY = "(max-width: 767px) and (orientation: portrait)";
+
 /** Quote + call to action shown under the folded sun. */
 export type ConstellationLine = [quote: string, action: string];

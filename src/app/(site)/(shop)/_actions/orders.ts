@@ -1,5 +1,7 @@
 "use server";
 
+import { assertShopOpen } from "@/lib/shop-gate";
+
 import { redirect } from "next/navigation";
 import * as orders from "@/server/shop/orders";
 import type { FormResult } from "./auth";
@@ -9,12 +11,14 @@ import type { FormResult } from "./auth";
  * one of the customer's own orders — the service reads through RLS, so other orders can't be reached.
  */
 export async function cancelOrderAction(formData: FormData): Promise<void> {
+	assertShopOpen();
 	const number = String(formData.get("order") ?? "");
 	const res = await orders.cancelMyOrder(number);
 	redirect(`/account/orders/${encodeURIComponent(number)}?${res.ok ? "notice=cancelled" : `error=${encodeURIComponent(res.error.message)}`}`);
 }
 
 export async function requestCancellationAction(_prev: FormResult, formData: FormData): Promise<FormResult<null>> {
+	assertShopOpen();
 	const number = String(formData.get("order") ?? "");
 	const res = await orders.requestCancellation(number, String(formData.get("reason") ?? ""));
 	if (res.ok) redirect(`/account/orders/${encodeURIComponent(number)}?notice=cancel-requested`);
@@ -22,6 +26,7 @@ export async function requestCancellationAction(_prev: FormResult, formData: For
 }
 
 export async function buyAgainAction(formData: FormData): Promise<void> {
+	assertShopOpen();
 	const res = await orders.buyAgain(String(formData.get("order") ?? ""));
 	const skipped = res.ok ? res.data.skipped.length : 0;
 	redirect(`/cart?${res.ok ? `notice=buy-again&skipped=${skipped}` : `error=${encodeURIComponent(res.error.message)}`}`);

@@ -1,5 +1,7 @@
 "use server";
 
+import { assertShopOpen } from "@/lib/shop-gate";
+
 import { redirect } from "next/navigation";
 import { verifyRecaptcha } from "@/lib/recaptcha";
 import { securityEvent } from "@/lib/audit";
@@ -13,6 +15,7 @@ import { fail } from "@/server/shop/result";
  */
 
 export async function quoteAction(shippingMethodId: string | null, postcode: string | null) {
+	assertShopOpen();
 	return checkout.quote({ shippingMethodId, postcode });
 }
 
@@ -25,6 +28,7 @@ const address = (formData: FormData, prefix: string) => ({
 export type PlaceOrderState = Awaited<ReturnType<typeof checkout.placeOrder>> & { redirectUrl?: string | null } | null;
 
 export async function placeOrderAction(_prev: PlaceOrderState, formData: FormData): Promise<PlaceOrderState> {
+	assertShopOpen();
 	const f = formFields(formData, ["email", "address_id", "shipping_method_id", "payment_method", "notes", "quote_hash"]);
 	if (!(await verifyRecaptcha(formData.get("recaptcha_token"), "checkout")).ok) {
 		await securityEvent("forms.captcha_failed", "Checkout reCAPTCHA check failed", { email: f.email });

@@ -5,6 +5,7 @@ import { paypalCapture, stripeGetSession } from "@/lib/payment-providers";
 import { getOrderForViewer, markOrderPaid, paidAmountMatches } from "@/lib/orders";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { siteUrl } from "@/lib/env";
+import { SHOP_CODE_ENABLED } from "@/lib/shop-gate";
 
 /**
  * Customers land here after paying on Stripe Checkout or approving on PayPal.
@@ -12,6 +13,8 @@ import { siteUrl } from "@/lib/env";
  * marked paid, then the customer is sent to the confirmation page.
  */
 export async function GET(request: NextRequest) {
+	// The old shop is closed (src/lib/shop-gate.ts): this endpoint answers 404.
+	if (!SHOP_CODE_ENABLED) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
 	const url = request.nextUrl;
 	const orderId = url.searchParams.get("order") ?? "";
 	const token = url.searchParams.get("t") ?? "";

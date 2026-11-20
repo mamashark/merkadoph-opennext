@@ -1,5 +1,7 @@
 "use server";
 
+import { assertShopOpen } from "@/lib/shop-gate";
+
 import { redirect } from "next/navigation";
 import { formFields } from "@/lib/validation";
 import * as addresses from "@/server/shop/addresses";
@@ -21,12 +23,14 @@ const addressInput = (formData: FormData) => ({
 });
 
 export async function updateProfileAction(_prev: FormResult, formData: FormData): Promise<FormResult<profile.Profile>> {
+	assertShopOpen();
 	const raw = formFields(formData, ["first_name", "last_name", "phone"]);
 	const res = await profile.updateProfile({ ...raw, marketing_opt_in: formData.get("marketing_opt_in") === "on" });
 	return { ...res, values: res.ok ? undefined : raw };
 }
 
 export async function saveAddressAction(_prev: FormResult, formData: FormData): Promise<FormResult<addresses.Address>> {
+	assertShopOpen();
 	const id = String(formData.get("id") ?? "");
 	const input = addressInput(formData);
 	const res = id ? await addresses.updateAddress(id, input) : await addresses.createAddress(input);
@@ -35,17 +39,20 @@ export async function saveAddressAction(_prev: FormResult, formData: FormData): 
 }
 
 export async function deleteAddressAction(formData: FormData): Promise<void> {
+	assertShopOpen();
 	const res = await addresses.deleteAddress(String(formData.get("id") ?? ""));
 	redirect(`/account/addresses?${res.ok ? "notice=deleted" : "error=not-found"}`);
 }
 
 export async function setDefaultAddressAction(formData: FormData): Promise<void> {
+	assertShopOpen();
 	const kind = String(formData.get("kind") ?? "both");
 	const res = await addresses.setDefaultAddress(String(formData.get("id") ?? ""), kind === "shipping" || kind === "billing" ? kind : "both");
 	redirect(`/account/addresses?${res.ok ? "notice=default" : "error=not-found"}`);
 }
 
 export async function deleteAccountAction(_prev: FormResult, formData: FormData): Promise<FormResult<null>> {
+	assertShopOpen();
 	const res = await profile.deleteAccount(formFields(formData, ["current_password"]));
 	if (res.ok) redirect("/?notice=account-deleted");
 	return res;

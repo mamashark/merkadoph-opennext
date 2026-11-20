@@ -1,5 +1,6 @@
 import { getShopSettings } from "@/lib/shop";
 import { getProductFeed } from "@/lib/product-feed";
+import { SHOP_CODE_ENABLED } from "@/lib/shop-gate";
 
 /**
  * Public product feed (Google Merchant Center RSS 2.0): [site]/product-feed.xml
@@ -9,6 +10,8 @@ import { getProductFeed } from "@/lib/product-feed";
 export const revalidate = 300;
 
 export async function GET() {
+	// The old shop is closed (src/lib/shop-gate.ts): this endpoint answers 404.
+	if (!SHOP_CODE_ENABLED) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
 	const settings = await getShopSettings();
 	if (!settings.enabled) return new Response("Shop is disabled.", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
 

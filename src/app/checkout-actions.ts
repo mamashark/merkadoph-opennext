@@ -1,5 +1,7 @@
 "use server";
 
+import { assertShopOpen } from "@/lib/shop-gate";
+
 import { revalidatePath, updateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getProductsForCheckout, getShopSettings } from "@/lib/shop";
@@ -33,6 +35,7 @@ const MIN_FILL_MS = 3000;
  * from the database, and the order stores its own copy of each line.
  */
 export async function placeOrder(_prev: CheckoutState, formData: FormData): Promise<CheckoutState> {
+	assertShopOpen();
 	const settings = await getShopSettings();
 	if (!settings.enabled) return { status: "error", message: "The shop is closed right now." };
 

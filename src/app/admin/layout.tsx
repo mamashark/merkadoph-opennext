@@ -9,7 +9,8 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {
-	const user = await requireAdmin();
+	// Allowed without an authenticator, so the Security page can render inside the admin to add one.
+		const user = await requireAdmin({ allowMfaSetup: true });
 	const collapsed = (await cookies()).get(SIDEBAR_COOKIE)?.value === "1";
 
 	return (

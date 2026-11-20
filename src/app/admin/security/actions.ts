@@ -11,7 +11,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 /** Step 1: create a TOTP factor and return its QR code + secret for the authenticator app. */
 export async function startMfaEnrollment(): Promise<Result<{ factorId: string; qr: string; secret: string }>> {
-	await requireAdmin();
+	await requireAdmin({ allowMfaSetup: true });
 	const supabase = await createClient();
 	// Clear abandoned (unverified) attempts first.
 	const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -24,7 +24,7 @@ export async function startMfaEnrollment(): Promise<Result<{ factorId: string; q
 
 /** Step 2: confirm with a code from the app. Upgrades this session to aal2. */
 export async function confirmMfaEnrollment(factorId: string, code: string): Promise<Result<null>> {
-	const me = await requireAdmin();
+	const me = await requireAdmin({ allowMfaSetup: true });
 	const parsed = otpSchema.safeParse(code);
 	if (!parsed.success) return { ok: false, error: "Enter the 6-digit code from your app." };
 	const supabase = await createClient();
@@ -47,7 +47,7 @@ export async function removeMfa(formData: FormData) {
 
 /** Revokes every session of this account (all browsers/devices). */
 export async function signOutEverywhere() {
-	const me = await requireAdmin();
+	const me = await requireAdmin({ allowMfaSetup: true });
 	await audit({ kind: "security", action: "auth.logout_all", summary: "Signed out of all devices", actor: { id: me.id, email: me.email } });
 	const supabase = await createClient();
 	await supabase.auth.signOut({ scope: "global" });

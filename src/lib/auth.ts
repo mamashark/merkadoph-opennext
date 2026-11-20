@@ -45,12 +45,16 @@ export const getMfaState = cache(async (): Promise<{ enrolled: boolean; pending:
 /**
  * Gate for every admin page and Server Action. The proxy already redirects anonymous
  * visitors, but actions can be invoked directly, so each one must call this too.
- * Admins with an authenticator must complete the second step (aal2) first.
+ * Two-step login is required for every admin (Kay, 2026-11-20): an admin with an authenticator must pass
+ * the second step (aal2) first, and an admin without one can only open the Security page to add it
+ * (`allowMfaSetup`: the admin layout, the Security page and its enrolment actions).
  */
-export async function requireAdmin(): Promise<SessionUser> {
+export async function requireAdmin(opts: { allowMfaSetup?: boolean } = {}): Promise<SessionUser> {
 	const user = await getCurrentUser();
 	if (!user) redirect("/login");
 	if (!isAdmin(user)) redirect("/login?error=forbidden");
-	if ((await getMfaState()).pending) redirect("/login/mfa");
+	const mfa = await getMfaState();
+	if (mfa.pending) redirect("/login/mfa");
+	if (!mfa.enrolled && !opts.allowMfaSetup) redirect("/admin/security?setup=required");
 	return toSessionUser(user);
 }

@@ -1,5 +1,7 @@
 "use server";
 
+import { assertShopOpen } from "@/lib/shop-gate";
+
 import { redirect } from "next/navigation";
 import { verifyRecaptcha, type RecaptchaAction } from "@/lib/recaptcha";
 import { securityEvent } from "@/lib/audit";
@@ -24,6 +26,7 @@ async function human(formData: FormData, action: RecaptchaAction, email: string)
 const keep = (raw: Record<string, string>) => Object.fromEntries(Object.entries(raw).filter(([k]) => !k.includes("password")));
 
 export async function registerAction(_prev: FormResult, formData: FormData): Promise<FormResult<{ message: string }>> {
+	assertShopOpen();
 	const raw = formFields(formData, ["first_name", "last_name", "email", "password"]);
 	if (!(await human(formData, "register", raw.email))) return { ...fail("CAPTCHA"), values: keep(raw) };
 	const res = await auth.register({ ...raw, marketing_opt_in: formData.get("marketing_opt_in") === "on" });
@@ -31,6 +34,7 @@ export async function registerAction(_prev: FormResult, formData: FormData): Pro
 }
 
 export async function signInAction(_prev: FormResult, formData: FormData): Promise<FormResult<{ next: string }>> {
+	assertShopOpen();
 	const raw = formFields(formData, ["email", "password", "next"]);
 	if (!(await human(formData, "shop_login", raw.email))) return { ...fail("CAPTCHA"), values: keep(raw) };
 	const res = await auth.signIn(raw);
@@ -39,33 +43,39 @@ export async function signInAction(_prev: FormResult, formData: FormData): Promi
 }
 
 export async function signOutAction(): Promise<void> {
+	assertShopOpen();
 	await auth.signOut();
 	redirect("/");
 }
 
 export async function requestPasswordResetAction(_prev: FormResult, formData: FormData): Promise<FormResult<{ message: string }>> {
+	assertShopOpen();
 	const raw = formFields(formData, ["email"]);
 	if (!(await human(formData, "password_reset", raw.email))) return { ...fail("CAPTCHA"), values: raw };
 	return auth.requestPasswordReset(raw);
 }
 
 export async function resendVerificationAction(_prev: FormResult, formData: FormData): Promise<FormResult<{ message: string }>> {
+	assertShopOpen();
 	const raw = formFields(formData, ["email"]);
 	if (!(await human(formData, "resend_verification", raw.email))) return { ...fail("CAPTCHA"), values: raw };
 	return auth.resendVerification(raw);
 }
 
 export async function resetPasswordAction(_prev: FormResult, formData: FormData): Promise<FormResult<null>> {
+	assertShopOpen();
 	const res = await auth.resetPassword(formFields(formData, ["password"]));
 	if (res.ok) redirect("/account?notice=password-reset");
 	return res;
 }
 
 export async function changePasswordAction(_prev: FormResult, formData: FormData): Promise<FormResult<null>> {
+	assertShopOpen();
 	return auth.changePassword(formFields(formData, ["current_password", "password"]));
 }
 
 export async function changeEmailAction(_prev: FormResult, formData: FormData): Promise<FormResult<{ message: string }>> {
+	assertShopOpen();
 	const raw = formFields(formData, ["email", "current_password"]);
 	const res = await auth.changeEmail(raw);
 	return { ...res, values: res.ok ? undefined : keep(raw) };

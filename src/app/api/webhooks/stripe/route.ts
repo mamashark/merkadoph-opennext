@@ -5,6 +5,7 @@ import { stripeVerifyWebhook } from "@/lib/payment-providers";
 import { markOrderPaid, markOrderPaymentFailed, paidAmountMatches } from "@/lib/orders";
 import { clientIp } from "@/lib/rate-limit";
 import { securityEvent } from "@/lib/audit";
+import { SHOP_CODE_ENABLED } from "@/lib/shop-gate";
 
 /**
  * Stripe webhook: [site]/api/webhooks/stripe
@@ -12,6 +13,8 @@ import { securityEvent } from "@/lib/audit";
  * Backup for the browser return — e.g. the customer closed the tab, or the payment confirmed later.
  */
 export async function POST(request: Request) {
+	// The old shop is closed (src/lib/shop-gate.ts): this endpoint answers 404.
+	if (!SHOP_CODE_ENABLED) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
 	const config = await gatewayConfig("stripe").catch(() => null);
 	const webhookSecret = config?.secrets.webhook_secret;
 	if (!webhookSecret) return NextResponse.json({ error: "Webhook not configured" }, { status: 503 });

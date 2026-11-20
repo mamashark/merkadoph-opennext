@@ -4,6 +4,7 @@ import { siteUrl } from "@/lib/env";
 import { createServerClient } from "@supabase/ssr";
 import { isAdmin } from "@/lib/auth-shared";
 import { SESSION_COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
+import { SHOP_CODE_ENABLED, SHOP_PATH } from "@/lib/shop-gate";
 import { safeEqual, STAGE_COOKIE, STAGE_COOKIE_MAX_AGE, STAGE_PARAM, stageGateEnabled, stageToken } from "@/lib/stage";
 
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
@@ -18,6 +19,11 @@ export async function proxy(request: NextRequest, event: NextFetchEvent) {
 		if (!/^https?:\/\//.test(moved.to)) request.nextUrl.searchParams.forEach((v, k) => target.searchParams.append(k, v));
 		event.waitUntil(recordRedirectHit(pathname));
 		return NextResponse.redirect(target, moved.status);
+	}
+	// The old shop is closed (src/lib/shop-gate.ts): its pages show "not found". (Its /api endpoints and the feed
+	// are outside this proxy's matcher; they return 404 themselves.)
+	if (!SHOP_CODE_ENABLED && SHOP_PATH.test(pathname)) {
+		return NextResponse.rewrite(new URL("/_closed-shop", request.url));
 	}
 	const gated = await stageGate(request);
 	// Personal shop pages: keep the shopper's session fresh and never cache or index them.

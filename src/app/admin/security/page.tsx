@@ -17,7 +17,7 @@ import { buttonClass, cardClass } from "@/lib/ui";
 export const metadata: Metadata = { title: "Security" };
 
 export default async function SecurityPage({ searchParams }: PageProps<"/admin/security">) {
-	const me = await requireAdmin();
+	const me = await requireAdmin({ allowMfaSetup: true });
 	const params = await searchParams;
 	const supabase = await createClient();
 	const { data: factors } = await supabase.auth.mfa.listFactors();
@@ -36,6 +36,11 @@ export default async function SecurityPage({ searchParams }: PageProps<"/admin/s
 			<PageHeader title="Security" description="Protect your admin account." breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Security" }]} />
 			<div className="max-w-3xl space-y-6">
 				<FlashMessage notice={param(params, "notice")} error={param(params, "error")} />
+				{param(params, "setup") === "required" && !verified.length && (
+					<p role="alert" className="rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-200">
+						Two-step login is required for the admin. Add an authenticator app below; the rest of the admin opens once it&apos;s set up.
+					</p>
+				)}
 
 				<section className={`${cardClass} p-5`} aria-labelledby="mfa-title">
 					<div className="flex items-start gap-3">

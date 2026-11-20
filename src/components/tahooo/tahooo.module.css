@@ -1,288 +1,414 @@
 /*
- * Tahooo Corner (/tahooo), in the Tahooo brand (Brand Guide, October 2026): coloured like a cup of taho.
- * Light: soya ground, arnibal ink. Dark: boba ground, soya ink, sago accents.
- * Flavour colours are for the menu only (brand rule), as small dots next to dark/light text.
+ * Tahooo Corner (/tahooo), after Kay's Tahooo Corner slides: Merkado PH brand yellow as the page,
+ * orange and red-orange panels, red labels, teal bands, olive text. Split panels: words on one side, a photo on the other.
+ *
+ * Contrast (WCAG): olive on yellow 8.7:1. Red labels on yellow are 3.3:1, so they are large bold text (≥ 19px).
+ * White display words on yellow get an olive outline, like the Tahooo! sticker, so their edges read.
+ * Teal bands use a deeper teal for white text (5.6:1). Text on orange panels is olive.
  */
 .root {
-	--soya: #f8f3ea;
-	--arnibal: #5b2f14;
-	--caramel: #9a5a2b;
-	--sago: #c9935f;
-	--sago-light: #e6cba5;
-	--boba: #1c1612;
-	--ube: #6a3d9a;
-	--mango: #f8b51c;
-	--strawberry: #e5486a;
-	--pandan: #5fa046;
+	--yellow: #ffcc3f;
+	--orange: #f47e20;
+	--promo: #f05d22;
+	--red: #e10606;
+	--teal: #0f7a62;
+	--olive: #33331e;
+	--white: #ffffff;
 
-	--bg: var(--soya);
-	--bg-2: #ffffff;
-	--ink: var(--arnibal);
-	--ink-2: #6b4128;
-	--accent: var(--caramel);
-	--line: rgba(91, 47, 20, 0.16);
-	--btn-bg: var(--arnibal);
-	--btn-ink: var(--soya);
+	--page: var(--yellow);
+	--ink: var(--olive);
+	--label: var(--red);
+	--display-fill: var(--white);
+	--display-edge: var(--olive);
+	--rule: rgba(255, 255, 255, 0.9);
+	--card: var(--white);
 
-	background: var(--bg);
+	background: var(--page);
 	color: var(--ink);
-	font-family: var(--font-tahooo-body), "Segoe UI", system-ui, sans-serif;
-	font-size: 17px;
-	line-height: 1.6;
+	font-family: var(--font-tahooo-display), "Segoe UI", system-ui, sans-serif;
+	font-size: 18px;
+	line-height: 1.5;
 }
+/* Dark mode: a deep olive page with the brand colours kept for panels, labels and the display words. */
 @media (prefers-color-scheme: dark) {
 	.root {
-		--bg: var(--boba);
-		--bg-2: #2a211b;
-		--ink: var(--soya);
-		--ink-2: var(--sago-light);
-		--accent: var(--sago);
-		--line: rgba(248, 243, 234, 0.16);
-		--btn-bg: var(--sago);
-		--btn-ink: var(--boba);
+		--page: #24220f;
+		--ink: #f8f3ea;
+		--label: #ff8f80;
+		--display-fill: var(--yellow);
+		--display-edge: #000000;
+		--rule: rgba(248, 243, 234, 0.35);
+		--card: #312e17;
 	}
 }
 .root h1,
 .root h2,
 .root h3 {
-	font-family: var(--font-tahooo-display), var(--font-tahooo-body), system-ui, sans-serif;
-	font-weight: 700;
-	letter-spacing: -0.01em;
-	text-wrap: balance;
 	margin: 0;
+	font-weight: 700;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
 }
 .root :focus-visible {
-	outline: 2px solid var(--accent);
+	outline: 3px solid var(--olive);
 	outline-offset: 3px;
 }
-
-.wrap {
-	max-width: 1120px;
-	margin: 0 auto;
-	padding: 0 max(20px, env(safe-area-inset-left, 0px));
-}
-.section {
-	padding: clamp(56px, 8vw, 104px) 0;
-	border-top: 1px solid var(--line);
-	scroll-margin-top: 72px;
-}
-.eyebrow {
-	margin: 0;
-	font-size: 12px;
-	font-weight: 700;
-	letter-spacing: 0.2em;
-	text-transform: uppercase;
-	color: var(--accent);
-}
-.lede {
-	margin: 14px 0 0;
-	max-width: 60ch;
-	color: var(--ink-2);
-	font-size: clamp(17px, 1.6vw, 20px);
-}
-
-/* Hero: logo and words beside the cart */
-.hero {
-	display: grid;
-	grid-template-columns: 1.05fr 1fr;
-	gap: clamp(24px, 4vw, 56px);
-	align-items: center;
-	padding: clamp(40px, 6vw, 80px) 0 clamp(48px, 7vw, 88px);
-}
-.logoTile {
-	display: inline-block;
-	border-radius: 18px;
-}
 @media (prefers-color-scheme: dark) {
-	.logoTile {
-		background: var(--soya);
-		padding: 10px 14px;
+	.root :focus-visible {
+		outline-color: var(--yellow);
 	}
 }
-.logoTile img {
-	display: block;
-	width: clamp(120px, 14vw, 168px);
-	height: auto;
+.srOnly {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
 }
-.hero h1 {
-	margin-top: 22px;
-	font-size: clamp(2.6rem, 6.4vw, 4.6rem);
-	line-height: 0.98;
+
+/* Labels and big words */
+.label {
+	margin: 0;
+	font-size: 19px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--label);
 }
-.tagline {
-	margin: 16px 0 0;
-	font-family: var(--font-tahooo-display), sans-serif;
+.display {
+	color: var(--display-fill);
+	-webkit-text-stroke: 0.045em var(--display-edge);
+	paint-order: stroke fill;
+	text-shadow: 0.04em 0.05em 0 color-mix(in srgb, var(--display-edge) 35%, transparent);
+	font-size: clamp(3rem, 8vw, 7rem);
+	line-height: 0.95;
+}
+.sub {
+	margin: 10px 0 0;
 	font-style: italic;
-	font-size: clamp(20px, 2.2vw, 26px);
-	line-height: 1.3;
+	font-weight: 500;
+	font-size: clamp(22px, 2.6vw, 36px);
+	line-height: 1.2;
 }
-.taglineEn {
-	margin: 4px 0 0;
-	color: var(--ink-2);
+.svLine {
+	margin: 0;
+	font-size: clamp(22px, 2.4vw, 34px);
+	line-height: 1.2;
+	font-weight: 500;
 }
-.actions {
+.enLine {
+	margin: 8px 0 0;
+	font-size: clamp(17px, 1.5vw, 21px);
+}
+.rule {
+	width: 92px;
+	height: 5px;
+	margin: 0 0 24px;
+	border: 0;
+	background: var(--rule);
+}
+
+/* Split panels */
+.split {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	min-height: clamp(520px, 52vw, 860px);
+}
+.panel {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: 32px;
+	padding: clamp(28px, 4vw, 64px);
+}
+.panelTop {
+	display: grid;
+	gap: 18px;
+}
+.photo {
+	position: relative;
+	min-height: 320px;
+	overflow: hidden;
+}
+.photo img {
+	object-fit: cover;
+}
+.flip .photo {
+	order: -1;
+}
+@media (max-width: 820px) {
+	.split {
+		grid-template-columns: 1fr;
+	}
+	.flip .photo {
+		order: 0;
+	}
+	.photo {
+		min-height: 0;
+		aspect-ratio: 4 / 3;
+	}
+}
+
+/* Hero: the cart as a sticker on an orange panel */
+.heroCart {
+	position: relative;
+	display: grid;
+	place-items: center;
+	padding: clamp(24px, 4vw, 56px);
+	background: var(--orange);
+}
+.heroCart img {
+	width: 100%;
+	height: auto;
+	max-width: 640px;
+	filter: drop-shadow(0 0 0 #fff) drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff);
+}
+.heroText .display {
+	font-size: clamp(3.4rem, 9vw, 8.5rem);
+}
+.ctas {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12px;
-	margin-top: 28px;
 }
 .btn {
 	display: inline-flex;
 	align-items: center;
-	min-height: 48px;
-	padding: 0 22px;
+	min-height: 52px;
+	padding: 0 26px;
 	border-radius: 999px;
 	font-weight: 700;
+	font-size: 17px;
 	text-decoration: none;
-	background: var(--btn-bg);
-	color: var(--btn-ink);
-	border: 2px solid var(--btn-bg);
+	background: var(--olive);
+	color: var(--yellow);
+	border: 2px solid var(--olive);
 }
 .btn:hover {
 	background: transparent;
-	color: var(--ink);
+	color: var(--olive);
 }
 .btnGhost {
 	background: transparent;
-	color: var(--ink);
-	border-color: var(--line);
+	color: var(--olive);
 }
 .btnGhost:hover {
-	border-color: var(--accent);
+	background: var(--olive);
+	color: var(--yellow);
 }
-.cart {
-	position: relative;
-	aspect-ratio: 1200 / 1155;
-	width: 100%;
-}
-.cart img {
-	object-fit: contain;
-}
-.sister {
-	margin: 22px 0 0;
-	font-size: 14px;
-	color: var(--ink-2);
-}
-
-/* Taho explained */
-.explain {
-	display: grid;
-	grid-template-columns: 1fr 1.2fr;
-	gap: clamp(20px, 4vw, 56px);
-	align-items: start;
-}
-.explain h2,
-.head h2,
-.book h2 {
-	margin-top: 10px;
-	font-size: clamp(30px, 4vw, 46px);
-	line-height: 1.05;
-}
-.explain p {
-	margin: 0;
-	font-size: clamp(17px, 1.6vw, 20px);
+@media (prefers-color-scheme: dark) {
+	.btn {
+		background: var(--yellow);
+		color: var(--olive);
+		border-color: var(--yellow);
+	}
+	.btn:hover,
+	.btnGhost {
+		background: transparent;
+		color: var(--yellow);
+	}
+	.btnGhost:hover {
+		background: var(--yellow);
+		color: var(--olive);
+	}
 }
 
-/* Menu: flavours */
-.head {
-	margin-bottom: clamp(24px, 4vw, 40px);
-}
-.menu {
+/* What is taho: three layers */
+.layers {
 	list-style: none;
 	margin: 0;
 	padding: 0;
+	border-top: 4px solid var(--rule);
+}
+.layers li {
+	display: grid;
+	grid-template-columns: 72px 1fr;
+	gap: 16px;
+	align-items: center;
+	padding: 18px 0;
+	border-bottom: 4px solid var(--rule);
+}
+.layers b {
+	font-size: clamp(40px, 4.5vw, 64px);
+	font-weight: 400;
+	line-height: 1;
+}
+.layers i {
+	display: block;
+	font-size: clamp(24px, 2.4vw, 34px);
+	font-weight: 500;
+}
+.meet {
+	display: flex;
+	flex-direction: column;
+	background: #000;
+	color: #fff;
+}
+.meet .photo {
+	flex: 1;
+}
+.meetText {
+	padding: clamp(28px, 4vw, 56px) clamp(24px, 4vw, 56px) 8px;
+	text-align: center;
+}
+.meetText p {
+	margin: 0;
+	font-size: clamp(30px, 3.4vw, 52px);
+	color: #3fd6b0;
+	font-weight: 500;
+}
+.meetText p + p {
+	margin-top: 8px;
+	font-size: clamp(18px, 1.8vw, 26px);
+	font-style: italic;
+	color: var(--yellow);
+}
+
+/* How it works: three numbered points */
+.points {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+}
+.points li {
+	padding: 0 18px;
+	border-left: 4px solid var(--rule);
+}
+.points li:first-child {
+	padding-left: 0;
+	border-left: 0;
+}
+.points b {
+	display: block;
+	font-size: clamp(48px, 5vw, 80px);
+	line-height: 1;
+	color: var(--promo);
+	-webkit-text-stroke: 0.02em var(--olive);
+	paint-order: stroke fill;
+}
+@media (prefers-color-scheme: dark) {
+	.points b {
+		color: var(--orange);
+		-webkit-text-stroke: 0;
+	}
+}
+.points strong {
+	display: block;
+	margin-top: 14px;
+	font-size: 19px;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	line-height: 1.25;
+}
+.points span {
+	display: block;
+	margin-top: 10px;
+	font-size: clamp(17px, 1.6vw, 22px);
+	line-height: 1.25;
+}
+@media (max-width: 560px) {
+	.points {
+		grid-template-columns: 1fr;
+		gap: 20px;
+	}
+	.points li,
+	.points li:first-child {
+		padding: 0 0 0 16px;
+		border-left: 4px solid var(--rule);
+	}
+}
+
+/* Flavours */
+.flavours {
+	padding: clamp(56px, 7vw, 104px) clamp(20px, 3vw, 52px);
+	text-align: center;
+	scroll-margin-top: 72px;
+}
+.flavours .display {
+	margin-top: 12px;
+}
+.flavourGrid {
+	list-style: none;
+	margin: clamp(32px, 4vw, 56px) auto 0;
+	padding: 0;
+	max-width: 1900px;
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: 12px;
+	gap: clamp(12px, 1.5vw, 28px);
 }
-.flavour {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	min-height: 64px;
-	padding: 12px 16px;
-	background: var(--bg-2);
-	border: 1px solid var(--line);
-	border-radius: 999px;
+.flavourGrid li {
+	scroll-margin-top: 90px;
 }
-.dot {
-	flex: none;
-	width: 22px;
-	height: 22px;
-	border-radius: 50%;
-	box-shadow: 0 0 0 2px var(--bg-2), 0 0 0 3px var(--line);
+.flavourImg {
+	position: relative;
+	aspect-ratio: 720 / 898;
+	overflow: hidden;
 }
-.dot[data-c="sago"] {
-	background: var(--sago);
+.flavourImg img {
+	object-fit: cover;
 }
-.dot[data-c="ube"] {
-	background: var(--ube);
-}
-.dot[data-c="mango"] {
-	background: var(--mango);
-}
-.dot[data-c="strawberry"] {
-	background: var(--strawberry);
-}
-.dot[data-c="pandan"] {
-	background: var(--pandan);
-}
-.flavour b {
-	display: block;
-	line-height: 1.2;
-}
-.flavour small {
-	display: block;
-	font-size: 13px;
-	color: var(--ink-2);
-}
-.facts {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 8px 28px;
-	margin: 22px 0 0;
-	padding: 0;
-	list-style: none;
-	font-size: 15px;
-	color: var(--ink-2);
-}
-.facts b {
-	color: var(--ink);
-}
-@media (max-width: 900px) {
-	.menu {
+@media (max-width: 1000px) {
+	.flavourGrid {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
-/* Occasions */
-.occasions {
+/* Occasions: a teal band under each photo */
+.occPhoto {
+	display: grid;
+	grid-template-rows: 1fr auto;
+}
+.occPhoto .photo {
+	min-height: 0;
+}
+.band {
+	display: grid;
+	place-items: center;
+	min-height: clamp(120px, 12vw, 230px);
+	padding: 24px;
+	background: var(--teal);
+	color: #fff;
+	text-align: center;
+	font-size: clamp(20px, 2vw, 30px);
+	line-height: 1.3;
+}
+.band em {
+	font-style: italic;
+}
+
+/* How to book: steps */
+.steps {
 	list-style: none;
 	margin: 0;
 	padding: 0;
-	display: flex;
-	flex-wrap: wrap;
-	gap: 10px;
 }
-.occasions li {
-	padding: 10px 18px;
-	border-radius: 999px;
-	border: 1.5px solid var(--accent);
-	font-weight: 600;
+.steps li {
+	padding: 22px 0;
+	border-bottom: 4px solid var(--rule);
+	font-size: clamp(18px, 1.7vw, 24px);
+	line-height: 1.3;
+}
+.steps li:last-child {
+	border-bottom: 0;
+}
+.steps b {
+	display: block;
+	font-weight: 700;
+}
+.steps b span {
+	color: var(--label);
 }
 
-/* Booking */
-.book {
-	display: grid;
-	grid-template-columns: 1fr 1.3fr;
-	gap: clamp(24px, 4vw, 56px);
-	align-items: start;
-}
+/* Booking form */
 .form {
-	padding: clamp(20px, 3vw, 32px);
-	background: var(--bg-2);
-	border: 1px solid var(--line);
-	border-radius: 20px;
+	max-width: 880px;
+	margin: 0 auto;
+	padding: clamp(20px, 3vw, 36px);
+	background: var(--card);
+	border-radius: 24px;
 	color: #1c1917;
 }
 @media (prefers-color-scheme: dark) {
@@ -290,23 +416,42 @@
 		color: #f5f5f4;
 	}
 }
-.checklist {
-	margin: 18px 0 0;
-	padding-left: 1.2em;
-	color: var(--ink-2);
+.formWrap {
+	padding: clamp(40px, 6vw, 88px) clamp(20px, 3vw, 52px);
+	scroll-margin-top: 72px;
 }
-.checklist li + li {
-	margin-top: 4px;
+.formWrap h2 {
+	text-align: center;
+	margin-bottom: 24px;
+	font-size: clamp(28px, 3.2vw, 44px);
 }
 
-@media (max-width: 860px) {
-	.hero,
-	.explain,
-	.book {
-		grid-template-columns: 1fr;
-	}
-	.cart {
-		max-width: 520px;
-		margin: 0 auto;
-	}
+/* Inquiries */
+.inquiries {
+	background: var(--promo);
+	color: #fff;
+}
+.inquiries h2 {
+	font-size: clamp(40px, 5vw, 76px);
+	font-weight: 500;
+}
+.inquiries dl {
+	margin: 0;
+	display: grid;
+	gap: 34px;
+}
+.inquiries dt {
+	font-size: 19px;
+	font-weight: 700;
+}
+.inquiries dd {
+	margin: 4px 0 0;
+	font-size: clamp(26px, 2.6vw, 40px);
+	overflow-wrap: anywhere;
+}
+.inquiries a {
+	color: inherit;
+	text-decoration: underline;
+	text-decoration-thickness: 2px;
+	text-underline-offset: 6px;
 }

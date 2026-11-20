@@ -60,8 +60,8 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 			.map((h) => ({ ...h, text: short(h.text), lang: "sv" }));
 
 		const tahooo: Hit[] = [
-			{ href: "/tahooo", title: TAHOOO.name, text: `${TAHOOO.tagline.en} ${TAHOOO.whatIsTaho} ${TAHOOO.occasions.join(", ")}. Taho Tahooo` },
-			...TAHOOO.flavours.map((f) => ({ href: `/tahooo#${f.id}`, title: f.en === f.sv ? f.sv : `${f.sv} · ${f.en}`, text: `Taho flavour. ${TAHOOO.sizes}. ${TAHOOO.allergens.en}.` })),
+			{ href: "/tahooo", title: TAHOOO.name, text: `${TAHOOO.hero.lead.en} ${TAHOOO.whatIsTaho.meet} ${TAHOOO.whatIsTaho.meetLine} ${TAHOOO.occasions.map((o) => `${o.sv} ${o.en}`).join(", ")}. Taho Tahooo` },
+			...TAHOOO.flavours.map((f) => ({ href: `/tahooo#${f.id}`, title: f.name, text: `Taho flavour: ${f.line}. ${f.ingredients.join(", ")}.` })),
 		]
 			.filter((h) => `${h.title} ${h.text}`.toLowerCase().includes(needle))
 			.map((h) => ({ ...h, text: short(h.text.replace(" Taho Tahooo", "")) }));

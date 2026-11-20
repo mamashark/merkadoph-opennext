@@ -33,6 +33,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | **Tahooo:** add prices and booking terms to `/tahooo` (`src/lib/tahooo-content.ts`) | Finn (FE) + Sol (SEO) | Waits for Needs Kay #9 (the Facebook launch post couldn't be read). |
 | **Tahooo:** Bulletin notice announcing Tahooo Corner | Sol (SEO) | Post tagged `Announcement` + `Tahooo`, linking to the booking page. |
 | **Tahooo:** Events entry for each place Tahooo appears | Sol (SEO) | Tag `Tahooo`; past ones archive automatically. |
+| Deploy `eba9b92` (new Highlights, /bygg, /tahooo, header, search, logo, B5/B6) after the Cloudflare KV limit resets (00:00 UTC) | Dex (OPS) | 2026-11-19 deploy stopped at the KV cache upload: “free usage limit for this operation for today” (code 10048). Nothing changed live. Build with NEXT_PUBLIC_SITE_URL=https://merkadoph.se. |
 | Remove or unpublish every `sample`-tagged item | Sol (SEO) | `node scripts/seed-sample-content.mjs --remove`. Before launch. |
 | Add 301 redirects for old Shopify URLs (Admin → SEO → Redirects) | Sol (SEO) | Old URLs return 404. |
 | Rewrite legal pages for a no-shop site | Dana (DATA) | They still describe a shop. |
@@ -84,6 +85,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 7. ~~Tahooo Corner setup~~ **Decided 2026-11-19 (Kay): its own Highlight and `/tahooo` page.** Built.
 8. **Notes and photos for the Tahooo posts** (taho cart build, flavour R&D). Sol writes from these; nothing is invented.
 9. **Tahooo Corner facts:** price or "from" price, what's included, servings, area beyond Gothenburg, lead time. (Flavours, sizes and allergens are from the Brand Guide; occasions from Kay.) Or paste the Facebook launch post text.
+10. **Cloudflare Workers plan.** The free plan caps KV cache writes per day; a deploy plus the 5-minute page refreshes used it up on 2026-11-19 (code 10048), and it may explain the earlier Error 1102. Recommended: Workers Paid ($5/month). Kay chose to wait for now.
 ---
 
 ## Log
@@ -116,3 +118,5 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-19 · BE · Kay ran the move: “A Concert For A Cause: Song Weavers PH Live in Älvängen” is a published Community Impact project (2025-10-25, Smyrnakyrkan, Älvängen); the blog post is no longer public; 301 /blogs/… → /impact/… is in place. Checked via the public API
 2026-11-19 · PM · Tahooo plan added (Kay): blog posts (cart build, Taho Lab R&D), Community Impact project, Tahooo Corner booking page, Bulletin notice, events, all tagged Tahooo. Three Needs Kay items. Same tasks added to the Kay's Web Studio Kanban
 2026-11-19 · FE · Tahooo Corner: own Highlight (7th, caramel) and /tahooo page in the Tahooo brand (Brand Guide palette, Google Sans + Karla, stacked logo, cart photo): taho explained, flavour menu, occasions, booking form; in the menu, search and sitemap. No prices yet. Checked light, dark, 390px; no broken images, no console errors
+2026-11-19 · OPS · Deploy of eba9b92 failed at the KV cache upload: Cloudflare free-plan daily KV write limit reached (10048). Live site unchanged. Kay: wait and deploy after 00:00 UTC
+2026-11-19 · UI · /tahooo reworked after Kay's Tahooo Corner slides: brand yellow page, orange/red-orange panels, red labels, teal bands, olive text; Swedish first, English second; sections: hero (cart), the call, what is taho (three layers), how it works, eight flavours (Classic, Ube, Pandan, Peach & Mango, Ube-Langka, Strawberry, Matcha, Taholatte; replaces the Brand Guide list), perfect for (kalas, bröllop, dop, företagsevent), how to book, book now + form, inquiries. Photos cropped from the slides (public/tahooo/). White display words get an olive outline for contrast; dark mode uses a deep olive page. Homepage nodes now show each flavour photo. Checked light, dark, 390px; no broken images, no console errors. Not deployed

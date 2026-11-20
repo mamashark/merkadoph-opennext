@@ -7,7 +7,7 @@ import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
 import { getPublicServiceBySlug, getPublicServices, type Service, type ServiceSummary } from "@/lib/services";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
-import { TAHOOO } from "@/lib/tahooo-content";
+import { TAHOOO, flavourImage } from "@/lib/tahooo-content";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -205,25 +205,27 @@ export async function HighlightsHome() {
 			hub: "tahooo",
 			title: TAHOOO.name,
 			note: TAHOOO.brand,
-			image: thumb(TAHOOO.cart.src),
+			image: thumb(TAHOOO.hero.cart.src),
 			href: "/tahooo",
 			tags: ["Tahooo"],
 			slug: "tahooo-page",
-			excerpt: `${TAHOOO.tagline.en} ${TAHOOO.whatIsTaho}`,
-			cover: TAHOOO.cart.src,
-			coverAlt: TAHOOO.cart.alt,
+			excerpt: `${TAHOOO.hero.lead.en} ${TAHOOO.howItWorks.line.en}`,
+			cover: TAHOOO.hero.cart.src,
+			coverAlt: TAHOOO.hero.cart.alt,
 		},
+		// Each flavour, with its photo from the menu.
 		...TAHOOO.flavours.map((f) => ({
 			id: `taho-${f.id}`,
 			hub: "tahooo",
-			title: f.en === f.sv ? f.sv : `${f.sv} · ${f.en}`,
-			note: `${TAHOOO.sizes} · ${TAHOOO.allergens.en}`,
+			title: f.name,
+			note: f.premium ? `${f.line} · Premium` : f.line,
+			image: thumb(flavourImage(f.id)),
 			href: `/tahooo#${f.id}`,
 			tags: [],
 			slug: f.id,
-			excerpt: "",
-			coverAlt: "",
-			shape: "dot" as const,
+			excerpt: `${f.ingredients.join(", ")}.`,
+			cover: flavourImage(f.id),
+			coverAlt: `${f.name} taho: ${f.ingredients.join(", ").toLowerCase()}`,
 		})),
 		...notices.blogs.map((b) => ({
 			id: `notice-${b.slug}`,
@@ -573,21 +575,21 @@ export async function HighlightsHome() {
 								<>
 									Tahooo <em>Corner</em>
 								</>,
-								`${TAHOOO.tagline.en} Book the taho cart for birthdays, weddings, baptisms, community and company events in ${TAHOOO.area}.`,
+								`${TAHOOO.howItWorks.line.en} ${TAHOOO.book.line}`,
 								W.tahooo.allLabel,
 							)}
 							<div className={styles.services}>
 								<article className={`${styles.service} ${styles.card}`} data-key="tahooo-menu">
 									<span className={`${styles.num} ${styles.mono}`}>01</span>
 									<h3>
-										<Link href="/tahooo#meny" className={styles.stretch}>
-											The menu
+										<Link href="/tahooo#smaker" className={styles.stretch}>
+											{TAHOOO.flavoursIntro.title.en}
 										</Link>
 									</h3>
-									<p>{TAHOOO.whatIsTaho.split(". ")[0]}.</p>
-									<ul lang="sv">
+									<p>{TAHOOO.whatIsTaho.meetLine.charAt(0).toUpperCase() + TAHOOO.whatIsTaho.meetLine.slice(1)}</p>
+									<ul>
 										{TAHOOO.flavours.map((f) => (
-											<li key={f.id}>{f.sv}</li>
+											<li key={f.id}>{f.name}</li>
 										))}
 									</ul>
 								</article>
@@ -598,10 +600,10 @@ export async function HighlightsHome() {
 											Book the cart
 										</Link>
 									</h3>
-									<p>We bring the cart and serve fresh taho at your event in {TAHOOO.area}.</p>
+									<p>{TAHOOO.howToBook.steps.map((st) => st.en).join(" ")}</p>
 									<ul>
 										{TAHOOO.occasions.map((o) => (
-											<li key={o}>{o}</li>
+											<li key={o.id}>{o.en}</li>
 										))}
 									</ul>
 								</article>

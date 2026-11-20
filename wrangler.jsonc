@@ -56,7 +56,10 @@
 		"crons": ["0 3 * * 1,4", "*/15 * * * *"]
 	},
 	"observability": {
-		"enabled": true
+		"enabled": true,
+		// Workers Observability → Issues (open beta): groups uncaught exceptions, failed invocations, 5xx and
+		// logged errors. Must stay true here, or the next `wrangler deploy` turns Issues off again.
+		"issues": { "enabled": true }
 	},
 	"upload_source_maps": true
 	/**

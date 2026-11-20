@@ -1,0 +1,105 @@
+# Uptime safety net (fallback monitor; the main monitor is an external service, see STATUS.md).
+# Runs every hour (and on demand). It checks two things on the production site:
+#   1. /api/health → 200 with {"ok":true}. Runs the Worker uncached and queries Supabase, so it
+#      catches Worker errors (for example Error 1102, resource limits) and a down or paused database.
+#      /api/* is outside the staging gate (src/proxy.ts matcher), so this works before and after launch.
+#   2. /        → 200 and a <title> containing "Merkado PH". Before launch this is the coming-soon page
+#      (a rewrite, still 200); after launch it's the homepage. Either one counts as up. A Cloudflare
+#      error page (5xx, or a 200 without our title) counts as down.
+# Each check is retried 3 times, 20 s apart, so one slow response doesn't raise an alarm.
+# On failure: the run fails (GitHub notifies whoever last edited this file) and one issue titled
+# "Uptime check failing" is opened, or commented on if it's already open. On recovery it's closed.
+# The site URL comes from NEXT_PUBLIC_SITE_URL in .env.production (public values only). No secrets needed.
+name: Uptime
+
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .env.production
+          sparse-checkout-cone-mode: false
+
+      - name: Read the site URL
+        run: |
+          url=$(grep -E '^NEXT_PUBLIC_SITE_URL=' .env.production | head -n1 | cut -d= -f2- | tr -d '"' | sed 's#/*$##')
+          if ! printf '%s' "$url" | grep -Eq '^https://[A-Za-z0-9.-]+$'; then
+            echo "::error::NEXT_PUBLIC_SITE_URL in .env.production is missing or not a plain https origin."
+            exit 1
+          fi
+          echo "SITE_URL=$url" >> "$GITHUB_ENV"
+
+      - name: Check the site
+        id: probe
+        run: |
+          # check NAME PATH TEST: up to 3 tries; TEST is a grep -E pattern the body must match.
+          check() {
+            local name=$1 path=$2 pattern=$3 code="" i
+            for i in 1 2 3; do
+              code=$(curl -sS -o body.txt -w '%{http_code}' --max-time 30 \
+                -H 'Cache-Control: no-cache' -A 'merkadoph-uptime-check' "$SITE_URL$path") || code=000
+              if [ "$code" = "200" ] && grep -Eq "$pattern" body.txt; then
+                echo "$name: up (HTTP $code, try $i)"
+                return 0
+              fi
+              echo "$name: try $i failed (HTTP $code)"
+              [ "$i" -lt 3 ] && sleep 20
+            done
+            echo "- \`$path\`: HTTP $code after 3 tries (expected 200 with the right content)" >> failures.md
+            return 1
+          }
+          : > failures.md
+          check health /api/health '"ok":[[:space:]]*true' || true
+          check home / '<title>[^<]*Merkado PH' || true
+          if [ -s failures.md ]; then
+            echo "down=true" >> "$GITHUB_OUTPUT"
+            { echo "### Uptime check failing"; cat failures.md; } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "down=false" >> "$GITHUB_OUTPUT"
+            echo "### All checks up" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Open or update the issue
+        if: steps.probe.outputs.down == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Uptime check failing"
+          now=$(date -u '+%Y-%m-%d %H:%M UTC')
+          { echo "$now: $SITE_URL"; echo; cat failures.md; echo; echo "Run: $RUN_URL"
+            echo; echo "Next steps: Cloudflare → Workers & Pages → merkadoph-opennext → Observability (Workers Logs, Issues); Supabase project status."; } > issue.md
+          num=$(gh issue list --state open --search "in:title \"$title\"" --json number,title --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          if [ -n "$num" ]; then
+            gh issue comment "$num" --body-file issue.md
+          else
+            gh issue create --title "$title" --body-file issue.md
+          fi
+          exit 1
+
+      - name: Close the issue on recovery
+        if: steps.probe.outputs.down == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          title="Uptime check failing"
+          for num in $(gh issue list --state open --search "in:title \"$title\"" --json number,title --jq ".[] | select(.title == \"$title\") | .number"); do
+            gh issue close "$num" --comment "Back up at $(date -u '+%Y-%m-%d %H:%M UTC'): all checks returned 200."
+          done

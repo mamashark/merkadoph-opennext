@@ -19,11 +19,19 @@ const atkinson = Atkinson_Hyperlegible({
 	weight: ["400", "700"],
 	style: ["normal", "italic"],
 	display: "swap",
+	// Not preloaded (B14): preload is all-or-nothing per family (4 files, ~50 KB), and the homepage hero
+	// doesn't use it. Pages still get it on first render; `swap` + the metric-matched fallback avoid layout shift.
+	preload: false,
 });
 
+/**
+ * Mono fallback (Tailwind `font-mono`, admin). No public hero uses it, so it isn't preloaded:
+ * it downloads only on pages that actually render mono text (B14).
+ */
 const geistMono = Geist_Mono({
 	variable: "--font-geist-mono",
 	subsets: ["latin"],
+	preload: false,
 });
 
 export const viewport: Viewport = {

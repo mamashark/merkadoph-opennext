@@ -519,6 +519,29 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		};
 		root.addEventListener("click", onClick);
 
+		// The bands below the hero use content-visibility (B14). After a same-page #link jump (e.g. the header's
+		// Contact), bands near the target render at their real height a few frames later and push it off its mark,
+		// so for a moment we land on the target again whenever a band changes size (until the user scrolls).
+		let stopRelanding = () => {};
+		const onHash = () => {
+			stopRelanding();
+			const id = decodeURIComponent(location.hash.slice(1));
+			const target = id ? document.getElementById(id) : null;
+			if (!target || !root.contains(target) || target.closest(`.${styles.stage}`)) return;
+			const ro = new ResizeObserver(() => target.scrollIntoView({ block: "start" }));
+			root.querySelectorAll(":scope > section").forEach((s) => ro.observe(s));
+			const timer = window.setTimeout(() => stopRelanding(), 600);
+			const userScroll = ["wheel", "touchstart", "keydown"] as const;
+			stopRelanding = () => {
+				ro.disconnect();
+				clearTimeout(timer);
+				userScroll.forEach((t) => window.removeEventListener(t, stopRelanding));
+				stopRelanding = () => {};
+			};
+			userScroll.forEach((t) => window.addEventListener(t, stopRelanding, { passive: true }));
+		};
+		window.addEventListener("hashchange", onHash);
+
 		// Deep links (/#events) land with the section already revealed.
 		const deep = decodeURIComponent(location.hash.slice(1));
 		const sec = deep && hubs.some((h) => h.id === deep) ? document.getElementById(deep) : null;
@@ -535,6 +558,8 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		return () => {
 			io.disconnect();
 			root.removeEventListener("click", onClick);
+			window.removeEventListener("hashchange", onHash);
+			stopRelanding();
 			delete root.dataset.js;
 		};
 	}, [hubs, worlds, dive, climb, arrive, setWorld]);

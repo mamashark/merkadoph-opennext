@@ -7,7 +7,7 @@ import { SITE_NAME, SITE_URL } from "@/lib/env";
  * Blog RSS 2.0 feed: [site]/blogs/rss.xml (linked from every page's <head> and the footer).
  * Cached like the blog pages; refreshed when posts are saved and via Admin → Cache → Blogs.
  */
-export const revalidate = 300;
+export const revalidate = 86400;
 
 const esc = (s: string) => s.replace(/[<>&'"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[c]!);
 

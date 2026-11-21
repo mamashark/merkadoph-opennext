@@ -39,7 +39,7 @@ export default async function CachePage({ searchParams }: PageProps<"/admin/cach
 		<>
 			<PageHeader
 				title="Cache"
-				description={`Public pages and their data are cached for speed and refresh on their own every ${CACHE_TTL / 60} minutes. Saving content already purges what it affects — use this when something still looks out of date.`}
+				description={`Public pages and their data are cached for speed and refresh on their own every ${CACHE_TTL >= 3600 ? `${CACHE_TTL / 3600} hours` : `${CACHE_TTL / 60} minutes`}. Saving content already purges what it affects, and scheduled posts, offers and events update within 15 minutes of their time. Use this when something still looks out of date.`}
 				breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Cache" }]}
 			/>
 

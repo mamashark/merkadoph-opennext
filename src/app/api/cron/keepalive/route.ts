@@ -3,6 +3,7 @@ import { runKeepAlive } from "@/lib/keepalive";
 import { secret } from "@/lib/secrets";
 import { runMaintenance } from "@/lib/maintenance";
 import { releaseExpiredHolds } from "@/lib/orders";
+import { refreshDueContent } from "@/lib/scheduled-refresh";
 import { revalidatePath, revalidateTag } from "next/cache";
 
 /**
@@ -20,14 +21,16 @@ export async function POST(request: Request) {
 	const given = request.headers.get("authorization")?.replace(/^Bearer /, "") ?? "";
 	if (!safeEqual(given, expected)) return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
 
-	// Every 15 minutes: only release expired stock holds (D18). The twice-weekly run does the rest.
+	// Every 15 minutes: refresh content whose scheduled moment just passed (pages otherwise refresh once a day),
+	// and release expired stock holds (D18, legacy shop). The twice-weekly run does the rest.
 	if (request.headers.get("x-cron") === "*/15 * * * *") {
+		const refreshed = await refreshDueContent().catch(() => [] as string[]);
 		const holds = await releaseExpiredHolds();
 		if (holds.slugs.length) {
 			revalidateTag("products", { expire: 0 });
 			holds.slugs.forEach((s) => revalidatePath(`/product/${s}`));
 		}
-		return NextResponse.json({ ok: true, holds }, { headers: { "Cache-Control": "no-store" } });
+		return NextResponse.json({ ok: true, refreshed, holds }, { headers: { "Cache-Control": "no-store" } });
 	}
 
 	const result = await runKeepAlive("cron", null);

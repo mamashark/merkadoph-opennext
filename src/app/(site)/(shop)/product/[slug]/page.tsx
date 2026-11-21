@@ -14,8 +14,8 @@ import { AddToCart } from "@/components/shop/add-to-cart";
 import { Price, ProductCard } from "@/components/shop/product-card";
 import { cn } from "@/lib/ui";
 
-// Cached as an ISR page; refreshed every 5 minutes or when the product/shop is saved or purged.
-export const revalidate = 300;
+// Cached as an ISR page; refreshed once a day or when the product/shop is saved or purged.
+export const revalidate = 86400;
 
 /** No pages at build time; each one is rendered on its first visit and then served from the cache (ISR). */
 export function generateStaticParams() {

@@ -6,9 +6,12 @@ import { revalidatePath, unstable_cache, updateTag } from "next/cache";
  * - Public data reads are cached with `cached()` and tagged by content type.
  * - Public detail pages and the homepage are cached as ISR pages (`revalidate = CACHE_TTL`).
  * - Listing pages read search params (tabs, pagination) so they render per request, but their data is cached.
- * Entries refresh on their own after CACHE_TTL; saving content or using Admin → Cache purges immediately.
+ * Entries refresh on their own after CACHE_TTL (a day); saving content or using Admin → Cache purges immediately.
  */
-export const CACHE_TTL = 300;
+/** Once a day (Kay, 2026-11-20: fewer cache writes on the free Cloudflare plan). Saves purge at once, and the
+ *  15-minute cron catches scheduled posts, offers and events (src/lib/scheduled-refresh.ts). Page files repeat this
+ *  number as a literal (`export const revalidate = 86400`): Next needs it written out. */
+export const CACHE_TTL = 86400;
 
 export const CONTENT_TAGS = ["blogs", "events", "promotions", "services", "portfolio"] as const;
 export type ContentTag = (typeof CONTENT_TAGS)[number];

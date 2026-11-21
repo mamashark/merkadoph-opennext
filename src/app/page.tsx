@@ -8,8 +8,8 @@ import { HighlightsHome } from "@/components/highlights/highlights-home";
  * is kept in the code but no longer rendered.
  */
 
-// ISR: cached and refreshed every 5 minutes or when content is saved / purged in Admin → Cache.
-export const revalidate = 300;
+// ISR: cached and refreshed once a day or when content is saved / purged in Admin → Cache.
+export const revalidate = 86400;
 
 export const generateMetadata = homeMetadata;
 

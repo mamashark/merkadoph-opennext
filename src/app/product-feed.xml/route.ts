@@ -6,8 +6,8 @@ import { SHOP_CODE_ENABLED } from "@/lib/shop-gate";
  * Public product feed (Google Merchant Center RSS 2.0): [site]/product-feed.xml
  * Served from the cache; rebuilt when products/settings change or via Admin → Shop → Regenerate feed.
  */
-// Static route, refreshed every 5 minutes and on purge (the data underneath is cached and tagged too).
-export const revalidate = 300;
+// Static route, refreshed once a day and on purge (the data underneath is cached and tagged too).
+export const revalidate = 86400;
 
 export async function GET() {
 	// The old shop is closed (src/lib/shop-gate.ts): this endpoint answers 404.

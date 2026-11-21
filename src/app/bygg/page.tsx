@@ -1,7 +1,7 @@
 import { ByggPage, byggMetadata } from "@/components/site/bygg-page";
 
-// Static content (src/lib/bygg-content.ts), served from the cache and refreshed every 5 minutes like the other pages.
-export const revalidate = 300;
+// Static content (src/lib/bygg-content.ts), served from the cache and refreshed once a day like the other pages.
+export const revalidate = 86400;
 
 export const generateMetadata = byggMetadata;
 

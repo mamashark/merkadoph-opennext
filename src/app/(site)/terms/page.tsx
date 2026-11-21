@@ -1,6 +1,6 @@
 import { LegalPage, legalMetadata } from "@/components/site/legal-page";
 
-export const revalidate = 300; // CACHE_TTL; purged on save and via Admin → Cache → Site settings & legal
+export const revalidate = 86400; // CACHE_TTL (a day); purged on save and via Admin → Cache → Site settings & legal
 export const generateMetadata = () => legalMetadata("terms");
 
 export default function Page() {

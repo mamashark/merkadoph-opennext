@@ -9,8 +9,8 @@ import { BackFooter, Body, CoverFigure, CtaLink, DetailHeader, Facts } from "@/c
 import { JsonLd } from "@/components/site/json-ld";
 import { CopyButton } from "@/components/ui/copy-button";
 
-// Cached as an ISR page; refreshed every 5 minutes or when the content is saved / purged in Admin → Cache.
-export const revalidate = 300;
+// Cached as an ISR page; refreshed once a day or when the content is saved / purged in Admin → Cache.
+export const revalidate = 86400;
 
 /** No pages at build time; each one is rendered on its first visit and then served from the cache (ISR). */
 export function generateStaticParams() {

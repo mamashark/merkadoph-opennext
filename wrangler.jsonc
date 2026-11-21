@@ -61,7 +61,24 @@
 		// logged errors. Must stay true here, or the next `wrangler deploy` turns Issues off again.
 		"issues": { "enabled": true }
 	},
-	"upload_source_maps": true
+	"upload_source_maps": true,
+	// Where the Worker is served (2026-11-21, B12). Only the custom domains below; the workers.dev URL is off.
+	// Keep this list identical to Settings → Domains & Routes in the dashboard: on deploy, Wrangler replaces the
+	// Worker's custom domains with exactly this list, so a domain missing here would be detached (and its DNS
+	// record removed). www stays attached so its DNS record keeps existing; the zone's Redirect Rule
+	// (www → merkadoph.se, 301) answers www before the Worker runs.
+	"routes": [
+		{ "pattern": "merkadoph.se", "custom_domain": true },
+		{ "pattern": "www.merkadoph.se", "custom_domain": true }
+	],
+	// Off: merkadoph-opennext.<subdomain>.workers.dev served the whole site as a second origin (B12). If this
+	// line is missing, a deploy turns workers.dev back on (when there are no routes), even after it was
+	// disabled in the dashboard.
+	"workers_dev": false,
+	// On (kept as today): Version/Preview URLs for Workers Builds preview builds of non-production branches
+	// such as `main`. They are separate from the workers.dev route above and keep working when it's off.
+	// They are public by default; protect them with Cloudflare Access if they shouldn't be.
+	"preview_urls": true
 	/**
 	 * Secrets (set with `npx wrangler secret put NAME`, never committed):
 	 * - SUPABASE_SERVICE_ROLE_KEY

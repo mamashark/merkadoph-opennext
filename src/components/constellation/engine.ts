@@ -82,6 +82,8 @@ interface GNode extends SimulationNodeDatum {
 	/** Phone layout: the label's lines (under the marker) and its half width, for keeping it inside the panel. */
 	lines?: string[];
 	halfW?: number;
+	/** Wider screens: how far right of its square a category reaches (label + count), to keep it on screen and out of keepClear. */
+	reach?: number;
 }
 interface GLink extends SimulationLinkDatum<GNode> {
 	kind: "core" | "spoke" | "cross";
@@ -178,9 +180,12 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			const items = ITEMS.filter((it) => it.hub === h.id);
 			const dots = h.dots ? Math.max(3, Math.round(h.dots * sizeScale)) : 0;
 			const color = C(`--${h.color}`);
+			const shownCount = h.count ?? items.length + dots;
+			// The label starts 13px right of the square; IBM Plex Mono is 0.6 em per character (count: 5px gap, smaller type).
+			const labelReach = 13 + h.label.length * 0.6 * (small ? 12 : 14) + 5 + String(shownCount).length * 0.6 * (small ? 9 : 10);
 			nodes.push({
-				id: `hub:${h.id}`, kind: "hub", hub: h.id, color, label: h.label, lines, halfW,
-				angle: Math.atan2(ty - cy, tx - cx), tx, ty, count: h.count ?? items.length + dots,
+				id: `hub:${h.id}`, kind: "hub", hub: h.id, color, label: h.label, lines, halfW, reach: phone ? undefined : labelReach,
+				angle: Math.atan2(ty - cy, tx - cx), tx, ty, count: shownCount,
 				...(folded ? hidden() : { x: tx, y: ty, shown: true }),
 			});
 			links.push({ source: "center", target: `hub:${h.id}`, kind: "core", hub: h.id });
@@ -471,6 +476,16 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			.on("end", (e, d) => { dragging = false; if (!e.active) s.alphaTarget(0); d.fx = null; d.fy = null; }));
 
 		const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
+		/** How far right of its centre a node reaches: a category's whole label (estimated from its length, so long names
+		 *  like "Merkado Byggnadsavdelning" count in full), or a leaf's tile. */
+		const reachRight = (n: GNode) => (n.kind === "hub" ? Math.max(n.reach ?? 0, 22) + 8 : 16);
+		/** Hubs also keep their label (above-right of the square) out of the Open/Fold box (B5: a long label ran under "Fold again"). */
+		const keepClear = (n: GNode) => {
+			const k = o.keepClear;
+			if (k && n.kind !== "center" && (n.x ?? cx) + reachRight(n) > width - k.width && (n.y ?? cy) < k.height + (n.kind === "hub" ? 24 : 16)) {
+				n.y = k.height + (n.kind === "hub" ? 24 : 16);
+			}
+		};
 		const render = () => {
 			nodes.forEach((n) => {
 				if (phone) {
@@ -481,14 +496,25 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 					return;
 				}
 				// hubs keep room on the right for their label
-				n.x = clamp(n.x ?? cx, 16, width - (n.kind === "hub" ? 140 : 16));
+				n.x = clamp(n.x ?? cx, 16, width - (n.kind === "hub" ? Math.max(reachRight(n), 140) : 16));
 				n.y = clamp(n.y ?? cy, n.kind === "hub" ? 40 : 16, height - 16);
-				// Hubs also keep their label (above-right of the square) out of the box.
-				const k = o.keepClear;
-				if (k && n.kind !== "center" && n.x > width - k.width - (n.kind === "hub" ? 140 : 16) && n.y < k.height + (n.kind === "hub" ? 24 : 16)) {
-					n.y = k.height + (n.kind === "hub" ? 24 : 16);
-				}
+				keepClear(n);
 			});
+			// B5: a category's label (to the right of and above its square) must never lie over another category's
+			// square, or a tap there opens the wrong one. Move the covered category just above or below the label.
+			if (!phone) {
+				for (const a of hubNodes) {
+					for (const b of hubNodes) {
+						if (a === b || !a.shown || !b.shown) continue;
+						const ax = a.x ?? cx, ay = a.y ?? cy, bx = b.x ?? cx, by = b.y ?? cy;
+						// Label box: x from +13 to reach, y from -26 (count) to -4; keep an 11px core around the other square clear.
+						if (bx + 11 < ax + 13 || bx - 11 > ax + (a.reach ?? 0) || by + 11 < ay - 26 || by - 11 > ay - 4) continue;
+						const up = ay - 38, down = ay + 8;
+						b.y = by < ay - 15 && up >= 40 ? up : down <= height - 16 ? down : up;
+						keepClear(b);
+					}
+				}
+			}
 			linkSel.attr("x1", (d) => src(d).x ?? 0).attr("y1", (d) => src(d).y ?? 0)
 				.attr("x2", (d) => tgt(d).x ?? 0).attr("y2", (d) => tgt(d).y ?? 0);
 			nodeSel.attr("transform", (d) => `translate(${d.x},${d.y})`);

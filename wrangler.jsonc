@@ -67,17 +67,21 @@
 	// Worker's custom domains with exactly this list, so a domain missing here would be detached (and its DNS
 	// record removed). www stays attached so its DNS record keeps existing; the zone's Redirect Rule
 	// (www → merkadoph.se, 301) answers www before the Worker runs.
+	// In Workers Builds (non-TTY) this runs without a prompt and overrides conflicting DNS records and other
+	// Workers' claims on these hostnames. Add or remove domains here first, never only in the dashboard.
+	// Rollback: see local/guidelines.md §3 (Deploys).
 	"routes": [
 		{ "pattern": "merkadoph.se", "custom_domain": true },
 		{ "pattern": "www.merkadoph.se", "custom_domain": true }
 	],
-	// Off: merkadoph-opennext.<subdomain>.workers.dev served the whole site as a second origin (B12). If this
-	// line is missing, a deploy turns workers.dev back on (when there are no routes), even after it was
-	// disabled in the dashboard.
+	// Off: merkadoph-opennext.<subdomain>.workers.dev served the whole site as a second origin (B12).
+	// Keep explicit: Wrangler turns workers.dev on whenever `routes` is empty (e.g. if the routes block is
+	// removed or reverted).
 	"workers_dev": false,
 	// On (kept as today): Version/Preview URLs for Workers Builds preview builds of non-production branches
 	// such as `main`. They are separate from the workers.dev route above and keep working when it's off.
-	// They are public by default; protect them with Cloudflare Access if they shouldn't be.
+	// They are public by default: workers.dev hosts serving the full site with production data (KV, D1,
+	// Supabase). Protect them with Cloudflare Access if they shouldn't be (see STATUS "To do").
 	"preview_urls": true
 	/**
 	 * Secrets (set with `npx wrangler secret put NAME`, never committed):

@@ -8,6 +8,7 @@ import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
 import { DIGITAL } from "@/lib/digital-content";
 import { TAHOOO, FLAVOUR_RATIO, flavourImage } from "@/lib/tahooo-content";
+import { HOME } from "@/lib/home-content";
 import { formatDate, formatDayRange } from "@/lib/datetime";
 import { toPlainText } from "@/lib/content";
 import { getSeoSettings, localBusinessDetails } from "@/lib/site-settings";
@@ -23,7 +24,9 @@ import { ChipFilter } from "./chip-filter";
 import styles from "./highlights.module.css";
 
 /** The old shop now lives here. */
-const GROCERY_URL = "https://phasianmarket.se";
+const GROCERY_URL = HOME.groceryUrl;
+const H = HOME.highlights;
+const L = HOME.labels;
 
 /** Tiles per category in the graph; the sections show the first few. */
 const PER_TYPE = 10;
@@ -40,6 +43,9 @@ const glyph = (title: string) => (title.split(/[\s:—-]+/).find((w) => w.length
 /** Excerpts can carry Markdown (e.g. imported posts); cards show plain text. */
 const plain = (s: string | null | undefined) => (s ? toPlainText(s) : "");
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+/** Text from home-content.ts with *stars* around a word: that word becomes the heading's highlighted <em>. */
+const emph = (text: string, emProps?: React.HTMLAttributes<HTMLElement>) =>
+	text.split(/\*([^*]+)\*/).map((part, i) => (i % 2 ? <em key={i} {...emProps}>{part}</em> : part));
 /** Short excerpt for the preview panel inside a Highlight. */
 const clip = (s: string | null | undefined, n = 240) => {
 	const t = plain(s);
@@ -100,25 +106,25 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 
 	const worlds: World[] = (
 		[
-			{ id: "blogs", allLabel: "All stories", cta: "Read the full story", label: "Blogs", sub: "Stories from Merkado PH and our community", color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
+			{ id: "blogs", allLabel: H.blogs.allLabel, cta: H.blogs.cta, label: H.blogs.label, sub: H.blogs.sub, color: "leaf", count: blogsRes.total - notices.total, list: "/blogs", dots: 18, has: stories.length },
 			{
 				id: "events",
-				allLabel: live ? "All events" : "Events archive",
-				cta: "Event details",
-				label: "Events",
-				sub: live ? "Community and cultural events, pop-ups, festivals" : "Our most recent events",
+				allLabel: live ? H.events.upcoming.allLabel : H.events.past.allLabel,
+				cta: H.events.cta,
+				label: H.events.label,
+				sub: live ? H.events.upcoming.sub : H.events.past.sub,
 				color: "red",
 				count: live ? upcoming.total : past.total,
 				list: live ? "/events" : "/events?when=past",
 				dots: 10,
 				has: events.length,
 			},
-			{ id: "impact", allLabel: "All of Community Impact", cta: "View the entry", label: "Community Impact", sub: "Every year, the same community", color: "sun", count: impact.length, list: "/impact", dots: 8, has: impactYears.length },
+			{ id: "impact", allLabel: H.impact.allLabel, cta: H.impact.cta, label: H.impact.label, sub: H.impact.sub, color: "sun", count: impact.length, list: "/impact", dots: 8, has: impactYears.length },
 			// The two businesses always show: their page is worth visiting even before offerings are listed.
-			{ id: "bygg", allLabel: `Visit ${BUSINESSES.bygg.name}`, cta: "Read more", label: BUSINESSES.bygg.name, sub: "Construction by Tindero Pedro", color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
-			{ id: "digital", allLabel: `Visit ${BUSINESSES.digital.name}`, cta: "Read more", label: BUSINESSES.digital.name, sub: "Branding, marketing, websites and consulting", color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
-			{ id: "tahooo", allLabel: "Visit Tahooo Corner", cta: "Read more", label: TAHOOO.highlight, sub: "Tahooo Corner: taho for your event in Gothenburg", color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
-			{ id: "bulletin", allLabel: "Bulletin Board", cta: "Read more", label: "Bulletin Board", sub: "Embassy news, notices and offers", color: "coral", count: notices.total + promotions.total, list: "/bulletin", dots: 6, has: notices.blogs.length + promotions.promotions.length },
+			{ id: "bygg", allLabel: `${H.bygg.allLabelPrefix} ${BUSINESSES.bygg.name}`, cta: H.bygg.cta, label: BUSINESSES.bygg.name, sub: H.bygg.sub, color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
+			{ id: "digital", allLabel: `${H.digital.allLabelPrefix} ${BUSINESSES.digital.name}`, cta: H.digital.cta, label: BUSINESSES.digital.name, sub: H.digital.sub, color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
+			{ id: "tahooo", allLabel: H.tahooo.allLabel, cta: H.tahooo.cta, label: TAHOOO.highlight, sub: H.tahooo.sub, color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
+			{ id: "bulletin", allLabel: H.bulletin.allLabel, cta: H.bulletin.cta, label: H.bulletin.label, sub: H.bulletin.sub, color: "coral", count: notices.total + promotions.total, list: "/bulletin", dots: 6, has: notices.blogs.length + promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
 		.filter((w) => w.has > 0)
@@ -226,7 +232,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 			id: `notice-${b.slug}`,
 			hub: "bulletin",
 			title: b.title,
-			note: [b.author_name || "Merkado PH", b.published_at && formatDate(b.published_at, { month: "short", year: "numeric" })].filter(Boolean).join(" · "),
+			note: [b.author_name || L.defaultAuthor, b.published_at && formatDate(b.published_at, { month: "short", year: "numeric" })].filter(Boolean).join(" · "),
 			image: thumb(b.cover_image_url),
 			href: `/blogs/${b.slug}`,
 			tags: shownTags(b.tags),
@@ -239,7 +245,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 			id: `promo-${p.slug}`,
 			hub: "bulletin",
 			title: p.title,
-			note: ["Offer", p.discount_label, p.ends_at ? `until ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : null].filter(Boolean).join(" · "),
+			note: [L.offer, p.discount_label, p.ends_at ? `${L.until.toLowerCase()} ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : null].filter(Boolean).join(" · "),
 			image: thumb(p.cover_image_url),
 			href: `/promotions/${p.slug}`,
 			tags: shownTags(p.tags),
@@ -298,7 +304,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 			tags: e.tags,
 		})),
 		...(w.id === "impact" && {
-			groupsLabel: "All years",
+			groupsLabel: H.impact.groupsLabel,
 			groups: impactYears.map((y) => ({ slug: y, itemId: `impact-year-${y}`, title: y, note: entriesWord(ofYear(y).length), thumb: thumb(yearCover(y)), href: `/impact?year=${y}` })),
 		}),
 	}));
@@ -326,7 +332,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						{allLabel} →
 					</Link>
 					<a href="#top" data-back={id} className={`${styles.back} ${styles.mono}`}>
-						↖ Back to highlights
+						{L.backToHighlights}
 					</a>
 				</div>
 			</div>
@@ -365,9 +371,9 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 				<HighlightsStage
 					hubs={hubs}
 					items={items}
-					eyebrow="Est. 2023 · Gothenburg"
-					title="Merkado PH"
-					lede="The store has a new home. This is what comes next: Filipino culture, festivals and pop-ups, and three years of stories from our community."
+					eyebrow={HOME.hero.eyebrow}
+					title={HOME.hero.title}
+					lede={HOME.hero.lede}
 					label={label}
 					worlds={worldInfo}
 				/>
@@ -375,28 +381,26 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 				{/* About + index */}
 				<section className={styles.about} id="index" aria-labelledby="about-title">
 					<div className={styles.wrap}>
-						<p className={styles.eyebrow}>Mabuhay · Välkommen</p>
-						<h2 id="about-title">
-							Everything <em>Filipino</em>, from Gothenburg.
-						</h2>
+						<p className={styles.eyebrow}>{HOME.about.eyebrow}</p>
+						<h2 id="about-title">{emph(HOME.about.heading)}</h2>
 						<p className={styles.aboutLede}>
-							Merkado PH started as a Filipino grocery in 2023. The shop now lives on at{" "}
+							{HOME.about.lede.before}{" "}
 							<a href={GROCERY_URL} rel="noopener">
-								PH Asian Market
+								{HOME.about.lede.link}
 							</a>{" "}
-							— this is where the community, the stories and the celebrations continue.
+							{HOME.about.lede.after}
 						</p>
 						<dl className={styles.stats}>
 							<div>
-								<dt>Merkado PH founded in Gothenburg</dt>
-								<dd>2023</dd>
+								<dt>{HOME.about.stats.founded.label}</dt>
+								<dd>{HOME.about.stats.founded.value}</dd>
 							</div>
 							<div>
-								<dt>Stories about Filipino culture</dt>
+								<dt>{HOME.about.stats.stories}</dt>
 								<dd>{W.blogs?.count ?? 0}</dd>
 							</div>
 							<div>
-								<dt>Highlights to explore</dt>
+								<dt>{HOME.about.stats.highlights}</dt>
 								<dd>{worlds.length}</dd>
 							</div>
 						</dl>
@@ -426,11 +430,9 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
 								"blogs",
-								<>
-									Mga <em>Kuwento</em>
-								</>,
-								"Food, faith, fiestas and family — stories about Filipino life, at home and in Sweden.",
-								"All stories",
+								emph(HOME.sections.blogs.heading),
+								HOME.sections.blogs.body,
+								H.blogs.allLabel,
 							)}
 							{storyCats.length > 1 && <ChipFilter categories={storyCats} target="blog-grid" label="Filter stories" />}
 							<div className={styles.blogGrid} id="blog-grid">
@@ -458,7 +460,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 												</h3>
 												{plain(b.excerpt) && <p>{plain(b.excerpt)}</p>}
 												<span className={`${styles.more} ${styles.mono}`} aria-hidden="true">
-													Read story →
+													{L.readStory}
 												</span>
 											</div>
 										</article>
@@ -475,11 +477,9 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
 								"events",
-								<>
-									Pista &amp; <em>pop-ups</em>
-								</>,
-								live ? "Community and cultural events, pop-ups and festivals with Merkado PH and friends." : "No events coming up right now. These are our most recent ones; follow the Bulletin Board for news.",
-								live ? "All events" : "Events archive",
+								emph(HOME.sections.events.heading),
+								live ? HOME.sections.events.body : HOME.sections.events.bodyNoUpcoming,
+								live ? H.events.upcoming.allLabel : H.events.past.allLabel,
 							)}
 							<div className={styles.events}>
 								{events.slice(0, 4).map((e, i) => (
@@ -494,7 +494,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 											<span className={`${styles.where} ${styles.mono}`}>{[formatDayRange(e.starts_at, e.ends_at), e.venue_name].filter(Boolean).join(" · ")}</span>
 										</div>
 										<Link href={`/events/${e.slug}`} className={styles.btn} aria-label={`Details: ${e.title}`}>
-											Details
+											{L.eventDetails}
 										</Link>
 									</article>
 								))}
@@ -509,11 +509,9 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
 								"impact",
-								<>
-									Sama-<em>sama</em>
-								</>,
-								"Every year, the same community: the markets, Independence Day, our anniversaries and Tambayan Sessions, year by year.",
-								"All of Community Impact",
+								emph(HOME.sections.impact.heading),
+								HOME.sections.impact.body,
+								H.impact.allLabel,
 							)}
 							<div className={styles.timeline}>
 								{/* A timeline of the latest four years, oldest first; each year lists what happened. */}
@@ -561,18 +559,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 							<div className={`${styles.wrap} ${styles.zoom}`}>
 								{head(
 									id,
-									id === "bygg" ? (
-										<>
-											Merkado{" "}
-											<em lang="sv" className={styles.long}>
-												Byggnadsavdelning
-											</em>
-										</>
-									) : (
-										<>
-											Merkado PH <em>Digital</em>
-										</>
-									),
+									id === "bygg" ? emph(HOME.sections.bygg.heading, { lang: "sv", className: styles.long }) : emph(HOME.sections.digital.heading),
 									excerpt,
 									w.allLabel,
 									b.lang === "en" ? undefined : b.lang,
@@ -613,9 +600,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
 								"tahooo",
-								<>
-									Project <em>Taho</em>
-								</>,
+								emph(HOME.sections.tahooo.heading),
 								`Tahooo Corner: ${TAHOOO.howItWorks.line.en.toLowerCase()} ${TAHOOO.book.line}`,
 								W.tahooo.allLabel,
 							)}
@@ -638,7 +623,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 									<span className={`${styles.num} ${styles.mono}`}>02</span>
 									<h3>
 										<Link href="/tahooo#boka" className={styles.stretch}>
-											Book the cart
+											{HOME.sections.tahooo.bookCard}
 										</Link>
 									</h3>
 									<p>{TAHOOO.howToBook.steps.map((st) => st.en).join(" ")}</p>
@@ -659,18 +644,16 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						<div className={`${styles.wrap} ${styles.zoom}`}>
 							{head(
 								"bulletin",
-								<>
-									Mga <em>Paalala</em>
-								</>,
-								"News from the Philippine Embassy in Sweden, community notices and offers from friends of Merkado PH.",
-								"Bulletin Board",
+								emph(HOME.sections.bulletin.heading),
+								HOME.sections.bulletin.body,
+								H.bulletin.allLabel,
 							)}
 							{notices.blogs.length > 0 && (
 								<div className={styles.notices}>
 									{notices.blogs.slice(0, 3).map((b, i) => (
 										<article key={b.id} className={`${styles.notice} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`notice-${b.slug}`}>
 											<div className={`${styles.src} ${styles.mono}`}>
-												<span>{b.author_name || "Merkado PH"}</span>
+												<span>{b.author_name || L.defaultAuthor}</span>
 												{b.published_at && <time dateTime={b.published_at}>{formatDate(b.published_at, { month: "short", year: "numeric" })}</time>}
 											</div>
 											<h3>
@@ -679,7 +662,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 												</Link>
 											</h3>
 											{plain(b.excerpt) && <p>{plain(b.excerpt)}</p>}
-											<span className={`${styles.badge} ${styles.mono}`}>{cap(firstTag(b.tags) ?? "Notice")}</span>
+											<span className={`${styles.badge} ${styles.mono}`}>{cap(firstTag(b.tags) ?? L.notice)}</span>
 										</article>
 									))}
 								</div>
@@ -691,7 +674,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 											<article key={p.id} className={styles.promo} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`promo-offer-${p.slug}`}>
 												{cover(p.cover_image_url, p.cover_image_alt || "", i === 0 ? "(max-width: 860px) 100vw, 760px" : "(max-width: 860px) 100vw, 540px", undefined, i + 1)}
 												<span className={styles.scrim} aria-hidden="true" />
-												<span className={`${styles.promoKicker} ${styles.mono}`}>{p.discount_label || "Offer"}</span>
+												<span className={`${styles.promoKicker} ${styles.mono}`}>{p.discount_label || L.offer}</span>
 												<h3>
 													<Link href={`/promotions/${p.slug}`} className={styles.stretch}>
 														{p.title}
@@ -700,7 +683,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 												{plain(p.excerpt) && <p>{plain(p.excerpt)}</p>}
 												{i === 0 && (
 													<span className={`${styles.btn} ${styles.promoCta}`} aria-hidden="true">
-														{p.ends_at ? `Until ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : "View offer"} →
+														{p.ends_at ? `${L.until} ${formatDate(p.ends_at, { month: "short", day: "numeric" })}` : L.viewOffer} →
 													</span>
 												)}
 											</article>
@@ -723,13 +706,9 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 				<section className={styles.contact} id="contact" aria-labelledby="contact-title">
 					<div className={`${styles.wrap} ${styles.contactGrid}`}>
 						<div>
-							<p className={styles.eyebrow}>Kumusta?</p>
-							<h2 id="contact-title">
-								Get in <em>touch</em>.
-							</h2>
-							<p className={styles.aboutLede}>
-								Submit an event, list your business, write for us or ask a question. We usually reply within 1–2 business days — in English, Filipino or Swedish.
-							</p>
+							<p className={styles.eyebrow}>{HOME.contact.eyebrow}</p>
+							<h2 id="contact-title">{emph(HOME.contact.heading)}</h2>
+							<p className={styles.aboutLede}>{HOME.contact.lede}</p>
 						</div>
 						<div className={styles.form}>
 							<ContactForm topics={[BUSINESSES.bygg.name, BUSINESSES.digital.name, ...offerings.map((s) => s.title)]} />
@@ -740,12 +719,12 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 				<section className={styles.signoff} aria-label="Sign-off">
 					<div className={`${styles.wrap} ${styles.signoffRow}`}>
 						<div>
-							<p className={styles.signoffTitle}>Salamat, kababayan.</p>
-							<p>Merkado PH · Gothenburg, Sweden</p>
+							<p className={styles.signoffTitle}>{HOME.signoff.title}</p>
+							<p>{HOME.signoff.line}</p>
 						</div>
 						<p>
 							<a href={GROCERY_URL} rel="noopener">
-								Groceries → PH Asian Market ↗
+								{HOME.signoff.groceryLink}
 							</a>
 						</p>
 					</div>

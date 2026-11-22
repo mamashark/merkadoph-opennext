@@ -1,0 +1,104 @@
+/**
+ * Homepage text (src/components/highlights/highlights-home.tsx). To change a word on the homepage, edit this file.
+ *
+ * - Change only the text between the quotes. Use ’ (curly apostrophe) or “ ” inside text, never a straight ".
+ * - *Stars* around a word make it the highlighted (marker) word in a heading, e.g. "Mga *Kuwento*".
+ * - The order and colours of the Highlights, and the counts, are set in highlights-home.tsx.
+ * - The header menu has its own names and descriptions: src/components/site/site-nav.ts.
+ * - The Bygg, Digital and Tahooo texts come from their own files (bygg-content.ts, digital-content.ts, tahooo-content.ts).
+ */
+export const HOME = {
+	/** The constellation hero at the top. */
+	hero: {
+		eyebrow: "Est. 2023 · Gothenburg",
+		title: "Merkado PH",
+		lede: "The store has a new home. This is what comes next: Filipino culture, festivals and pop-ups, and three years of stories from our community.",
+	},
+
+	/**
+	 * Each Highlight in the constellation, the index and the section headings.
+	 * label = its name · sub = one-line description · allLabel = the "see everything" link · cta = the button in the zoomed-in panel.
+	 */
+	highlights: {
+		blogs: { label: "Blogs", sub: "Stories from Merkado PH and our community", allLabel: "All stories", cta: "Read the full story" },
+		/** Events have two versions: when events are coming up ("upcoming"), and when none are ("past"). */
+		events: {
+			label: "Events",
+			cta: "Event details",
+			upcoming: { sub: "Community and cultural events, pop-ups, festivals", allLabel: "All events" },
+			past: { sub: "Our most recent events", allLabel: "Events archive" },
+		},
+		impact: { label: "Community Impact", sub: "Every year, the same community", allLabel: "All of Community Impact", cta: "View the entry", groupsLabel: "All years" },
+		/** The business names come from src/lib/businesses.ts; the "Visit …" link adds the name after this word. */
+		bygg: { sub: "Construction by Tindero Pedro", allLabelPrefix: "Visit", cta: "Read more" },
+		digital: { sub: "Branding, marketing, websites and consulting", allLabelPrefix: "Visit", cta: "Read more" },
+		/** The Highlight's name comes from TAHOOO.highlight in tahooo-content.ts ("Project Taho"). */
+		tahooo: { sub: "Tahooo Corner: taho for your event in Gothenburg", allLabel: "Visit Tahooo Corner", cta: "Read more" },
+		bulletin: { label: "Bulletin Board", sub: "Embassy news, notices and offers", allLabel: "Bulletin Board", cta: "Read more" },
+	},
+
+	/** "Mabuhay" section under the hero. */
+	about: {
+		eyebrow: "Mabuhay · Välkommen",
+		heading: "Everything *Filipino*, from Gothenburg.",
+		/** The sentence with the PH Asian Market link: before + link + after. */
+		lede: {
+			before: "Merkado PH started as a Filipino grocery in 2023. The shop now lives on at",
+			link: "PH Asian Market",
+			after: "— this is where the community, the stories and the celebrations continue.",
+		},
+		stats: {
+			founded: { label: "Merkado PH founded in Gothenburg", value: "2023" },
+			stories: "Stories about Filipino culture",
+			highlights: "Highlights to explore",
+		},
+	},
+
+	/** The section for each Highlight further down the page: its heading and the line under it. */
+	sections: {
+		blogs: { heading: "Mga *Kuwento*", body: "Food, faith, fiestas and family — stories about Filipino life, at home and in Sweden." },
+		events: {
+			heading: "Pista & *pop-ups*",
+			body: "Community and cultural events, pop-ups and festivals with Merkado PH and friends.",
+			/** Shown instead when no events are coming up. */
+			bodyNoUpcoming: "No events coming up right now. These are our most recent ones; follow the Bulletin Board for news.",
+		},
+		impact: { heading: "Sama-*sama*", body: "Every year, the same community: the markets, Independence Day, our anniversaries and Tambayan Sessions, year by year." },
+		/** The Bygg and Digital lines under the heading come from bygg-content.ts (intro) and digital-content.ts (lede). */
+		bygg: { heading: "Merkado *Byggnadsavdelning*" },
+		digital: { heading: "Merkado PH *Digital*" },
+		/** The Taho line under the heading, the menu card and the booking steps come from tahooo-content.ts. */
+		tahooo: { heading: "Project *Taho*", bookCard: "Book the cart" },
+		bulletin: { heading: "Mga *Paalala*", body: "News from the Philippine Embassy in Sweden, community notices and offers from friends of Merkado PH." },
+	},
+
+	/** Small labels used on cards and links. */
+	labels: {
+		backToHighlights: "↖ Back to highlights",
+		readStory: "Read story →",
+		eventDetails: "Details",
+		offer: "Offer",
+		viewOffer: "View offer",
+		until: "Until",
+		notice: "Notice",
+		/** Shown as the author when a notice has none. */
+		defaultAuthor: "Merkado PH",
+	},
+
+	/** "Get in touch" section with the contact form. */
+	contact: {
+		eyebrow: "Kumusta?",
+		heading: "Get in *touch*.",
+		lede: "Submit an event, list your business, write for us or ask a question. We usually reply within 1–2 business days — in English, Filipino or Swedish.",
+	},
+
+	/** The last strip of the page. */
+	signoff: {
+		title: "Salamat, kababayan.",
+		line: "Merkado PH · Gothenburg, Sweden",
+		groceryLink: "Groceries → PH Asian Market ↗",
+	},
+
+	/** The partner shop that took over the groceries (used in the About text and the sign-off). */
+	groceryUrl: "https://phasianmarket.se",
+};

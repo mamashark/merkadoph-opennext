@@ -42,13 +42,21 @@ export const checkoutSchema = z.object({
 
 /* ---------------------------- Shopper accounts ---------------------------- */
 
-/** Shopper password policy (shop-reference.md D12): 10–72 chars (bcrypt limit), letters and numbers. */
+/**
+ * Password policy for every account (shoppers and admins). Must match Supabase → Auth → Sign In / Providers → Email
+ * (Kay, 2026-11-22): at least 12 characters, lowercase, uppercase, digit and symbol. Max 72 = bcrypt limit.
+ * SYMBOL is Supabase's own symbol set, so a password this accepts is never rejected by Supabase.
+ */
+export const PASSWORD_MIN = 12;
+const SYMBOL = /[!@#$%^&*()_+\-=[\]{};':"\\|<>?,./`~]/;
 export const passwordSchema = z
 	.string()
-	.min(10, "Use at least 10 characters.")
+	.min(PASSWORD_MIN, `Use at least ${PASSWORD_MIN} characters.`)
 	.max(72, "Use at most 72 characters.")
-	.regex(/[A-Za-z]/, "Include at least one letter.")
-	.regex(/\d/, "Include at least one number.");
+	.regex(/[a-z]/, "Include at least one lowercase letter.")
+	.regex(/[A-Z]/, "Include at least one uppercase letter.")
+	.regex(/\d/, "Include at least one number.")
+	.regex(SYMBOL, "Include at least one symbol, like ! ? # or %.");
 
 const nameField = (label: string) => trimmed(60).min(1, `Please enter your ${label}.`);
 

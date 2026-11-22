@@ -5,8 +5,13 @@ import { redirect } from "next/navigation";
 import { requireAdmin, ADMIN_ROLE } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit";
+import { passwordSchema } from "@/lib/validation";
 
-const MIN_PASSWORD = 8;
+/** First problem with a new password, or null when it meets the policy (same rules as Supabase Auth). */
+function passwordProblem(password: string): string | null {
+	const result = passwordSchema.safeParse(password);
+	return result.success ? null : (result.error.issues[0]?.message ?? "Choose a stronger password.");
+}
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function read(formData: FormData) {
@@ -26,7 +31,8 @@ export async function createUser(formData: FormData) {
 	const fail = (error: string): never => redirect(`/admin/users/new?${qs({ error, name, email })}`);
 
 	if (!EMAIL.test(email)) fail("Enter a valid email address.");
-	if (password.length < MIN_PASSWORD) fail(`Password must be at least ${MIN_PASSWORD} characters.`);
+	const problem = passwordProblem(password);
+	if (problem) fail(problem);
 
 	const { data, error } = await createAdminClient().auth.admin.createUser({
 		email,
@@ -49,7 +55,8 @@ export async function updateUser(formData: FormData) {
 	const fail = (error: string): never => redirect(`/admin/users/${id}?${qs({ error })}`);
 
 	if (!EMAIL.test(email)) fail("Enter a valid email address.");
-	if (password && password.length < MIN_PASSWORD) fail(`Password must be at least ${MIN_PASSWORD} characters.`);
+	const problem = password ? passwordProblem(password) : null;
+	if (problem) fail(problem);
 	if (id === me.id && !hasAccess) fail("You can't remove your own admin access.");
 
 	const { error } = await createAdminClient().auth.admin.updateUserById(id, {

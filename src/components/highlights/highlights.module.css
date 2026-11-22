@@ -2001,7 +2001,8 @@
 	contain-intrinsic-block-size: auto 900px;
 }
 /* Rendered for real once the visitor jumps within the page (index dive, #link), so the jump lands on its target
-   (B28, set by renderBands() in highlights-stage.tsx), and always when printing. */
+   (B28, set by renderBands() in highlights-stage.tsx), and always when printing. On a reload or Back the bands get
+   the heights they had when the visitor left as their placeholder instead (B29, inline style, same file). */
 .root[data-cv-off] > :is(.about, .world, .contact) {
 	content-visibility: visible;
 }

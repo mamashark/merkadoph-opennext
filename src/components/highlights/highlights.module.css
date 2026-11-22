@@ -1998,5 +1998,17 @@
 .world,
 .contact {
 	content-visibility: auto;
-	contain-intrinsic-size: auto 900px;
+	contain-intrinsic-block-size: auto 900px;
+}
+/* Rendered for real once the visitor jumps within the page (index dive, #link), so the jump lands on its target
+   (B28, set by renderBands() in highlights-stage.tsx), and always when printing. */
+.root[data-cv-off] > :is(.about, .world, .contact) {
+	content-visibility: visible;
+}
+@media print {
+	.about,
+	.world,
+	.contact {
+		content-visibility: visible;
+	}
 }

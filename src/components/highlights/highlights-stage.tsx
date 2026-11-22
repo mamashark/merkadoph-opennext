@@ -41,6 +41,18 @@ const readView = (worlds: WorldInfo[], q: URLSearchParams) => {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+/**
+ * The bands under the hero skip rendering until they near the viewport (content-visibility, B14), so until then
+ * they're 900 px placeholders and anything below them is measured in the wrong place. Before any in-page jump
+ * (index dive, #link, card scroll) render them all for real, then measure (B28). It stays on for the rest of the
+ * visit: the first paint has had its gain, and switching back would bring the placeholder jumps back.
+ */
+const renderBands = (from: Element | null | undefined) => {
+	const root = from?.closest<HTMLElement>(`.${styles.root}`);
+	if (!root || "cvOff" in root.dataset) return;
+	root.dataset.cvOff = "";
+	void root.offsetHeight; // lay out at the real heights now, before anyone measures
+};
 const canHover = () => window.matchMedia("(hover: hover)").matches;
 /** Phones held upright: the sky is a framed panel below the title, and a Highlight opens as a full-screen view. */
 const phone = () => window.matchMedia(PHONE_QUERY).matches;
@@ -193,6 +205,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		if (card.hidden) sec.querySelector<HTMLButtonElement>("[data-chip-all]")?.click();
 		setTimeout(
 			() => {
+				renderBands(card);
 				card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
 				delete card.dataset.flash;
 				void card.offsetWidth;
@@ -212,7 +225,9 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			const p = engineRef.current?.hubPoint(id);
 			const heroInView = stage.getBoundingClientRect().bottom > innerHeight * 0.6;
 			if (reduced() || foldedRef.current || !p || !heroInView) {
+				renderBands(sec);
 				sec.scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
+				sec.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
 				setTimeout(() => arrive(sec, key), reduced() ? 0 : MOTION.dive.scroll);
 				return;
 			}
@@ -227,6 +242,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			await wait(MOTION.dive.approach);
 			warp.dataset.state = "open";
 			await wait(MOTION.dive.warp);
+			renderBands(sec);
 			sec.scrollIntoView({ behavior: "instant" as ScrollBehavior });
 			setCam("none");
 			camera(0, 0, 1);
@@ -519,26 +535,23 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		};
 		root.addEventListener("click", onClick);
 
-		// The bands below the hero use content-visibility (B14). After a same-page #link jump (e.g. the header's
-		// Contact), bands near the target render at their real height a few frames later and push it off its mark,
-		// so for a moment we land on the target again whenever a band changes size (until the user scrolls).
-		let stopRelanding = () => {};
+		// B28: render the bands for real before a #link to them scrolls, so it lands on the target. Capture phase, so
+		// this runs before next/link's handler and before the browser's own jump (header Contact, /#index, …).
+		const inBands = (id: string) => {
+			const t = id ? document.getElementById(id) : null;
+			return !!t && root.contains(t) && !t.closest(`.${styles.stage}`) ? t : null;
+		};
+		const onLink = (e: MouseEvent) => {
+			const a = (e.target as Element | null)?.closest?.<HTMLAnchorElement>("a[href*='#']");
+			if (a && inBands(decodeURIComponent(a.hash.slice(1)))) renderBands(root);
+		};
+		document.addEventListener("click", onLink, true);
+		// A hash typed into the address bar has already jumped (with placeholder heights): land on it again.
 		const onHash = () => {
-			stopRelanding();
-			const id = decodeURIComponent(location.hash.slice(1));
-			const target = id ? document.getElementById(id) : null;
-			if (!target || !root.contains(target) || target.closest(`.${styles.stage}`)) return;
-			const ro = new ResizeObserver(() => target.scrollIntoView({ block: "start" }));
-			root.querySelectorAll(":scope > section").forEach((s) => ro.observe(s));
-			const timer = window.setTimeout(() => stopRelanding(), 600);
-			const userScroll = ["wheel", "touchstart", "keydown"] as const;
-			stopRelanding = () => {
-				ro.disconnect();
-				clearTimeout(timer);
-				userScroll.forEach((t) => window.removeEventListener(t, stopRelanding));
-				stopRelanding = () => {};
-			};
-			userScroll.forEach((t) => window.addEventListener(t, stopRelanding, { passive: true }));
+			const t = inBands(decodeURIComponent(location.hash.slice(1)));
+			if (!t || "cvOff" in root.dataset) return;
+			renderBands(root);
+			t.scrollIntoView({ block: "start" });
 		};
 		window.addEventListener("hashchange", onHash);
 
@@ -558,8 +571,8 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		return () => {
 			io.disconnect();
 			root.removeEventListener("click", onClick);
+			document.removeEventListener("click", onLink, true);
 			window.removeEventListener("hashchange", onHash);
-			stopRelanding();
 			delete root.dataset.js;
 		};
 	}, [hubs, worlds, dive, climb, arrive, setWorld]);

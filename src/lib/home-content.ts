@@ -3,6 +3,8 @@
  *
  * - Change only the text between the quotes. Use ’ (curly apostrophe) or “ ” inside text, never a straight ".
  * - *Stars* around a word make it the highlighted (marker) word in a heading, e.g. "Mga *Kuwento*".
+ * - Never leave a heading empty (""): an empty heading confuses screen readers.
+ * - Don't delete or rename a line (the part before the colon). The site won't build without it.
  * - The order and colours of the Highlights, and the counts, are set in highlights-home.tsx.
  * - The header menu has its own names and descriptions: src/components/site/site-nav.ts.
  * - The Bygg, Digital and Tahooo texts come from their own files (bygg-content.ts, digital-content.ts, tahooo-content.ts).
@@ -79,6 +81,7 @@ export const HOME = {
 		eventDetails: "Details",
 		offer: "Offer",
 		viewOffer: "View offer",
+		/** Offer end date: "Until 5 Dec" on the button, and in lower case in the small note ("Offer · until 5 Dec"). */
 		until: "Until",
 		notice: "Notice",
 		/** Shown as the author when a notice has none. */

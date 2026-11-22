@@ -65,6 +65,19 @@ export type ConstellationEngine = {
 
 export const UNFOLDED_HINT = "Hover a category · drag to rearrange";
 
+/* Category labels on wider screens (name, then a smaller raised count, above-right of the square). One set of numbers
+   for both drawing them and estimating their box, so a font-size change (B15) can't silently break the overlap checks. */
+/** Label and count font sizes (px): `small` stages, otherwise `wide`. */
+const LABEL_PX = { small: 12, wide: 14 } as const;
+const COUNT_PX = { small: 9, wide: 10 } as const;
+/** IBM Plex Mono: every character is 0.6 em wide; ascent and descent (em) give the box's height. */
+const MONO_EM = 0.6;
+const MONO_ASCENT = 1.025, MONO_DESCENT = 0.275;
+/** The label starts this far right of the square's centre, with its baseline this far above it. */
+const LABEL_X = 13, LABEL_Y = -9;
+/** Gap between the name and the count, and how far the count is raised. */
+const LABEL_DX = 5, COUNT_DY = -6;
+
 interface GNode extends SimulationNodeDatum {
 	id: string;
 	kind: "center" | "hub" | "leaf";
@@ -161,6 +174,10 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		};
 		const rand = (a: number, b: number) => a + Math.random() * (b - a);
 		const sizeScale = small ? 0.4 : 1;
+		const labelPx = small ? LABEL_PX.small : LABEL_PX.wide, countPx = small ? COUNT_PX.small : COUNT_PX.wide;
+		/** A category label's box, relative to its square's centre: from the top of the raised count to the name's descent. */
+		const LBL_TOP = Math.min(LABEL_Y - labelPx * MONO_ASCENT, LABEL_Y + COUNT_DY - countPx * MONO_ASCENT);
+		const LBL_BOTTOM = LABEL_Y + labelPx * MONO_DESCENT;
 
 		const nodes: GNode[] = [{ id: "center", kind: "center", fx: cx, fy: cy, x: cx, y: cy, shown: true }];
 		const links: GLink[] = [];
@@ -181,8 +198,8 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			const dots = h.dots ? Math.max(3, Math.round(h.dots * sizeScale)) : 0;
 			const color = C(`--${h.color}`);
 			const shownCount = h.count ?? items.length + dots;
-			// The label starts 13px right of the square; IBM Plex Mono is 0.6 em per character (count: 5px gap, smaller type).
-			const labelReach = 13 + h.label.length * 0.6 * (small ? 12 : 14) + 5 + String(shownCount).length * 0.6 * (small ? 9 : 10);
+			// Label start + name + gap + count, in IBM Plex Mono (the same numbers draw the label below).
+			const labelReach = LABEL_X + h.label.length * MONO_EM * labelPx + LABEL_DX + String(shownCount).length * MONO_EM * countPx;
 			nodes.push({
 				id: `hub:${h.id}`, kind: "hub", hub: h.id, color, label: h.label, lines, halfW, reach: phone ? undefined : labelReach,
 				angle: Math.atan2(ty - cy, tx - cx), tx, ty, count: shownCount,
@@ -375,9 +392,9 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				});
 			});
 		} else {
-			const label = hubs.append("text").attr("x", 13).attr("y", -9).attr("fill", INK).attr("font-size", small ? 12 : 14);
+			const label = hubs.append("text").attr("x", LABEL_X).attr("y", LABEL_Y).attr("fill", INK).attr("font-size", labelPx);
 			label.append("tspan").text((d) => d.label ?? "");
-			label.append("tspan").attr("dx", 5).attr("dy", -6).attr("font-size", small ? 9 : 10).attr("fill", MUTED).text((d) => d.count ?? "");
+			label.append("tspan").attr("dx", LABEL_DX).attr("dy", COUNT_DY).attr("font-size", countPx).attr("fill", MUTED).text((d) => d.count ?? "");
 		}
 
 		let pinned: GNode | null = null;
@@ -479,13 +496,79 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		/** How far right of its centre a node reaches: a category's whole label (estimated from its length, so long names
 		 *  like "Merkado Byggnadsavdelning" count in full), or a leaf's tile. */
 		const reachRight = (n: GNode) => (n.kind === "hub" ? Math.max(n.reach ?? 0, 22) + 8 : 16);
-		/** Hubs also keep their label (above-right of the square) out of the Open/Fold box (B5: a long label ran under "Fold again"). */
-		const keepClear = (n: GNode) => {
-			const k = o.keepClear;
-			if (k && n.kind !== "center" && (n.x ?? cx) + reachRight(n) > width - k.width && (n.y ?? cy) < k.height + (n.kind === "hub" ? 24 : 16)) {
-				n.y = k.height + (n.kind === "hub" ? 24 : 16);
+		/** Where node n may sit (wider screens), given a wanted spot: on screen with room on the right for its whole
+		 *  label, and, for anything near the top right, below the Open/Fold box (B5: a long label ran under "Fold again";
+		 *  a category's label sits above-right of its square, so it needs more room there). */
+		const place = (n: GNode, x: number, y: number) => {
+			const px = clamp(x, 16, width - reachRight(n));
+			let py = clamp(y, n.kind === "hub" ? 40 : 16, height - 16);
+			const k = o.keepClear, below = k ? k.height + (n.kind === "hub" ? Math.ceil(-LBL_TOP) + 2 : 16) : 0;
+			if (k && n.kind !== "center" && px + reachRight(n) > width - k.width && py < below) py = below;
+			return { x: px, y: py };
+		};
+
+		/* Categories must not get in each other's way (B5, B18): no label over another category's square, no label on
+		   another label, no square inside another category's 44px tap circle. Boxes: l, t, r, b (SVG px). */
+		type Box = readonly [number, number, number, number];
+		const overlaps = (p: Box, q: Box, gap = 0) => p[0] < q[2] + gap && q[0] < p[2] + gap && p[1] < q[3] + gap && q[1] < p[3] + gap;
+		/** The square plus a little margin (a finger is not a point). */
+		const sqBox = (x: number, y: number): Box => [x - 11, y - 11, x + 11, y + 11];
+		const lblBox = (n: GNode, x: number, y: number): Box => [x + LABEL_X, y + LBL_TOP, x + (n.reach ?? 0), y + LBL_BOTTOM];
+		/** How badly category n at (x, y) and category m (where it is now) get in each other's way:
+		 *  a square under a label or too close to the other square (10), label on label (3), a label's middle in the other's tap circle (1). */
+		const clash = (n: GNode, x: number, y: number, m: GNode) => {
+			const mx = m.x ?? cx, my = m.y ?? cy;
+			const nL = lblBox(n, x, y), mL = lblBox(m, mx, my);
+			let s = 0;
+			if (overlaps(sqBox(x, y), mL) || overlaps(nL, sqBox(mx, my)) || Math.hypot(x - mx, y - my) < 24) s += 10;
+			if (overlaps(nL, mL, 2)) s += 3;
+			if (Math.hypot((nL[0] + nL[2]) / 2 - mx, (nL[1] + nL[3]) / 2 - my) < 22 || Math.hypot((mL[0] + mL[2]) / 2 - x, (mL[1] + mL[3]) / 2 - y) < 22) s += 1;
+			return s;
+		};
+		const clashAll = (n: GNode, x: number, y: number) => hubNodes.reduce((s, m) => (m === n || !m.shown ? s : s + clash(n, x, y, m)), 0);
+		/** How far below another category the next one sits so the two labels stack with a gap (and the squares are 26px+ apart). */
+		const STACK = Math.max(26, Math.ceil(LBL_BOTTOM - LBL_TOP) + 6);
+		/** Moves categories that clash to the first free spot next to the one they clash with most: below its label,
+		 *  above it, then to its right or left. Every spot is checked as `place` would leave it, against every category.
+		 *  Repeats (at most 3 times) until nothing moves, so a later move can't undo an earlier one. Dragged ones stay put. */
+		const unclash = () => {
+			for (let pass = 0; pass < 3; pass++) {
+				let moved = false;
+				for (const b of hubNodes) {
+					if (!b.shown || b.fx != null) continue;
+					const bx = b.x ?? cx, by = b.y ?? cy;
+					let best = clashAll(b, bx, by);
+					if (!best) continue;
+					let a: GNode | undefined, worst = 0;
+					for (const m of hubNodes) {
+						const s = m === b || !m.shown ? 0 : clash(b, bx, by, m);
+						if (s > worst) [a, worst] = [m, s];
+					}
+					if (!a) continue;
+					const ax = a.x ?? cx, ay = a.y ?? cy;
+					const spots = [
+						[bx, ay + STACK], // below: its label under the other label
+						[bx, ay + LBL_TOP - 13], // above: its square over the other label
+						[ax + (a.reach ?? 0) + 13, by], // right of the other label
+						[ax - 13 - (b.reach ?? 0), by], // left of the other square
+						// Crowded (a third category is in the way of all four): small steps up or down from where it is.
+						...[12, -12, 24, -24, 36, -36, 48, -48].map((d) => [bx, by + d]),
+					];
+					let pick: { x: number; y: number } | undefined;
+					for (const [x, y] of spots) {
+						const p = place(b, x, y), s = clashAll(b, p.x, p.y);
+						if (s < best) [best, pick] = [s, p];
+						if (!s) break;
+					}
+					if (!pick) continue;
+					b.x = pick.x;
+					b.y = pick.y;
+					moved = true;
+				}
+				if (!moved) break;
 			}
 		};
+
 		const render = () => {
 			nodes.forEach((n) => {
 				if (phone) {
@@ -495,26 +578,11 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 					n.y = clamp(n.y ?? cy, PAD + (n.kind === "hub" ? 22 : r), height - PAD - (n.kind === "hub" ? 24 + (n.lines?.length ?? 1) * 15 : r));
 					return;
 				}
-				// hubs keep room on the right for their label
-				n.x = clamp(n.x ?? cx, 16, width - (n.kind === "hub" ? Math.max(reachRight(n), 140) : 16));
-				n.y = clamp(n.y ?? cy, n.kind === "hub" ? 40 : 16, height - 16);
-				keepClear(n);
+				const p = place(n, n.x ?? cx, n.y ?? cy);
+				n.x = p.x;
+				n.y = p.y;
 			});
-			// B5: a category's label (to the right of and above its square) must never lie over another category's
-			// square, or a tap there opens the wrong one. Move the covered category just above or below the label.
-			if (!phone) {
-				for (const a of hubNodes) {
-					for (const b of hubNodes) {
-						if (a === b || !a.shown || !b.shown) continue;
-						const ax = a.x ?? cx, ay = a.y ?? cy, bx = b.x ?? cx, by = b.y ?? cy;
-						// Label box: x from +13 to reach, y from -26 (count) to -4; keep an 11px core around the other square clear.
-						if (bx + 11 < ax + 13 || bx - 11 > ax + (a.reach ?? 0) || by + 11 < ay - 26 || by - 11 > ay - 4) continue;
-						const up = ay - 38, down = ay + 8;
-						b.y = by < ay - 15 && up >= 40 ? up : down <= height - 16 ? down : up;
-						keepClear(b);
-					}
-				}
-			}
+			if (!phone) unclash();
 			linkSel.attr("x1", (d) => src(d).x ?? 0).attr("y1", (d) => src(d).y ?? 0)
 				.attr("x2", (d) => tgt(d).x ?? 0).attr("y2", (d) => tgt(d).y ?? 0);
 			nodeSel.attr("transform", (d) => `translate(${d.x},${d.y})`);

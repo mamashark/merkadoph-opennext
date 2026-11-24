@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DEFAULT_LINES } from "@/components/constellation/constellation";
 import type { ConstellationEngine } from "@/components/constellation/engine";
@@ -41,6 +41,49 @@ const readView = (worlds: WorldInfo[], q: URLSearchParams) => {
 
 const wait = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const reduced = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+/**
+ * The bands under the hero skip rendering until they near the viewport (content-visibility, B14), so until then
+ * they're 900 px placeholders and anything below them is measured in the wrong place. Before any in-page jump
+ * (index dive, #link, card scroll) render them all for real, then measure (B28). It stays on for the rest of the
+ * visit: the first paint has had its gain, and switching back would bring the placeholder jumps back.
+ */
+const renderBands = (from: Element | null | undefined) => {
+	const root = from?.closest<HTMLElement>(`.${styles.root}`);
+	if (!root || "cvOff" in root.dataset) return;
+	root.dataset.cvOff = "";
+	void root.offsetHeight; // lay out at the real heights now, before anyone measures
+};
+/**
+ * What kind of visit this mount is (B29). "fresh": the document's first, plain load, which opens at the top and keeps
+ * the first-paint gain. "hard": a reload or Back/Forward into the document. "soft": any later client-side mount (soft
+ * Back to the homepage). On the last two the browser restores the old scroll offset, but the bands have lost their
+ * remembered heights and are back at the 900 px placeholder, so the offset would land in the wrong band.
+ */
+let mountedBefore = false;
+const visitKind = (): "fresh" | "hard" | "soft" => {
+	if (mountedBefore) return "soft";
+	mountedBefore = true;
+	const nav = performance.getEntriesByType?.("navigation")[0] as PerformanceNavigationTiming | undefined;
+	return !nav || nav.type === "navigate" ? "fresh" : "hard";
+};
+/** The page as the visitor left it: scroll offset, viewport width and each band's laid-out height (real or placeholder). */
+type LeftAt = { path: string; w: number; y: number; bands: number[] };
+const LEFT_KEY = "hl-left";
+/** The height contain-intrinsic-block-size stands in for: the content box, without padding and borders. */
+const contentHeight = (el: HTMLElement) => {
+	const cs = getComputedStyle(el);
+	const edges = ["paddingTop", "paddingBottom", "borderTopWidth", "borderBottomWidth"] as const;
+	return Math.round((el.getBoundingClientRect().height - edges.reduce((sum, k) => sum + (parseFloat(cs[k]) || 0), 0)) * 100) / 100;
+};
+const bandsOf = (root: Element) => [...root.querySelectorAll<HTMLElement>(`.${styles.about}, .${styles.world}, .${styles.contact}`)];
+/** "#a%20b" → "a b"; a malformed escape (#%E0) is no target rather than a URIError. */
+const hashId = (hash: string) => {
+	try {
+		return decodeURIComponent(hash.slice(1));
+	} catch {
+		return "";
+	}
+};
 const canHover = () => window.matchMedia("(hover: hover)").matches;
 /** Phones held upright: the sky is a framed panel below the title, and a Highlight opens as a full-screen view. */
 const phone = () => window.matchMedia(PHONE_QUERY).matches;
@@ -76,6 +119,43 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	const setWorld = useCallback((v: WorldView | null) => {
 		worldRef.current = v;
 		setWorldState(v);
+	}, []);
+
+	// B29: give the bands back the heights they had when the visitor left, before the restored scroll offset is used,
+	// so the offset points at the same content. They keep skipping rendering (B14); the stored height stands in until
+	// one renders (`auto <h>px`). Soft Back: React renders a popstate navigation synchronously inside the event and
+	// Next leaves scroll restoration to the browser, so this layout effect runs before the browser restores. Reload /
+	// hard Back: the browser restores while the HTML is still parsing, long before hydration, and stops short at the
+	// placeholder page's end; so scroll to the stored offset here. Nothing stored (or another width): render the bands
+	// for real instead, the B28 fallback.
+	const visitRef = useRef<ReturnType<typeof visitKind> | null>(null);
+	useLayoutEffect(() => {
+		const root = stageRef.current?.closest<HTMLElement>(`.${styles.root}`);
+		if (!root) return;
+		const path = location.pathname; // on unmount the URL is already the next page's
+		const save = () => {
+			try {
+				const left: LeftAt = { path, w: innerWidth, y: Math.round(scrollY), bands: bandsOf(root).map(contentHeight) };
+				sessionStorage.setItem(LEFT_KEY, JSON.stringify(left));
+			} catch {}
+		};
+		window.addEventListener("pagehide", save);
+		visitRef.current ??= visitKind();
+		if (visitRef.current !== "fresh") {
+			let left: LeftAt | null = null;
+			try {
+				left = JSON.parse(sessionStorage.getItem(LEFT_KEY) ?? "null") as LeftAt | null;
+			} catch {}
+			const bands = bandsOf(root);
+			if (left && left.path === path && left.w === innerWidth && left.bands?.length === bands.length) {
+				bands.forEach((b, i) => b.style.setProperty("contain-intrinsic-block-size", `auto ${left.bands[i]}px`));
+				if (visitRef.current === "hard" && Math.abs(scrollY - left.y) > 2) window.scrollTo({ top: left.y, behavior: "instant" });
+			} else renderBands(root);
+		}
+		return () => {
+			window.removeEventListener("pagehide", save);
+			save(); // a client-side navigation away: the next page hasn't scrolled to its top yet
+		};
 	}, []);
 
 	/* ------------------------------ Camera ------------------------------ */
@@ -193,6 +273,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		if (card.hidden) sec.querySelector<HTMLButtonElement>("[data-chip-all]")?.click();
 		setTimeout(
 			() => {
+				renderBands(card);
 				card.scrollIntoView({ behavior: reduced() ? "auto" : "smooth", block: "center" });
 				delete card.dataset.flash;
 				void card.offsetWidth;
@@ -212,7 +293,9 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			const p = engineRef.current?.hubPoint(id);
 			const heroInView = stage.getBoundingClientRect().bottom > innerHeight * 0.6;
 			if (reduced() || foldedRef.current || !p || !heroInView) {
+				renderBands(sec);
 				sec.scrollIntoView({ behavior: reduced() ? "auto" : "smooth" });
+				sec.querySelector<HTMLElement>("h2")?.focus({ preventScroll: true });
 				setTimeout(() => arrive(sec, key), reduced() ? 0 : MOTION.dive.scroll);
 				return;
 			}
@@ -227,6 +310,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			await wait(MOTION.dive.approach);
 			warp.dataset.state = "open";
 			await wait(MOTION.dive.warp);
+			renderBands(sec);
 			sec.scrollIntoView({ behavior: "instant" as ScrollBehavior });
 			setCam("none");
 			camera(0, 0, 1);
@@ -519,8 +603,31 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		};
 		root.addEventListener("click", onClick);
 
+		// B28: render the bands for real before a #link to them scrolls, so it lands on the target. Capture phase, so
+		// this runs before next/link's handler and before the browser's own jump (header Contact, /#index, …).
+		const inBands = (id: string) => {
+			const t = id ? document.getElementById(id) : null;
+			return !!t && root.contains(t) && !t.closest(`.${styles.stage}`) ? t : null;
+		};
+		const onLink = (e: MouseEvent) => {
+			// HTML links to this page only: the constellation's SVG <a> tiles have no .hash, and other pages' #links
+			// don't scroll this one (B30).
+			const a = (e.target as Element | null)?.closest?.("a[href*='#']");
+			if (!(a instanceof HTMLAnchorElement) || a.origin + a.pathname !== location.origin + location.pathname) return;
+			if (inBands(hashId(a.hash))) renderBands(root);
+		};
+		document.addEventListener("click", onLink, true);
+		// A hash typed into the address bar has already jumped (with placeholder heights): land on it again.
+		const onHash = () => {
+			const t = inBands(hashId(location.hash));
+			if (!t || "cvOff" in root.dataset) return;
+			renderBands(root);
+			t.scrollIntoView({ block: "start" });
+		};
+		window.addEventListener("hashchange", onHash);
+
 		// Deep links (/#events) land with the section already revealed.
-		const deep = decodeURIComponent(location.hash.slice(1));
+		const deep = hashId(location.hash);
 		const sec = deep && hubs.some((h) => h.id === deep) ? document.getElementById(deep) : null;
 		if (sec) arrive(sec);
 
@@ -535,6 +642,8 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		return () => {
 			io.disconnect();
 			root.removeEventListener("click", onClick);
+			document.removeEventListener("click", onLink, true);
+			window.removeEventListener("hashchange", onHash);
 			delete root.dataset.js;
 		};
 	}, [hubs, worlds, dive, climb, arrive, setWorld]);

@@ -161,7 +161,7 @@ export default async function SeoSettingsPage({ searchParams }: PageProps<"/admi
 								{
 									name: "cf_analytics_token",
 									label: "Cloudflare Web Analytics token",
-									hint: "Cloudflare → Analytics & Logs → Web Analytics → Add site → copy the token from the snippet. Cookie-free, no consent banner needed.",
+									hint: "Cloudflare → Analytics & Logs → Web Analytics → Add site → copy the token from the snippet. Cookie-free, no consent banner needed. Turning this on loads Cloudflare Web Analytics. Update /privacy and /cookies first.",
 								},
 							]}
 						/>

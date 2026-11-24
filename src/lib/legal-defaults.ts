@@ -6,7 +6,9 @@ import type { LegalPageId, SeoSettings } from "@/lib/site-settings";
  * a staff-only admin and no shop (local/guidelines.md section 5). They describe what the code actually does (contact form → Supabase,
  * reCAPTCHA loaded only when a form is used, logs kept 180 days, messages 24 months, no analytics or marketing cookies).
  * Not legal advice: Kay reviews them before launch. If the site changes (analytics, newsletter, a shop), update these.
- * Placeholders still supported: {{business}}, {{legal_name}}, {{email}}, {{phone}}, {{address}}.
+ * Placeholders are still supported, but these texts now contain the business details (name, org. no., address, email) as literal text,
+ * so changing them in Admin → SEO does NOT update the legal pages. Edit this file (or the saved version in Admin → SEO → Legal pages).
+ * Placeholders: {{business}}, {{legal_name}}, {{email}}, {{phone}}, {{address}}.
  */
 const TEMPLATES: Record<LegalPageId, string> = {
 	privacy: `*Last updated: 24 November 2026*
@@ -135,8 +137,8 @@ Cookies are small files a website stores in your browser. This page lists the co
 |---|---|---|---|
 | \`_GRECAPTCHA\` and related Google data | Google reCAPTCHA | Checks that a form message comes from a person, not a bot. Loads only when you start using a form | Up to 6 months |
 | \`mph_stage\` | merkadoph.se | Lets people we invited view the website before it is public. Only after opening a preview link | 30 days |
-| \`__cf_bm\` (if set) | Cloudflare | Our hosting provider may set it to tell people from bots and keep the website secure | 30 minutes |
-| \`sb-…-auth-token\` | merkadoph.se (Supabase) | Keeps our staff signed in to the admin area. Never set for visitors | While signed in |
+| \`__cf_bm\` / \`cf_clearance\` (if set) | Cloudflare | Bot protection, and a note that you passed a security check. Our hosting provider may set them to keep the website secure | 30 minutes (\`__cf_bm\`); up to 1 year (\`cf_clearance\`) |
+| \`sb-…-auth-token\` | merkadoph.se (Supabase) | Keeps our staff signed in to the admin area. Never set for visitors | Until staff sign out (up to 400 days) |
 | \`admin-sidebar-collapsed\` | merkadoph.se | Remembers the layout of the admin area. Never set for visitors | 1 year |
 
 ## Statistics and marketing

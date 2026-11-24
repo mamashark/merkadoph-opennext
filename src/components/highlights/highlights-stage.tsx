@@ -572,7 +572,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 
 	/**
 	 * A fresh visit opens on the folded sky alone, and the page doesn't scroll until the visitor opens the sky by
-	 * clicking it (or the Open button, which is also the keyboard way in). Scrolling, swiping and scroll keys do
+	 * clicking the sun in the centre (or the Open button, which is also the keyboard way in). Scrolling, swiping and scroll keys do
 	 * nothing while it's folded (Kay, 2026-11-24: click only). Not applied on a deep link (#blogs, ?world=), a reload
 	 * or Back (the browser restores a scroll offset), phones held upright (their sky panel is taller than the screen),
 	 * or when the script failed (it only starts once the engine is ready). Focus moving below the sky (Tab, a screen
@@ -695,7 +695,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			ref={stageRef}
 			id="top"
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
-			// The whole sky opens the graph; keyboard users have the Open button.
+			// Folded, a click on the sun in the centre opens the graph; keyboard users have the Open button.
 		>
 			{/* Title first: on phones it sits above the sky panel, in reading order (it's absolutely placed on wider screens). */}
 			<div className={styles.intro}>

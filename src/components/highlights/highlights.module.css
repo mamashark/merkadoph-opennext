@@ -152,7 +152,8 @@
 	isolation: isolate;
 	background: var(--night);
 }
-.folded {
+/* Folded: only the sun and its cue text are clickable (constellation/engine.ts, .sun-hit). */
+.folded :global(.sun-hit) {
 	cursor: pointer;
 }
 /* Light mode: the sky is Merkado PH orange (#F47E20). Text is brand olive (4.8:1 on the orange; #2B2B18 for the

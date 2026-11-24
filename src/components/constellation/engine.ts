@@ -326,6 +326,9 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		}
 		center.append("circle").attr("r", 7).attr("fill", "none").attr("stroke", SUN).attr("stroke-width", 1.5);
 		const coreDot = center.append("circle").attr("r", folded ? 3 : 0).attr("fill", SUN);
+		// Click target while folded: the sun and its cue text below it. Only a click here opens the sky (Kay, 2026-11-24).
+		center.append("circle").attr("class", "sun-hit").attr("r", 34).attr("fill", "transparent");
+		center.append("rect").attr("class", "sun-hit").attr("x", -170).attr("y", 30).attr("width", 340).attr("height", 52).attr("fill", "transparent");
 		const cue = center.append("text").attr("y", 48).attr("text-anchor", "middle").attr("opacity", folded ? 1 : 0);
 		const cueQuote = cue.append("tspan").attr("x", 0)
 			.attr("font-family", FONT_DISPLAY).attr("font-size", small ? 13 : 15).attr("fill", INK);
@@ -718,9 +721,11 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		else api.unfold();
 	};
 
+	/** Folded: only a click on the sun (or its cue text) opens the sky; clicks elsewhere do nothing. */
 	const onStageClick = (e: MouseEvent) => {
-		if ((e.target as Element).closest("button, a, [data-no-unfold]")) return;
-		if (folded) setFolded(false);
+		const t = e.target as Element;
+		if (t.closest("button, a, [data-no-unfold]")) return;
+		if (folded && t.closest(".sun-hit")) setFolded(false);
 	};
 	let resizeT: ReturnType<typeof setTimeout> | undefined;
 	let lastWidth = svgEl.getBoundingClientRect().width;

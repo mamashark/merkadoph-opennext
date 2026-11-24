@@ -571,11 +571,12 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	/* ------------------------ Hero first (scroll lock) ------------------------ */
 
 	/**
-	 * A fresh visit opens on the folded sky alone: the page doesn't scroll until the sky opens. Opening it is a click
-	 * anywhere on the sky or the Open button, and any try to scroll (wheel, swipe up, Space / Page Down / ↓) opens it
-	 * too, so nobody is ever stuck. Not applied on a deep link (#blogs, ?world=), a reload or Back (the browser restores
-	 * a scroll offset), phones held upright (their sky panel is taller than the screen), or when the script failed
-	 * (it only starts once the engine is ready). Keyboard focus leaving the sky releases it as well.
+	 * A fresh visit opens on the folded sky alone, and the page doesn't scroll until the visitor opens the sky by
+	 * clicking it (or the Open button, which is also the keyboard way in). Scrolling, swiping and scroll keys do
+	 * nothing while it's folded (Kay, 2026-11-24: click only). Not applied on a deep link (#blogs, ?world=), a reload
+	 * or Back (the browser restores a scroll offset), phones held upright (their sky panel is taller than the screen),
+	 * or when the script failed (it only starts once the engine is ready). Focus moving below the sky (Tab, a screen
+	 * reader) releases it, so keyboard and assistive-tech users are never stuck.
 	 */
 	const lockedRef = useRef(false);
 	const unlockRef = useRef<() => void>(() => {});
@@ -588,30 +589,6 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		lockedRef.current = true;
 		html.dataset.heroLock = "";
 
-		let startY: number | null = null;
-		const open = () => {
-			if (foldedRef.current) engineRef.current?.setFolded(false);
-		};
-		const onWheel = (e: WheelEvent) => {
-			if (e.deltaY > 0) open();
-		};
-		const onKey = (e: KeyboardEvent) => {
-			const t = e.target as HTMLElement | null;
-			if (e.defaultPrevented || t?.closest("input, textarea, select, [contenteditable]")) return;
-			// Space on a button presses it; only plain page-scroll keys count here.
-			if (e.key === " " && t?.closest("button, a")) return;
-			if ([" ", "PageDown", "ArrowDown", "End"].includes(e.key)) {
-				e.preventDefault();
-				open();
-			}
-		};
-		const onTouchStart = (e: TouchEvent) => (startY = e.touches[0]?.clientY ?? null);
-		const onTouchMove = (e: TouchEvent) => {
-			if (startY !== null && startY - (e.touches[0]?.clientY ?? startY) > 30) {
-				startY = null;
-				open();
-			}
-		};
 		const onFocus = (e: FocusEvent) => {
 			if (!stage.contains(e.target as Node)) unlockRef.current();
 		};
@@ -619,26 +596,15 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			if (!lockedRef.current) return;
 			lockedRef.current = false;
 			delete html.dataset.heroLock;
-			window.removeEventListener("wheel", onWheel);
-			window.removeEventListener("keydown", onKey);
-			window.removeEventListener("touchstart", onTouchStart);
-			window.removeEventListener("touchmove", onTouchMove);
 			document.removeEventListener("focusin", onFocus);
 		};
 		unlockRef.current = unlock;
-		window.addEventListener("wheel", onWheel, { passive: true });
-		window.addEventListener("keydown", onKey);
-		window.addEventListener("touchstart", onTouchStart, { passive: true });
-		window.addEventListener("touchmove", onTouchMove, { passive: true });
 		document.addEventListener("focusin", onFocus);
 		return unlock;
 	}, [ready]);
-	// Opened: free the page once the unfold has settled, so the scroll that opened it (trackpad momentum) doesn't
-	// carry the visitor straight past the reveal.
+	// Opened: the page scrolls again.
 	useEffect(() => {
-		if (folded || !lockedRef.current) return;
-		const t = setTimeout(() => unlockRef.current(), reduced() ? 0 : 700);
-		return () => clearTimeout(t);
+		if (!folded) unlockRef.current();
 	}, [folded]);
 
 	/* ------------------------- Page-wide behaviour ------------------------ */

@@ -5,8 +5,9 @@ const isImageOnly = (node: { children?: Array<{ type: string; tagName?: string; 
 	!!node?.children?.length &&
 	node.children.every((c) => (c.type === "element" && c.tagName === "img") || (c.type === "text" && !c.value?.trim()));
 
-const hasImage = (node: { children?: Array<{ type: string; tagName?: string }> } | undefined) =>
-	!!node?.children?.some((c) => c.type === "element" && c.tagName === "img");
+type HNode = { type: string; tagName?: string; children?: HNode[] };
+/** Any image inside, however deep (an image can sit in **bold** or a link, which still makes a <figure> inside the <p>). */
+const hasImage = (node: HNode | undefined): boolean => !!node?.children?.some((c) => (c.type === "element" && c.tagName === "img") || hasImage(c));
 
 const components: Components = {
 	// An image becomes a <figure>, which can't sit inside a <p> (hydration error, B24). An image on its own line:

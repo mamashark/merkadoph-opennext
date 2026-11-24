@@ -2,10 +2,11 @@ import type { LegalPageId, SeoSettings } from "@/lib/site-settings";
 
 /**
  * The legal texts shown on /privacy, /terms and /cookies until an admin saves their own version in
- * Admin → SEO → Legal pages. Rewritten 2026-11-20 and again 2026-11-24 (B4) for the site as it is now: a content, events and portfolio site with contact forms,
+ * Admin → SEO → Legal pages. Rewritten 2026-11-20 and again 2026-11-24 (B4; Kay confirmed retention, Supabase EU, no analytics, no old shop data) for the site as it is now: a content, events and portfolio site with contact forms,
  * a staff-only admin and no shop (local/guidelines.md section 5). They describe what the code actually does (contact form → Supabase,
  * reCAPTCHA loaded only when a form is used, logs kept 180 days, messages 24 months, no analytics or marketing cookies).
  * Not legal advice: Kay reviews them before launch. If the site changes (analytics, newsletter, a shop), update these.
+ * TODO (Kay): add the postal address of the controller to the privacy text once she supplies it (via {{address}} from Admin → SEO, or typed here). Not invented.
  * Placeholders still supported: {{business}}, {{legal_name}}, {{email}}, {{phone}}, {{address}}.
  */
 const TEMPLATES: Record<LegalPageId, string> = {
@@ -30,12 +31,12 @@ merkadoph.se is a website about Filipino culture and community in Sweden: blog s
 | You email us, or we reply by email | Your email address and what you write | To answer and follow up | As long as we need it for your matter |
 | A quote or booking becomes an agreement | Contact details and what was agreed | To carry out the agreement (contract) and keep the accounts (legal obligation) | Accounting records for 7 years (Swedish Bookkeeping Act) |
 | A form is sent too fast, too often or fails the spam check | Your IP address, browser type and the time, and the email address you typed if you filled it in | To protect the forms against spam and abuse (legitimate interest) | Deleted automatically after 180 days |
-| You visit the website | IP address and technical data about your browser, handled by our hosting provider; if Cloudflare Web Analytics is switched on, counts of page views without cookies | To deliver the website, keep it secure and understand how much it is used (legitimate interest) | We don't keep visitor IP addresses ourselves |
+| You visit the website | IP address and technical data about your browser, handled by our hosting provider | To deliver the website and keep it secure (legitimate interest) | We don't keep visitor IP addresses ourselves |
 | You open a page that has moved | A visit counter for the old address only, with no personal data | To keep old links working and see which ones are still used (legitimate interest) | While the redirect exists |
 | You open a preview link we sent you | A preview cookie (see the [cookie policy](/cookies)) | To show you the site before it is public (legitimate interest) | 30 days |
 | Our staff sign in to the admin area | Work email, sign-in session, and a log of admin changes and security events with IP address and browser type | To keep the website and its content secure (legitimate interest) | Logs are deleted after 180 days; the account stays while the person works with us |
 
-We don't sell your data, we don't use it for advertising, and we don't build profiles of visitors. We don't send newsletters and we don't keep a mailing list.
+We don't use analytics or statistics tools on this website. We don't sell your data, we don't use it for advertising, and we don't build profiles of visitors. We don't send newsletters and we don't keep a mailing list.
 
 ## Photos from our events
 
@@ -43,18 +44,18 @@ Our Blogs, Events and Community Impact pages show photos from markets, celebrati
 
 ## The earlier webshop
 
-Merkado PH's webshop has moved to PH Asian Market ([phasianmarket.se](https://phasianmarket.se)), which is a separate business with its own privacy policy. This website no longer takes orders or payments. For questions about a purchase, delivery or return, contact PH Asian Market. If you used our earlier shop and want to know what we still hold about you, or have it deleted, email us and we will help.
+Merkado PH's webshop has moved to PH Asian Market ([phasianmarket.se](https://phasianmarket.se)), which is a separate business with its own privacy policy. This website no longer takes orders or payments, and no customer or order data from the former webshop is kept here. For questions about a purchase, delivery or return, contact PH Asian Market.
 
 ## Who handles data for us
 
-We use these service providers. They only process data on our behalf and under data processing agreements:
+We use service providers (processors) that only process data on our behalf, under data processing agreements:
 
-- **Cloudflare**: hosts and protects the website, blocks abusive traffic and automated crawlers, and limits how often forms can be sent.
-- **Supabase**: our database and file storage. Messages from the forms, content and staff accounts are stored here.
+- **Cloudflare**: hosts and protects the website, blocks abusive traffic and AI crawlers, and limits how often forms can be sent.
+- **Supabase**: our database and file storage, hosted in the EU (Ireland). Messages from the forms, content and staff accounts are stored here.
 - **Microsoft 365**: our email (hello@merkadoph.se).
 - **Google reCAPTCHA**: checks that a form message or sign-in comes from a person, not a bot. It loads only when you start using a form, and Google receives technical data about your visit. Read [Google's privacy policy](https://policies.google.com/privacy).
 
-Some of these providers can process data outside the EU/EEA, for example in the United States. When they do, the transfer is protected by the EU Standard Contractual Clauses or the EU–US Data Privacy Framework.
+Cloudflare, Microsoft and Google can process data outside the EU/EEA, for example in the United States. When they do, the transfer is protected by the EU Standard Contractual Clauses or the EU–US Data Privacy Framework.
 
 ## Links to other sites
 
@@ -141,7 +142,7 @@ Cookies are small files a website stores in your browser. This page lists the co
 
 ## Statistics and marketing
 
-We don't use Google Analytics, Facebook pixels or any advertising tools on this website. We may use Cloudflare Web Analytics to count page views. It doesn't use cookies or local storage and doesn't follow you between websites. If we add any other statistics or advertising tool, we will update this page and, where the law requires it, ask for your consent first.
+We don't use Google Analytics, Cloudflare Web Analytics, Facebook pixels or any other statistics or advertising tools on this website. If we add one, we will update this page and, where the law requires it, ask for your consent first.
 
 ## Links and shared content
 

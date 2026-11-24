@@ -4,7 +4,10 @@
  */
 /* Text and accents use the Merkado PH brand palette (olive #33331E, teal #19B796, yellow #FFCC3F, orange #F47E20,
    red-orange #F05D22, red #E10606). Dark mode uses them as they are; light mode uses darker shades of the same hues so text passes 4.5:1. */
-.root {
+/* Colour tokens. Also declared on .wRoot (a Highlight's zoomed-in view): in light mode the sky around it is
+   brand orange (.stage, below), and the view inside it goes back to these day colours. */
+.root,
+.wRoot {
 	/* Brand colours at full strength, for fills and highlighter marks (text on them is olive). */
 	--sun-fill: #ffcc3f;
 	--leaf-fill: #19b796;
@@ -36,6 +39,8 @@
 	--panel: rgba(255, 255, 255, 0.94);
 	--on-c: #ffffff;
 	--shadow: rgba(51, 51, 30, 0.16);
+}
+.root {
 	--font-display: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
 	--font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -51,7 +56,8 @@
 	color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
-	.root {
+	.root,
+	.wRoot {
 		--night: #03051a;
 		--night-2: #080c2a;
 		--night-3: #0b1030;
@@ -148,6 +154,38 @@
 }
 .folded {
 	cursor: pointer;
+}
+/* Light mode: the sky is Merkado PH orange (#F47E20). Text is brand olive (4.8:1 on the orange; #2B2B18 for the
+   title, 5.4:1). The category colours become deep shades of the same hues, so markers are ≥ 3.3:1 on the orange and
+   their text passes on the cream preview card. Stars turn cream. Dark mode keeps the night sky. */
+@media (prefers-color-scheme: light) {
+	.stage {
+		--night: #f47e20;
+		--night-2: #f68d3a;
+		--night-3: #e8721a;
+		--ink: #2b2b18;
+		--ink-2: #33331e;
+		--muted: #33331e;
+		--sun: #33331e;
+		--leaf: #0a5242;
+		--red: #8f0404;
+		--coral: #7a2a0c;
+		--orange: #6e3208;
+		--caramel: #5c3417;
+		--blue: #1d3c9a;
+		--violet: #4a2a9e;
+		--tile-bg: #fbd9b8;
+		--star: #fff4e3;
+		--line: rgba(51, 51, 30, 0.2);
+		--line-2: rgba(51, 51, 30, 0.36);
+		--panel: rgba(255, 250, 242, 0.96);
+		--on-c: #f7f5ee;
+		--shadow: rgba(51, 51, 30, 0.22);
+	}
+	/* Opening a Highlight fades from the orange sky into a cream page. */
+	.wRoot {
+		background-color: var(--night);
+	}
 }
 .graph {
 	position: absolute;

@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 :root {
+	/* Brand cream and olive. */
 	--background: #faf9f6;
-	--foreground: #171717;
+	--foreground: #33331e;
 }
 
 @theme inline {
@@ -35,6 +36,51 @@
 	--color-tahooo-caramel: #9a5a2b;
 }
 
+/*
+ * Merkado PH brand palette, site-wide. The site's pages are built with Tailwind's stone (neutrals), teal (accent)
+ * and orange scales; here those scales are re-tinted to the brand: neutrals lean to the logo's olive (#33331E) and
+ * cream (#F7F5EE), teal turns to brand teal (#19B796, = teal-500), orange to brand orange (#F47E20, = orange-500).
+ * Every step keeps Tailwind's lightness, so the contrast of existing text/background pairs stays where it was.
+ * Admin keeps slate for neutrals, and picks up the brand teal from here.
+ */
+@theme {
+	--color-stone-50: oklch(98.5% 0.004 95);
+	--color-stone-100: oklch(97% 0.008 95);
+	--color-stone-200: oklch(92.3% 0.012 97);
+	--color-stone-300: oklch(86.9% 0.016 100);
+	--color-stone-400: oklch(70.9% 0.022 103);
+	--color-stone-500: oklch(55.3% 0.026 105);
+	--color-stone-600: oklch(44.4% 0.028 106);
+	--color-stone-700: oklch(37.4% 0.03 107);
+	--color-stone-800: oklch(26.8% 0.026 108);
+	--color-stone-900: oklch(21.6% 0.02 108);
+	--color-stone-950: oklch(14.7% 0.012 108);
+
+	--color-teal-50: oklch(98.4% 0.014 173);
+	--color-teal-100: oklch(95.3% 0.051 173);
+	--color-teal-200: oklch(91% 0.096 173);
+	--color-teal-300: oklch(85.5% 0.138 173);
+	--color-teal-400: oklch(77.7% 0.152 173);
+	--color-teal-500: #19b796;
+	--color-teal-600: oklch(60% 0.118 174);
+	--color-teal-700: oklch(51.1% 0.096 175);
+	--color-teal-800: oklch(43.7% 0.078 176);
+	--color-teal-900: oklch(38.6% 0.063 176);
+	--color-teal-950: oklch(27.7% 0.046 177);
+
+	--color-orange-50: oklch(98% 0.016 70);
+	--color-orange-100: oklch(95.4% 0.038 68);
+	--color-orange-200: oklch(90.1% 0.076 64);
+	--color-orange-300: oklch(83.7% 0.128 60);
+	--color-orange-400: oklch(77% 0.16 55);
+	--color-orange-500: #f47e20;
+	--color-orange-600: oklch(64.6% 0.19 47);
+	--color-orange-700: oklch(55.3% 0.17 44);
+	--color-orange-800: oklch(47% 0.14 42);
+	--color-orange-900: oklch(40.8% 0.115 41);
+	--color-orange-950: oklch(26.6% 0.075 40);
+}
+
 :root {
 	--home-bg: #faf9f6;
 	--home-surface: #ffffff;
@@ -49,7 +95,9 @@
 
 @media (prefers-color-scheme: dark) {
 	:root {
-		--background: #0c0a09;
+		/* stone-950 (olive-tinted, below), the same family as the homepage's dark tokens; cream text. */
+		--background: #0b0b06;
+		--foreground: #f1efe4;
 		--home-bg: #1b1b12;
 		--home-surface: #26261a;
 		--home-text: #f1efe4;
@@ -110,7 +158,7 @@ body {
 
 /* Blog article body (rendered from Markdown). */
 .prose-blog {
-	color: #334155;
+	color: var(--color-stone-700);
 	font-size: 1.0625rem;
 	line-height: 1.8;
 }
@@ -119,7 +167,7 @@ body {
 }
 .prose-blog h2 {
 	margin-top: 2em;
-	color: #0f172a;
+	color: var(--color-stone-900);
 	font-size: 1.6rem;
 	font-weight: 600;
 	line-height: 1.3;
@@ -127,28 +175,28 @@ body {
 }
 .prose-blog h3 {
 	margin-top: 1.75em;
-	color: #0f172a;
+	color: var(--color-stone-900);
 	font-size: 1.25rem;
 	font-weight: 600;
 	line-height: 1.4;
 }
 .prose-blog h4 {
 	margin-top: 1.5em;
-	color: #0f172a;
+	color: var(--color-stone-900);
 	font-weight: 600;
 }
 .prose-blog a {
-	color: #0f766e;
+	color: var(--color-teal-700);
 	font-weight: 500;
 	text-decoration: underline;
 	text-underline-offset: 3px;
-	text-decoration-color: rgb(15 118 110 / 0.35);
+	text-decoration-color: color-mix(in oklab, var(--color-teal-700) 35%, transparent);
 }
 .prose-blog a:hover {
 	text-decoration-color: currentColor;
 }
 .prose-blog strong {
-	color: #0f172a;
+	color: var(--color-stone-900);
 	font-weight: 600;
 }
 .prose-blog ul,
@@ -165,12 +213,12 @@ body {
 	margin-top: 0.4em;
 }
 .prose-blog li::marker {
-	color: #94a3b8;
+	color: var(--color-stone-500);
 }
 .prose-blog blockquote {
-	border-left: 3px solid #14b8a6;
+	border-left: 3px solid var(--color-teal-500);
 	padding-left: 1.1em;
-	color: #475569;
+	color: var(--color-stone-600);
 	font-style: italic;
 }
 .prose-blog figure {
@@ -181,28 +229,28 @@ body {
 	width: 100%;
 	height: auto;
 	border-radius: 0.875rem;
-	background: #f4ebd9;
+	background: var(--color-stone-200);
 }
 .prose-blog figcaption {
 	margin-top: 0.75em;
-	color: #57534e;
+	color: var(--color-stone-600);
 	font-size: 0.875rem;
 	line-height: 1.5;
 	text-align: center;
 }
 .prose-blog code {
 	border-radius: 0.375rem;
-	background: #f1f5f9;
+	background: var(--color-stone-100);
 	padding: 0.15em 0.4em;
-	color: #0f172a;
+	color: var(--color-stone-900);
 	font-size: 0.875em;
 }
 .prose-blog pre {
 	overflow-x: auto;
 	border-radius: 0.75rem;
-	background: #0f172a;
+	background: var(--color-stone-900);
 	padding: 1em 1.25em;
-	color: #e2e8f0;
+	color: var(--color-stone-200);
 	font-size: 0.875rem;
 	line-height: 1.7;
 }
@@ -213,7 +261,7 @@ body {
 }
 .prose-blog hr {
 	margin: 2.5em 0;
-	border-color: #e2e8f0;
+	border-color: var(--color-stone-200);
 }
 .prose-blog table {
 	width: 100%;
@@ -236,52 +284,52 @@ body {
 }
 .prose-blog th,
 .prose-blog td {
-	border-bottom: 1px solid #e2e8f0;
+	border-bottom: 1px solid var(--color-stone-200);
 	padding: 0.6em 0.75em;
 	text-align: left;
 }
 .prose-blog th {
-	color: #0f172a;
+	color: var(--color-stone-900);
 	font-weight: 600;
 }
 
 @media (prefers-color-scheme: dark) {
 	.prose-blog {
-		color: #d6d3d1;
+		color: var(--color-stone-300);
 	}
 	.prose-blog h2,
 	.prose-blog h3,
 	.prose-blog h4,
 	.prose-blog strong,
 	.prose-blog th {
-		color: #fafaf9;
+		color: var(--color-stone-50);
 	}
 	.prose-blog a {
-		color: #5eead4;
-		text-decoration-color: rgb(94 234 212 / 0.4);
+		color: var(--color-teal-300);
+		text-decoration-color: color-mix(in oklab, var(--color-teal-300) 40%, transparent);
 	}
 	.prose-blog blockquote {
-		border-left-color: #2dd4bf;
-		color: #a8a29e;
+		border-left-color: var(--color-teal-400);
+		color: var(--color-stone-400);
 	}
 	.prose-blog figure img {
-		background: #292524;
+		background: var(--color-stone-800);
 	}
 	.prose-blog figcaption,
 	.prose-blog li::marker {
-		color: #a8a29e;
+		color: var(--color-stone-400);
 	}
 	.prose-blog code {
-		background: #292524;
-		color: #fafaf9;
+		background: var(--color-stone-800);
+		color: var(--color-stone-50);
 	}
 	.prose-blog pre {
-		background: #1c1917;
+		background: var(--color-stone-900);
 	}
 	.prose-blog hr,
 	.prose-blog th,
 	.prose-blog td {
-		border-color: #44403c;
+		border-color: var(--color-stone-700);
 	}
 }
 
@@ -295,5 +343,21 @@ body {
 	from {
 		transform: translate(-115%, -6%) rotate(-14deg);
 		opacity: 0;
+	}
+}
+
+/* Homepage: until the visitor opens the constellation, the page doesn't scroll (set by highlights-stage.tsx, only
+   once its script has loaded; without JS the page scrolls as normal). The gutter keeps the layout from shifting
+   when the scrollbar comes back. */
+html[data-hero-lock] {
+	overflow: hidden;
+	overscroll-behavior: none;
+	scrollbar-gutter: stable;
+	/* The gutter shows the root background: match the sky (orange day / night sky, highlights.module.css). */
+	background: #f47e20;
+}
+@media (prefers-color-scheme: dark) {
+	html[data-hero-lock] {
+		background: #03051a;
 	}
 }

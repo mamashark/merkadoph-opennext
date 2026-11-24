@@ -385,8 +385,17 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				.attr("height", (d) => (d.lines?.length ?? 1) * 15 + 14).attr("fill", "transparent");
 		}
 		hubs.append("rect").attr("x", -5).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", (d) => d.color ?? BLUE);
+		// Labels live in their own layer above every node (below), so photo tiles and lines never cover them. It's
+		// aria-hidden: each hub already carries its name in aria-label, and DOM order (= tab order) stays hub → its tiles.
+		const labelLayer = root.append("g").attr("aria-hidden", "true").attr("pointer-events", "none");
+		const labelSel = labelLayer.selectAll<SVGGElement, GNode>("g").data(nodes.filter((d) => d.kind === "hub")).join("g")
+			.attr("opacity", (d) => (d.shown ? 1 : 0));
+		const labelsOf = (sel: typeof nodeSel) => {
+			const ids = new Set(sel.data().map((d) => d.id));
+			return labelSel.filter((d) => ids.has(d.id));
+		};
 		if (phone) {
-			const label = hubs.append("text").attr("class", "lbl").attr("text-anchor", "middle").attr("fill", INK).attr("font-size", 12);
+			const label = labelSel.append("text").attr("class", "lbl").attr("text-anchor", "middle").attr("fill", INK).attr("font-size", 12);
 			label.each(function (d) {
 				const t = select(this);
 				(d.lines ?? [d.label ?? ""]).forEach((line, k, all) => {
@@ -395,7 +404,10 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				});
 			});
 		} else {
-			const label = hubs.append("text").attr("x", LABEL_X).attr("y", LABEL_Y).attr("fill", INK).attr("font-size", labelPx);
+			// The label's area stays part of the hub's target (hover, click), as when the text sat inside it.
+			hubs.append("rect").attr("class", "hit").attr("x", LABEL_X - 3).attr("y", LBL_TOP - 3)
+				.attr("width", (d) => (d.reach ?? LABEL_X) - LABEL_X + 6).attr("height", LBL_BOTTOM - LBL_TOP + 6).attr("fill", "transparent");
+			const label = labelSel.append("text").attr("class", "lbl").attr("x", LABEL_X).attr("y", LABEL_Y).attr("fill", INK).attr("font-size", labelPx);
 			label.append("tspan").text((d) => d.label ?? "");
 			label.append("tspan").attr("dx", LABEL_DX).attr("dy", COUNT_DY).attr("font-size", countPx).attr("fill", MUTED).text((d) => d.count ?? "");
 		}
@@ -413,12 +425,15 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				if (crossLit(l)) reached.add(src(l)).add(tgt(l));
 			});
 			linkSel.attr("stroke-opacity", (l) => (!linkShown(l) ? 0 : l.hub === h.hub ? 0.95 : crossLit(l) ? 0.6 : 0.04));
-			nodeSel.attr("opacity", (n) => (!n.shown ? 0 : n.kind === "center" || lit.has(n) ? 1 : reached.has(n) ? 0.75 : 0.15));
+			const spot = (n: GNode) => (!n.shown ? 0 : n.kind === "center" || lit.has(n) ? 1 : reached.has(n) ? 0.75 : 0.15);
+			nodeSel.attr("opacity", spot);
+			labelSel.attr("opacity", spot);
 			hubs.attr("data-hot", (n) => (n === h ? "" : null));
 		};
 		const reset = () => {
 			linkSel.attr("stroke-opacity", (l) => (linkShown(l) ? baseOp(l) : 0));
 			nodeSel.attr("opacity", (n) => (n.shown ? 1 : 0));
+			labelSel.attr("opacity", (n) => (n.shown ? 1 : 0));
 			hubs.attr("data-hot", null);
 		};
 		let dragging = false;
@@ -589,6 +604,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			linkSel.attr("x1", (d) => src(d).x ?? 0).attr("y1", (d) => src(d).y ?? 0)
 				.attr("x2", (d) => tgt(d).x ?? 0).attr("y2", (d) => tgt(d).y ?? 0);
 			nodeSel.attr("transform", (d) => `translate(${d.x},${d.y})`);
+			labelSel.attr("transform", (d) => `translate(${d.x},${d.y})`);
 		};
 		s.on("tick", render);
 
@@ -640,6 +656,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 					const t = reduceMotion ? 0 : 500;
 					const sel = nodeSel.filter(mine);
 					sel.attr("pointer-events", null).transition().duration(t).attr("opacity", 1);
+					labelsOf(sel).transition().duration(t).attr("opacity", 1);
 					setReachable(sel, true);
 					linkSel.filter((l) => linkShown(l)).transition().duration(t).attr("stroke-opacity", baseOp);
 					if (reduceMotion) {
@@ -661,6 +678,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			const dur = reduceMotion ? 0 : 750;
 			const others = nodeSel.filter((n) => n.kind !== "center");
 			others.attr("pointer-events", "none").transition().duration(dur).attr("opacity", 0);
+			labelSel.transition().duration(dur).attr("opacity", 0);
 			setReachable(others, false);
 			linkSel.transition().duration(dur * 0.6).attr("stroke-opacity", 0);
 			s.alphaTarget(0.3).restart();

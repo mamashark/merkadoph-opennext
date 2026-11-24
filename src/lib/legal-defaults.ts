@@ -129,7 +129,7 @@ We may update these terms. The version published on this page applies, with the 
 
 Cookies are small files a website stores in your browser. This page lists the cookies and similar technologies used on merkadoph.se.
 
-**In short:** we only use what the website needs to work and stay secure. We don't use advertising, tracking or statistics cookies, so we don't ask for your consent with a cookie banner. Visitors don't need an account, and the website doesn't store anything in your browser's local storage.
+**In short:** we only use what the website needs to work and stay secure. We don't use advertising, tracking or statistics cookies, so we don't ask for your consent with a cookie banner. Visitors don't need an account. Apart from the cookies below, the homepage keeps a few layout numbers in your browser's session storage so that Back and reload return you to the same spot. They contain no personal data and are deleted when you close the tab.
 
 ## Cookies and similar technologies we use
 
@@ -140,6 +140,7 @@ Cookies are small files a website stores in your browser. This page lists the co
 | \`__cf_bm\` / \`cf_clearance\` (if set) | Cloudflare | Bot protection, and a note that you passed a security check. Our hosting provider may set them to keep the website secure | 30 minutes (\`__cf_bm\`); up to 1 year (\`cf_clearance\`) |
 | \`sb-…-auth-token\` | merkadoph.se (Supabase) | Keeps our staff signed in to the admin area. Never set for visitors | Until staff sign out (up to 400 days) |
 | \`admin-sidebar-collapsed\` | merkadoph.se | Remembers the layout of the admin area. Never set for visitors | 1 year |
+| \`hl-left\` (session storage, not a cookie) | merkadoph.se | Remembers where you were on the homepage so Back and reload return you to the same spot. Layout numbers only, no personal data | Until you close the tab |
 
 ## Statistics and marketing
 

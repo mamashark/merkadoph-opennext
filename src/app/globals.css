@@ -220,12 +220,19 @@ body {
 	border-collapse: collapse;
 	font-size: 0.9375rem;
 }
-/* Wide tables scroll inside themselves on phones instead of widening the page. */
-@media (max-width: 640px) {
-	.prose-blog table {
-		display: block;
-		overflow-x: auto;
-	}
+/* Wide tables scroll inside their wrapper (markdown.tsx) on phones instead of widening the page.
+   The wrapper takes keyboard focus so keyboard users can scroll it too (B33). */
+.prose-blog .table-scroll {
+	overflow-x: auto;
+	margin: 1.5em 0;
+}
+.prose-blog .table-scroll table {
+	margin: 0;
+}
+.prose-blog .table-scroll:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+	border-radius: 2px;
 }
 .prose-blog th,
 .prose-blog td {

@@ -29,6 +29,15 @@ const components: Components = {
 			</a>
 		);
 	},
+	// Wide tables scroll inside this box on phones. It can take keyboard focus (WCAG 2.1.1) and is named for
+	// screen readers; the table itself keeps its table semantics.
+	table({ children }) {
+		return (
+			<div className="table-scroll" role="region" aria-label="Table (scrolls sideways on small screens)" tabIndex={0}>
+				<table>{children}</table>
+			</div>
+		);
+	},
 	// Reserve <h1> for the post title.
 	h1({ children }) {
 		return <h2>{children}</h2>;

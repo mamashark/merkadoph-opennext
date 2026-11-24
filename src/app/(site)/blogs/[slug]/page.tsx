@@ -56,7 +56,6 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 	const kicker = blog.tags.find((t) => t.toLowerCase() !== "sample") ?? null;
 	/** Cover, layout photos and row photos, for search results. */
 	const ldImages = [...new Set([cover?.url, ...layoutPhotos.map((p) => p.url), ...slideshow.map((p) => p.url)].filter((u): u is string => !!u))].slice(0, 10);
-	const edited = blog.published_at && new Date(blog.updated_at).getTime() - new Date(blog.published_at).getTime() > 24 * 3600 * 1000;
 
 	return (
 		<main>
@@ -91,15 +90,8 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 								<span aria-hidden>·</span>
 							</>
 						)}
+						{/* Kay (2026-11-24): author, the date the post first appeared, and reading time only; no "Updated" date. */}
 						<time dateTime={blog.published_at ?? undefined}>{formatDate(blog.published_at, { dateStyle: "long" })}</time>
-						{edited && (
-							<>
-								<span aria-hidden>·</span>
-								<span>
-									Updated <time dateTime={blog.updated_at}>{formatDate(blog.updated_at, { dateStyle: "long" })}</time>
-								</span>
-							</>
-						)}
 						<span aria-hidden>·</span>
 						<span>{readingMinutes(blog.content)} min read</span>
 					</p>

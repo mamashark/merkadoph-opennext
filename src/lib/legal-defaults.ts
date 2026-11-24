@@ -6,7 +6,6 @@ import type { LegalPageId, SeoSettings } from "@/lib/site-settings";
  * a staff-only admin and no shop (local/guidelines.md section 5). They describe what the code actually does (contact form → Supabase,
  * reCAPTCHA loaded only when a form is used, logs kept 180 days, messages 24 months, no analytics or marketing cookies).
  * Not legal advice: Kay reviews them before launch. If the site changes (analytics, newsletter, a shop), update these.
- * TODO (Kay): add the postal address of the controller to the privacy text once she supplies it (via {{address}} from Admin → SEO, or typed here). Not invented.
  * Placeholders still supported: {{business}}, {{legal_name}}, {{email}}, {{phone}}, {{address}}.
  */
 const TEMPLATES: Record<LegalPageId, string> = {
@@ -16,7 +15,7 @@ This policy explains how Merkado PH handles personal data when you visit merkado
 
 ## Who is responsible
 
-**Merkado PH** (org. no. 559467-0811), Sweden, is the data controller for this website.
+**Merkado PH** (org. no. 559467-0811), Kålsereds byväg 14A, 423 59 Torslanda, Sweden, is the data controller for this website.
 Contact: [hello@merkadoph.se](mailto:hello@merkadoph.se)
 
 ## What this website is

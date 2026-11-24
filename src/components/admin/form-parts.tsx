@@ -226,7 +226,7 @@ export function DangerZone({ title, description, confirm, action, id }: { title:
 	);
 }
 
-export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export { UUID } from "@/lib/validation";
 
 /** Flash messages after saving any content type. */
 export const saveNotices: Record<string, string> = {

@@ -21,6 +21,8 @@ export type Portfolio = {
 	location: string | null;
 	completed_on: string | null;
 	tags: string[];
+	/** The blog post that tells this entry's story (shown as "Read the story" on both pages). */
+	blog_id: string | null;
 	meta_title: string | null;
 	meta_description: string | null;
 	status: ContentStatus;
@@ -35,6 +37,8 @@ export type PortfolioSummary = Pick<
 >;
 
 const SUMMARY = "id,title,slug,excerpt,cover_image_url,cover_image_alt,images,location,completed_on,tags,status,published_at,updated_at";
+/** Public detail page columns (no author_id). */
+const DETAIL = `${SUMMARY},content,blog_id,meta_title,meta_description,created_at`;
 export const PORTFOLIO_PER_PAGE = 12;
 
 /** Card image: the chosen cover, else the first project image. */
@@ -85,7 +89,7 @@ export const getPortfolioTags = cached(async (): Promise<string[]> => {
 
 export const getPublicPortfolioBySlug = cache(
 	cached(async (slug: string): Promise<Portfolio | null> => {
-		const { data, error } = await onlyLive(createPublicClient().from("portfolios").select("*").eq("slug", slug)).maybeSingle();
+		const { data, error } = await onlyLive(createPublicClient().from("portfolios").select(DETAIL).eq("slug", slug)).maybeSingle();
 		if (error) throw new Error(`Failed to load project: ${error.message}`);
 		return data as Portfolio | null;
 	}, "portfolio:getPublicPortfolioBySlug", ["portfolio"]),
@@ -112,6 +116,18 @@ export const getSameEventOtherYears = cached(async (excludeId: string, tags: str
 		.limit(limit);
 	return (data ?? []) as PortfolioSummary[];
 }, "portfolio:getSameEventOtherYears", ["portfolio"]);
+
+/** Live entries linked to a blog post (the "See the photos" card on the post), newest event first. Throws so errors aren't cached; callers catch. */
+export const getImpactEntriesForBlog = cache(
+	cached(async (blogId: string): Promise<PortfolioSummary[]> => {
+		const { data, error } = await onlyLive(createPublicClient().from("portfolios").select(SUMMARY))
+			.eq("blog_id", blogId)
+			.order("completed_on", { ascending: false, nullsFirst: false })
+			.limit(4);
+		if (error) throw new Error(`Failed to load linked entries: ${error.message}`);
+		return (data ?? []) as PortfolioSummary[];
+	}, "portfolio:getImpactEntriesForBlog", ["portfolio"]),
+);
 
 /* ------------------------------ Admin ------------------------------ */
 
@@ -164,3 +180,10 @@ export const searchPublicPortfolios = cached(async (term: string, limit: number 
 	if (error) throw new Error(`Failed to search portfolios: ${error.message}`);
 	return (data ?? []) as { id: string, slug: string, title: string, excerpt: string | null, completed_on: string | null }[];
 }, "portfolio:search", ["portfolio"]);
+
+/** Slugs of every entry (any status) linked to a blog post, so saving or deleting the post can refresh their pages. */
+export async function adminImpactSlugsForBlog(blogId: string): Promise<string[]> {
+	const { data, error } = await createAdminClient().from("portfolios").select("slug").eq("blog_id", blogId).limit(50);
+	if (error) throw new Error(`Failed to load linked entries: ${error.message}`);
+	return (data ?? []).map((r) => String(r.slug));
+}

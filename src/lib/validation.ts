@@ -152,3 +152,7 @@ export function fieldErrors<T extends z.ZodTypeAny>(result: z.ZodSafeParseError<
 	}
 	return out;
 }
+
+/** A row id. One definition for admin pages (via form-parts) and Server Actions. */
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export const uuidSchema = z.string().trim().regex(UUID);

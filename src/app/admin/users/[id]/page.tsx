@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/admin/page-header";
 import { FlashMessage } from "@/components/ui/alert";
 import { ConfirmButton } from "@/components/ui/confirm-button";
 import { cardClass } from "@/lib/ui";
+import { UUID } from "@/lib/validation";
 
 export const metadata: Metadata = { title: "Edit user" };
 
@@ -19,7 +20,6 @@ const notices: Record<string, string> = {
 	password: "Changes saved and password updated.",
 };
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function EditUserPage({ params, searchParams }: PageProps<"/admin/users/[id]">) {
 	const me = await requireAdmin();

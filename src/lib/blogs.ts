@@ -81,6 +81,13 @@ export const getPublishedBlogBySlug = cache(cached(async (slug: string): Promise
 	return data as Blog | null;
 }, "blogs:getPublishedBlogBySlug", ["blogs"]));
 
+/** A live post by id (the "Read the story" link on a Community Impact entry). Null if it's a draft, scheduled or gone. */
+export const getLinkedBlog = cache(cached(async (id: string): Promise<BlogSummary | null> => {
+	const { data, error } = await onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS).eq("id", id)).maybeSingle();
+	if (error) throw new Error(`Failed to load linked blog: ${error.message}`);
+	return data as BlogSummary | null;
+}, "blogs:getLinkedBlog", ["blogs"]));
+
 export const getAllPublishedSlugs = cached(async () => {
 	const { data, error } = await onlyLive(createPublicClient().from("blogs").select("slug,updated_at"))
 		.order("published_at", { ascending: false })
@@ -131,6 +138,49 @@ export async function adminGetBlog(id: string): Promise<Blog | null> {
 	const { data, error } = await createAdminClient().from("blogs").select("*").eq("id", id).maybeSingle();
 	if (error) throw new Error(`Failed to load blog: ${error.message}`);
 	return data as Blog | null;
+}
+
+export type BlogOption = Pick<Blog, "id" | "title" | "slug" | "status" | "published_at"> & {
+	/** Its /blogs/<slug> URL is a redirect source (e.g. moved to Community Impact), so linking to it would loop or leave the post. */
+	moved: boolean;
+};
+
+const PICKER_LIMIT = 500;
+
+/** Current slugs of posts whose /blogs/<slug> URL redirects elsewhere. Throws on error. */
+async function redirectedBlogSlugs(): Promise<Set<string>> {
+	const { data, error } = await createAdminClient().from("redirects").select("from_path").like("from_path", "/blogs/%").limit(5000);
+	if (error) throw new Error(`Failed to load redirects: ${error.message}`);
+	return new Set((data ?? []).map((r) => String(r.from_path).slice("/blogs/".length)));
+}
+
+/** True when the post's page redirects elsewhere, so it can't be the "Read the story" target. Throws on error. */
+export async function adminIsBlogMoved(slug: string): Promise<boolean> {
+	const { count, error } = await createAdminClient().from("redirects").select("id", { count: "exact", head: true }).eq("from_path", `/blogs/${slug}`);
+	if (error) throw new Error(`Failed to check redirects: ${error.message}`);
+	return (count ?? 0) > 0;
+}
+
+/**
+ * Posts for the "Related blog post" picker on a Community Impact entry, newest first, each flagged `moved` when its
+ * URL redirects. `currentId` (the entry's existing link) is always included, even past the limit, so opening and
+ * saving the form never drops a link the list didn't load.
+ */
+export async function adminBlogOptions(currentId?: string | null): Promise<BlogOption[]> {
+	const db = createAdminClient();
+	const columns = "id,title,slug,status,published_at";
+	const [{ data, error }, redirected] = await Promise.all([
+		db.from("blogs").select(columns).order("published_at", { ascending: false, nullsFirst: true }).limit(PICKER_LIMIT),
+		redirectedBlogSlugs(),
+	]);
+	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
+	const rows = (data ?? []) as Array<Omit<BlogOption, "moved">>;
+	if (currentId && !rows.some((r) => r.id === currentId)) {
+		const { data: current, error: currentError } = await db.from("blogs").select(columns).eq("id", currentId).maybeSingle();
+		if (currentError) throw new Error(`Failed to load the linked blog: ${currentError.message}`);
+		if (current) rows.push(current as Omit<BlogOption, "moved">);
+	}
+	return rows.map((r) => ({ ...r, moved: redirected.has(r.slug) }));
 }
 
 export async function adminBlogCounts() {

@@ -6,7 +6,8 @@ import { entryYear, getPublicPortfolioBySlug, getRelatedPortfolios, getSameEvent
 import { summarize } from "@/lib/content";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
-import { BackFooter, Body, DetailHeader, Facts } from "@/components/site/detail";
+import { getLinkedBlog } from "@/lib/blogs";
+import { BackFooter, Body, Companion, DetailHeader, Facts } from "@/components/site/detail";
 import { ContentCard } from "@/components/site/content-card";
 import { JsonLd } from "@/components/site/json-ld";
 import { PhotoTable } from "@/components/portfolio/photo-table";
@@ -44,6 +45,7 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/impac
 	// The same event in other years (shared tag, e.g. "Spring Market"); otherwise other recent entries.
 	const sameEvent = await getSameEventOtherYears(project.id, project.tags, 6).catch(() => []);
 	const related = sameEvent.length ? sameEvent : await getRelatedPortfolios(project.id, 3).catch(() => []);
+	const story = project.blog_id ? await getLinkedBlog(project.blog_id).catch(() => null) : null;
 	const date = project.completed_on ? formatDate(project.completed_on, { day: "numeric", month: "long", year: "numeric" }) : null;
 
 	return (
@@ -87,6 +89,21 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/impac
 				</section>
 
 				<Body content={project.content} />
+
+				{story && (
+					<Companion
+						heading="Read the story"
+						items={[
+							{
+								href: `/blogs/${story.slug}`,
+								title: story.title,
+								excerpt: story.excerpt,
+								image: story.cover_image_url ? { url: story.cover_image_url, alt: "" } : null,
+								meta: story.author_name ? `Blog · ${story.author_name}` : "Blog",
+							},
+						]}
+					/>
+				)}
 			</article>
 
 			{related.length > 0 && (

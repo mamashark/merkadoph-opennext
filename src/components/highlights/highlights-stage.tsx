@@ -528,6 +528,21 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 				unfoldedHint: UNFOLDED_HINT,
 				// The Open/Fold button's corner (button + its top/right padding).
 				keepClear: { width: 150, height: 66 },
+				// The hero title (eyebrow, h1, lede) sits over the sky on wider screens: keep the graph out of it.
+				// Phones held upright show the title above the sky panel, so there is nothing to avoid there.
+				avoid: () => {
+					const intro = stageRef.current?.querySelector<HTMLElement>(`.${styles.intro}`);
+					const box = panelRef.current?.getBoundingClientRect();
+					if (!intro || !box || phone()) return null;
+					const parts = [...intro.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width && r.height);
+					if (!parts.length) return null;
+					return {
+						left: Math.min(...parts.map((r) => r.left)) - box.left,
+						top: Math.min(...parts.map((r) => r.top)) - box.top,
+						right: Math.max(...parts.map((r) => r.right)) - box.left,
+						bottom: Math.max(...parts.map((r) => r.bottom)) - box.top,
+					};
+				},
 				onHint: setHint,
 				onFolded: (f) => {
 					foldedRef.current = f;

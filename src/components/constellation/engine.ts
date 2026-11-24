@@ -50,6 +50,9 @@ export type MountOptions = {
 	onItemActivate?: (item: ConstellationItem) => boolean;
 	/** A top-right box (px) that nodes stay out of, e.g. under the Open/Fold button, so nothing sits where it can't be tapped. */
 	keepClear?: { width: number; height: number };
+	/** A box in the graph's own px (e.g. the hero title) that categories, labels and tiles stay out of. Read on every
+	 *  (re)build; null = none. */
+	avoid?: () => { left: number; top: number; right: number; bottom: number } | null;
 };
 
 export type ConstellationEngine = {
@@ -143,6 +146,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 
 		const css = getComputedStyle(stage);
 		const C = (n: string) => css.getPropertyValue(n).trim();
+		const AVOID = o.avoid?.() ?? null;
 		const INK = C("--ink"), BLUE = C("--blue"), SUN = C("--sun"), MUTED = C("--muted");
 		const TILE_BG = C("--tile-bg"), STAR = C("--star"), FONT_DISPLAY = C("--font-display");
 
@@ -522,6 +526,18 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			let py = clamp(y, n.kind === "hub" ? 40 : 16, height - 16);
 			const k = o.keepClear, below = k ? k.height + (n.kind === "hub" ? Math.ceil(-LBL_TOP) + 2 : 16) : 0;
 			if (k && n.kind !== "center" && px + reachRight(n) > width - k.width && py < below) py = below;
+			// Out of the title (AVOID): its square, label or tile may not overlap it. Move up or right, whichever is
+			// the shorter way, as long as that stays on screen.
+			if (AVOID && n.kind !== "center") {
+				// Extents around the node's centre: below, left and above (a category: its 22px square and the label over it).
+				const M = 12, up = n.kind === "hub" ? Math.max(11, LBL_BOTTOM) : 16, left = n.kind === "hub" ? 11 : 16, top = n.kind === "hub" ? Math.max(11, -LBL_TOP) : 16;
+				if (px + reachRight(n) > AVOID.left - M && px - left < AVOID.right + M && py + up > AVOID.top - M && py - top < AVOID.bottom + M) {
+					const toTop = AVOID.top - M - up, toRight = AVOID.right + M + left;
+					const canRight = toRight + reachRight(n) <= width - 16;
+					if (canRight && toRight - px < py - toTop) return { x: toRight, y: py };
+					return { x: px, y: Math.max(toTop, n.kind === "hub" ? 40 : 16) };
+				}
+			}
 			return { x: px, y: py };
 		};
 

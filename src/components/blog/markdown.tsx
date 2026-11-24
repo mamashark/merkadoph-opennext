@@ -5,10 +5,15 @@ const isImageOnly = (node: { children?: Array<{ type: string; tagName?: string; 
 	!!node?.children?.length &&
 	node.children.every((c) => (c.type === "element" && c.tagName === "img") || (c.type === "text" && !c.value?.trim()));
 
+const hasImage = (node: { children?: Array<{ type: string; tagName?: string }> } | undefined) =>
+	!!node?.children?.some((c) => c.type === "element" && c.tagName === "img");
+
 const components: Components = {
-	// An image on its own line becomes a <figure>; unwrap the <p> so the markup stays valid.
+	// An image becomes a <figure>, which can't sit inside a <p> (hydration error, B24). An image on its own line:
+	// unwrap the <p>. An image mixed with text: use a <div> (the blog's spacing rule is on > * + *, so it looks the same).
 	p({ node, children }) {
 		if (isImageOnly(node)) return <>{children}</>;
+		if (hasImage(node)) return <div>{children}</div>;
 		return <p>{children}</p>;
 	},
 	img({ src, alt }) {

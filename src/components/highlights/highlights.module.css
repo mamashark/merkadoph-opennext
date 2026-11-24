@@ -150,6 +150,36 @@
 .folded :global(.sun-hit) {
 	cursor: pointer;
 }
+/* Light mode: the hero is a "dusk" sky, a lighter navy than dark mode's night (#03051A), with the night-sky colours
+   (Kay, 2026-11-24). The page below stays light. Contrast on #141B4A: text 15:1, muted 6.5:1, accents ≥ 4.8:1
+   (red brightened to #F2555A for that). Everything inside the stage, a Highlight's view included, uses these. */
+@media (prefers-color-scheme: light) {
+	.stage {
+		--night: #141b4a;
+		--night-2: #1a2256;
+		--night-3: #202a63;
+		--ink: #f7f5ee;
+		--ink-2: #d9d5c7;
+		--muted: #a8a391;
+		--blue: #5b84ff;
+		--sun: #ffcc3f;
+		--red: #f2555a;
+		--coral: #f05d22;
+		--caramel: #c9935f;
+		--leaf: #19b796;
+		--orange: #f47e20;
+		--violet: #a98bff;
+		--tile-bg: #202a63;
+		--star: #a3a9d4;
+		--line: rgba(247, 245, 238, 0.14);
+		--line-2: rgba(247, 245, 238, 0.28);
+		--panel: rgba(26, 34, 86, 0.94);
+		--on-c: #03051a;
+		--shadow: rgba(0, 0, 0, 0.4);
+		color: var(--ink);
+		color-scheme: dark;
+	}
+}
 .graph {
 	position: absolute;
 	inset: 0;

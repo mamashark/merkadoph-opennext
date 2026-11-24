@@ -14,6 +14,8 @@ const csp = [
 	"style-src 'self' 'unsafe-inline'",
 	`img-src 'self' data: blob: https://${supabaseHost}`,
 	"font-src 'self' data:",
+	// Blog videos / reels are files in our own Supabase Storage (the same host images come from). No third-party players.
+	`media-src 'self' https://${supabaseHost}`,
 	"connect-src 'self' https://www.google.com/recaptcha/ https://cloudflareinsights.com",
 	"frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/",
 	"frame-ancestors 'none'",
@@ -45,8 +47,8 @@ const nextConfig: NextConfig = {
 		remotePatterns: [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }],
 	},
 	experimental: {
-		// Media uploads go through Server Actions (5 × 2 MB WebP + form overhead).
-		serverActions: { bodySizeLimit: "12mb" },
+		// Media uploads go through Server Actions: 5 × 2 MB WebP, or one 20 MB blog video (upload-rules.ts), + form overhead.
+		serverActions: { bodySizeLimit: "22mb" },
 	},
 	async headers() {
 		return [{ source: "/:path*", headers: securityHeaders }];

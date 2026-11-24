@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Edit post" };
 export default async function EditBlogPage({ params, searchParams }: PageProps<"/admin/blogs/[id]/edit">) {
 	await requireAdmin();
 	const { id } = await params;
-	const { notice } = await searchParams;
+	const { notice, error } = await searchParams;
 	if (!UUID.test(id)) notFound();
 
 	const blog = await adminGetBlog(id);
@@ -40,7 +40,7 @@ export default async function EditBlogPage({ params, searchParams }: PageProps<"
 				}
 			/>
 			<div className="mb-6">
-				<FlashMessage notice={typeof notice === "string" ? saveNotices[notice] : undefined} />
+				<FlashMessage notice={typeof notice === "string" ? saveNotices[notice] : undefined} error={typeof error === "string" ? error : undefined} />
 			</div>
 			<BlogForm key={blog.updated_at} blog={blog} />
 			<DangerZone

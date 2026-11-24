@@ -4,6 +4,9 @@ export type ContentStatus = "draft" | "published";
 /** Display state: a published row with a future publish date is "scheduled". */
 export type ContentState = "draft" | "scheduled" | "published";
 
+/** One photo in a gallery (Community Impact entry, blog post), picked from the media library. */
+export type GalleryImage = { url: string; alt: string; description: string };
+
 export type ContentTable = "blogs" | "events" | "promotions" | "services" | "portfolios" | "products" | "product_categories" | "product_tags";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {

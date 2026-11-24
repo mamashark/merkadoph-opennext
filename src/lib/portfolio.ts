@@ -4,10 +4,10 @@ import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import type { ContentStatus } from "@/lib/content";
+import type { ContentStatus, GalleryImage } from "@/lib/content";
 
 /** One project image from the media library, with its own description (shown on hover). */
-export type PortfolioImage = { url: string; alt: string; description: string };
+export type PortfolioImage = GalleryImage;
 
 export type Portfolio = {
 	id: string;

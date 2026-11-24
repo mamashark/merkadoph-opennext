@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { MAX_FILES_PER_UPLOAD, uploadProblem } from "@/lib/upload-rules";
+import { MAX_FILES_PER_UPLOAD, uploadProblem, VIDEO_TYPES, videoProblem } from "@/lib/upload-rules";
 
 // Callers must have passed requireAdmin(): everything here uses the service role.
 
@@ -9,6 +9,14 @@ function isWebpBytes(buf: ArrayBuffer): boolean {
 	const b = new Uint8Array(buf, 0, Math.min(12, buf.byteLength));
 	const ascii = (from: number, to: number) => String.fromCharCode(...b.slice(from, to));
 	return b.length === 12 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP";
+}
+
+/** The real container of a video file ("ftyp" box = MP4, EBML header = WebM), or null. Never trusts the name alone. */
+function videoKind(buf: ArrayBuffer): "mp4" | "webm" | null {
+	const b = new Uint8Array(buf, 0, Math.min(12, buf.byteLength));
+	if (b.length >= 8 && String.fromCharCode(...b.slice(4, 8)) === "ftyp") return "mp4";
+	if (b.length >= 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return "webm";
+	return null;
 }
 
 /** Supabase Studio's marker object for empty folders. */
@@ -133,6 +141,31 @@ export async function uploadImages(bucket: string, folder: string, files: File[]
 		}
 	}
 	return uploaded;
+}
+
+/** Folder videos go into, in the first public bucket. */
+const VIDEO_FOLDER = "videos";
+
+/** Uploads one MP4 / WebM (blog video / reel) to the media library. Never overwrites an existing file. */
+export async function uploadVideo(file: File): Promise<MediaFile> {
+	const problem = videoProblem(file);
+	if (problem) throw new Error(problem);
+	const body = await file.arrayBuffer();
+	const kind = videoKind(body);
+	const ext = file.name.split(".").pop()?.toLowerCase();
+	if (!kind || kind !== ext) throw new Error(`${file.name}: this isn't a real ${ext?.toUpperCase() ?? "MP4/WebM"} video (it may be renamed). Export it again as MP4 or WebM.`);
+	const [bucket] = await listBuckets();
+	if (!bucket) throw new Error("No public storage bucket found.");
+	const storage = createAdminClient().storage.from(bucket);
+	const clean = cleanFileName(file.name);
+	for (let attempt = 0; attempt < 5; attempt++) {
+		const name = attempt === 0 ? clean : clean.replace(/(\.[a-z0-9]+)?$/, `-${Math.random().toString(36).slice(2, 7)}$1`);
+		const filePath = `${VIDEO_FOLDER}/${name}`;
+		const { error } = await storage.upload(filePath, body, { contentType: VIDEO_TYPES[kind], cacheControl: "31536000", upsert: false });
+		if (!error) return { name, path: filePath, url: publicUrl(bucket, filePath), size: file.size, type: VIDEO_TYPES[kind], updatedAt: new Date().toISOString() };
+		if (!/exists|duplicate/i.test(error.message) || attempt === 4) throw new Error(`${file.name}: ${error.message}`);
+	}
+	throw new Error(`${file.name}: couldn't find a free file name.`);
 }
 
 export async function deleteFile(bucket: string, filePath: string): Promise<void> {

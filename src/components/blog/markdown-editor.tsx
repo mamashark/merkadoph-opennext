@@ -5,8 +5,10 @@ import { Bold, Eye, Heading2, Heading3, ImagePlus, Italic, Link2, List, ListOrde
 import { MediaPicker, type PickedMedia } from "@/components/media/media-picker";
 import { Markdown } from "./markdown";
 import { buttonClass, cn, inputClass, labelClass } from "@/lib/ui";
+import { countMarkers, PHOTOS_MARKER, SLIDESHOW_MARKER } from "@/lib/blog-layout";
 
-type Props = { name: string; defaultValue?: string; required?: boolean };
+/** `markers`: blog posts get "+ Photos here" / "+ Slideshow here" buttons that place the photo layout and the photo row. */
+type Props = { name: string; defaultValue?: string; required?: boolean; markers?: boolean };
 
 /** Toolbar buttons: `wrap` = text around the selection (before, after, placeholder); `prefix` = added to each selected line. */
 type Tool = { icon: typeof Bold; label: string; wrap?: [string, string?, string?]; prefix?: string | ((i: number) => string) };
@@ -25,7 +27,7 @@ const TOOLS: Tool[] = [
  * Markdown body editor. The textarea is a normal named form field, so the surrounding
  * server-rendered form submits it like any other input.
  */
-export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
+export function MarkdownEditor({ name, defaultValue = "", required, markers = false }: Props) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 	const [value, setValue] = useState(defaultValue);
 	const [tab, setTab] = useState<"write" | "preview">("write");
@@ -73,6 +75,16 @@ export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
 		requestAnimationFrame(() => insert(`${lead}![${alt}](${pending.url.replace(/ /g, "%20")})\n\n`));
 	};
 
+	/** A marker on a line of its own, with blank lines around it, at the cursor. */
+	const insertMarker = (marker: string) => {
+		const el = ref.current;
+		const before = el ? el.value.slice(0, el.selectionStart) : "";
+		const lead = before === "" ? "" : before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
+		setTab("write");
+		requestAnimationFrame(() => insert(`${lead}${marker}\n\n`));
+	};
+	const placed = markers ? countMarkers(value) : { photos: 0, slideshow: 0 };
+
 	// Toolbar buttons are plain data; runTool (an event handler) reads the textarea ref, never render.
 	const runTool = (tool: Tool) => (tool.wrap ? wrap(...tool.wrap) : prefixLines(tool.prefix ?? ""));
 
@@ -111,7 +123,24 @@ export function MarkdownEditor({ name, defaultValue = "", required }: Props) {
 				<button type="button" onClick={() => setPicking(true)} className={buttonClass("secondary", "sm")}>
 					<ImagePlus className="h-4 w-4" aria-hidden /> Image
 				</button>
+				{markers && (
+					<>
+						<button type="button" onClick={() => insertMarker(PHOTOS_MARKER)} className={buttonClass("secondary", "sm")} title="Where the middle pair of photos goes (Layout B)">
+							+ Photos here
+						</button>
+						<button type="button" onClick={() => insertMarker(SLIDESHOW_MARKER)} className={buttonClass("secondary", "sm")} title="Where the photo row goes">
+							+ Slideshow here
+						</button>
+					</>
+				)}
 			</div>
+			{(placed.photos > 1 || placed.slideshow > 1) && (
+				<p role="status" className="border-b border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-medium text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-200">
+					{placed.photos > 1 && `${PHOTOS_MARKER} is placed ${placed.photos} times. `}
+					{placed.slideshow > 1 && `${SLIDESHOW_MARKER} is placed ${placed.slideshow} times. `}
+					Only the first one is used; the others are left out of the page.
+				</p>
+			)}
 
 			<textarea
 				ref={ref}

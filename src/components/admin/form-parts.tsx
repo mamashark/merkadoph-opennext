@@ -94,13 +94,13 @@ export function BasicsSection({ row, publicPath, titlePlaceholder, children }: {
 	);
 }
 
-export function ContentSection({ defaultValue, label = "Content" }: { defaultValue?: string; label?: string }) {
+export function ContentSection({ defaultValue, label = "Content", markers = false }: { defaultValue?: string; label?: string; markers?: boolean }) {
 	return (
 		<div>
 			<label htmlFor="content" className={labelClass}>
 				{label}
 			</label>
-			<MarkdownEditor name="content" defaultValue={defaultValue ?? ""} />
+			<MarkdownEditor name="content" defaultValue={defaultValue ?? ""} markers={markers} />
 		</div>
 	);
 }

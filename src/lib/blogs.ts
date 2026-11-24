@@ -5,6 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState, onlyLive } from "@/lib/content-server";
 import { searchTerm, type ContentStatus } from "@/lib/content";
+import type { BlogPhoto, PhotoLayout } from "@/lib/blog-layout";
 
 export { slugify, toPlainText, summarize, readingMinutes } from "@/lib/content";
 export { formatDate } from "@/lib/datetime";
@@ -26,6 +27,16 @@ export type Blog = {
 	published_at: string | null;
 	author_id: string | null;
 	author_name: string | null;
+	/** Photo layout (migration 20261124120000): A = header photo, B = middle pair, none = text only. */
+	photo_layout: PhotoLayout;
+	/** The A / B photos, in order (A uses the first; none set = the cover image). */
+	layout_photos: BlogPhoto[];
+	/** The photo row ("Mga larawan"), placed by [[slideshow]] or at the end. */
+	slideshow: BlogPhoto[];
+	/** An MP4 / WebM in our Storage, with an optional poster still and transcript. */
+	video_url: string | null;
+	video_poster_url: string | null;
+	video_transcript: string | null;
 	created_at: string;
 	updated_at: string;
 };

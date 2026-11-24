@@ -1,12 +1,12 @@
 import "server-only";
-import { toSitePath } from "@/lib/env";
+import { SUPABASE_URL, toSitePath } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { purgeContent, type ContentTag } from "@/lib/cache";
 import { audit } from "@/lib/audit";
 import { onSlugChange } from "@/lib/redirects";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fromDateTimeInput } from "@/lib/datetime";
-import { isHttpUrl, slugify, type ContentStatus, type ContentTable } from "@/lib/content";
+import { isHttpUrl, slugify, type ContentStatus, type ContentTable, type GalleryImage } from "@/lib/content";
 
 // Server-side helpers shared by the content Server Actions. Callers must have passed requireAdmin().
 
@@ -34,6 +34,33 @@ export function optionalLink(formData: FormData, key: string): string | null {
 export function optionalUrl(formData: FormData, key: string): string | null {
 	const value = text(formData, key, 1000);
 	return value && isHttpUrl(value) ? value : null;
+}
+
+/** Public URL prefix of our media library (Supabase Storage). Only these URLs are accepted for images and videos. */
+const MEDIA_PREFIX = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/`;
+
+/** A URL from our media library, or null (anything else is dropped, never stored). */
+export function mediaUrl(formData: FormData, key: string): string | null {
+	const value = text(formData, key, 1000);
+	return value.startsWith(MEDIA_PREFIX) && !/\s/.test(value) ? value : null;
+}
+
+/** A gallery field (GalleryField's JSON): media library images only, trimmed, at most `max`. Bad input → []. */
+export function readGallery(raw: FormDataEntryValue | null, max: number): GalleryImage[] {
+	try {
+		const parsed = JSON.parse(String(raw ?? "[]"));
+		if (!Array.isArray(parsed)) return [];
+		return parsed
+			.filter((g) => g && typeof g.url === "string" && g.url.startsWith(MEDIA_PREFIX) && g.url.length <= 1000)
+			.slice(0, max)
+			.map((g) => ({
+				url: String(g.url),
+				alt: String(g.alt ?? "").trim().slice(0, 200),
+				description: String(g.description ?? "").trim().slice(0, 500),
+			}));
+	} catch {
+		return [];
+	}
 }
 
 export function readTags(raw: FormDataEntryValue | null): string[] {

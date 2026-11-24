@@ -149,6 +149,8 @@ export function PortfolioLightbox({ images, title, index, onIndex, onClose }: { 
 									sizes="100vw"
 									className="object-contain"
 									priority
+									// The optimiser keeps one frame of an animated GIF (and the local preview returns 500 for it, B27): serve the original.
+									unoptimized={/\.gif(\?|$)/i.test(img.url)}
 									onLoad={(e) => setNatural({ url: img.url, ...realSize(e.currentTarget) })}
 																		// Never leave the photo hidden: on an error, show the frame without a size cap.
 																		onError={() => setNatural({ url: img.url, w: 100000, h: 100000 })}

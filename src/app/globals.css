@@ -353,8 +353,8 @@ html[data-hero-lock] {
 	overflow: hidden;
 	overscroll-behavior: none;
 	scrollbar-gutter: stable;
-	/* The gutter shows the root background: match the sky (orange day / night sky, highlights.module.css). */
-	background: #f47e20;
+	/* The gutter shows the root background: match the sky (day / night sky, highlights.module.css). */
+	background: #f7f5ee;
 }
 @media (prefers-color-scheme: dark) {
 	html[data-hero-lock] {

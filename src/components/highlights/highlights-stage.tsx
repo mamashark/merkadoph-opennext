@@ -200,10 +200,22 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		(id: string) => {
 			const p = engineRef.current?.hubPoint(id);
 			if (!p || reduced()) return;
+			// B31: scaling around the hovered category pushes a category that sits near the stage's edge off screen
+			// (on a 568px-wide stage the left-most square went to x = -6, out of reach of a tap). Only lean when
+			// every shown category's square (10px) stays inside the stage afterwards.
+			const box = stageRef.current?.getBoundingClientRect();
+			if (!box) return;
+			const k = MOTION.lean;
+			for (const h of hubs) {
+				const q = engineRef.current?.hubPoint(h.id);
+				if (!q) continue;
+				const x = p.x + (q.x - p.x) * k, y = p.y + (q.y - p.y) * k;
+				if (x < 6 || y < 6 || x > box.width - 6 || y > box.height - 6) return;
+			}
 			// Scale around the hovered category, so it stays under the pointer while the sky leans in.
-			place(p.x, p.y, MOTION.lean, p.x, p.y);
+			place(p.x, p.y, k, p.x, p.y);
 		},
-		[place],
+		[place, hubs],
 	);
 	const unlean = useCallback(() => {
 		if (!busyRef.current) place(0, 0, 1, 0, 0);

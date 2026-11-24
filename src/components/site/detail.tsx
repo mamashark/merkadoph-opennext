@@ -47,7 +47,7 @@ export function CoverFigure({ src, alt, caption }: { src: string | null; alt: st
 	return (
 		<figure className="mx-auto mt-10 max-w-5xl px-4 sm:px-6">
 			<div className="relative aspect-[16/9] overflow-hidden rounded-2xl bg-[#f4ebd9] dark:bg-stone-800">
-				<Image src={src} alt={alt} fill fetchPriority="high" sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover" />
+				<Image src={src} alt={alt} fill loading="eager" fetchPriority="high" sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover" />
 			</div>
 			{caption && <figcaption className="mt-3 text-center text-sm text-stone-600 dark:text-stone-400">{caption}</figcaption>}
 		</figure>

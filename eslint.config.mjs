@@ -19,6 +19,8 @@ const eslintConfig = defineConfig([
 		"out/**",
 		"build/**",
 		"next-env.d.ts",
+		"playwright-report/**",
+		"test-results/**",
 		// Generated or not part of the app:
 		".open-next/**",
 		".wrangler/**",

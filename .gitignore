@@ -59,3 +59,7 @@ CLAUDE.local.md
 
 # Kay's Web Studio agents (kept local, like /local)
 /.claude/agents/
+
+# Playwright
+/playwright-report/
+/test-results/

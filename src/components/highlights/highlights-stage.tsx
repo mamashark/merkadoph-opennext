@@ -540,6 +540,21 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 				unfoldedHint: UNFOLDED_HINT,
 				// The Open/Fold button's corner (button + its top/right padding).
 				keepClear: { width: 150, height: 66 },
+				// The hero title (eyebrow, h1, lede) sits over the sky on wider screens: keep the graph out of it.
+				// Phones held upright show the title above the sky panel, so there is nothing to avoid there.
+				avoid: () => {
+					const intro = stageRef.current?.querySelector<HTMLElement>(`.${styles.intro}`);
+					const box = panelRef.current?.getBoundingClientRect();
+					if (!intro || !box || phone()) return null;
+					const parts = [...intro.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width && r.height);
+					if (!parts.length) return null;
+					return {
+						left: Math.min(...parts.map((r) => r.left)) - box.left,
+						top: Math.min(...parts.map((r) => r.top)) - box.top,
+						right: Math.max(...parts.map((r) => r.right)) - box.left,
+						bottom: Math.max(...parts.map((r) => r.bottom)) - box.top,
+					};
+				},
 				onHint: setHint,
 				onFolded: (f) => {
 					foldedRef.current = f;
@@ -579,6 +594,57 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			engineRef.current = null;
 		};
 	}, [hubs, items, worlds, router, enterWorld, openPeek, closePeek, lean, unlean]);
+
+	/* ------------------------ Hero first (scroll lock) ------------------------ */
+
+	/**
+	 * A fresh visit opens on the folded sky alone, and the page doesn't scroll until the visitor opens the sky by
+	 * clicking the sun in the centre (or the Open button, which is also the keyboard way in). Scrolling, swiping and scroll keys do
+	 * nothing while it's folded (Kay, 2026-11-24: click only). Not applied on a deep link (#blogs, ?world=), a reload
+	 * or Back (the browser restores a scroll offset), phones held upright (their sky panel is taller than the screen),
+	 * or when the script failed (it only starts once the engine is ready). Never stuck (Arvid, 2026-11-25): focus moving
+	 * below the sky (Tab, a screen reader) releases it; so does any scroll at all while locked (the visitor can't scroll a
+	 * locked page, so it was a link, find-in-page, a screen reader or scrollIntoView), and turning a phone upright.
+	 */
+	const lockedRef = useRef(false);
+	const unlockRef = useRef<() => void>(() => {});
+	useEffect(() => {
+		const stage = stageRef.current;
+		if (!ready || !stage || lockedRef.current) return;
+		const deepLink = !!location.hash || new URLSearchParams(location.search).has("world");
+		if (visitRef.current !== "fresh" || deepLink || scrollY > 4 || phone() || !foldedRef.current) return;
+		const html = document.documentElement;
+		lockedRef.current = true;
+		html.dataset.heroLock = "";
+
+		const onFocus = (e: FocusEvent) => {
+			if (!stage.contains(e.target as Node)) unlockRef.current();
+		};
+		const onScroll = () => {
+			if (window.scrollY > 4) unlockRef.current();
+		};
+		const phoneMq = window.matchMedia(PHONE_QUERY);
+		const onPhone = () => {
+			if (phoneMq.matches) unlockRef.current();
+		};
+		const unlock = () => {
+			if (!lockedRef.current) return;
+			lockedRef.current = false;
+			delete html.dataset.heroLock;
+			document.removeEventListener("focusin", onFocus);
+			window.removeEventListener("scroll", onScroll);
+			phoneMq.removeEventListener("change", onPhone);
+		};
+		unlockRef.current = unlock;
+		document.addEventListener("focusin", onFocus);
+		window.addEventListener("scroll", onScroll, { passive: true });
+		phoneMq.addEventListener("change", onPhone);
+		return unlock;
+	}, [ready]);
+	// Opened: the page scrolls again.
+	useEffect(() => {
+		if (!folded) unlockRef.current();
+	}, [folded]);
 
 	/* ------------------------- Page-wide behaviour ------------------------ */
 
@@ -668,7 +734,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			ref={stageRef}
 			id="top"
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
-			// The whole sky opens the graph; keyboard users have the Open button.
+			// Folded, a click on the sun in the centre opens the graph; keyboard users have the Open button.
 		>
 			{/* Title first: on phones it sits above the sky panel, in reading order (it's absolutely placed on wider screens). */}
 			<div className={styles.intro}>

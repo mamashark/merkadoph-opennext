@@ -52,7 +52,7 @@
 }
 @media (prefers-color-scheme: dark) {
 	.root {
-		--night: #03051a;
+		--night: var(--hero-sky-night);
 		--night-2: #080c2a;
 		--night-3: #0b1030;
 		--ink: #f7f5ee;
@@ -146,8 +146,41 @@
 	isolation: isolate;
 	background: var(--night);
 }
-.folded {
+/* Folded: only the sun and its cue text are clickable (constellation/engine.ts, .sun-hit). */
+.folded :global(.sun-hit) {
 	cursor: pointer;
+}
+/* Light mode: the hero is a "dusk" sky, a lighter navy than dark mode's night (#03051A), with the night-sky colours
+   (Kay, 2026-11-24). The page below stays light. Contrast on #141B4A: text 15:1, muted 6.5:1, accents ≥ 4.8:1
+   (blue, red and coral brightened for the hover panel). Everything inside the stage, a Highlight's view included, uses these. */
+@media (prefers-color-scheme: light) {
+	.stage {
+		--night: var(--hero-sky-day);
+		--night-2: #1a2256;
+		--night-3: #202a63;
+		--ink: #f7f5ee;
+		--ink-2: #d9d5c7;
+		--muted: #a8a391;
+		/* Blue, red and coral are a little brighter than the night sky's, so text on the hover panel (#1A2155) and
+		   tiles (#202A63) passes 4.5:1 (Arvid, 2026-11-25): ≥ 4.59:1 on both. */
+		--blue: #7598ff;
+		--sun: #ffcc3f;
+		--red: #f76a6e;
+		--coral: #f4703a;
+		--caramel: #c9935f;
+		--leaf: #19b796;
+		--orange: #f47e20;
+		--violet: #a98bff;
+		--tile-bg: #202a63;
+		--star: #a3a9d4;
+		--line: rgba(247, 245, 238, 0.14);
+		--line-2: rgba(247, 245, 238, 0.28);
+		--panel: rgba(26, 34, 86, 0.94);
+		--on-c: #03051a;
+		--shadow: rgba(0, 0, 0, 0.4);
+		color: var(--ink);
+		color-scheme: dark;
+	}
 }
 .graph {
 	position: absolute;
@@ -193,16 +226,24 @@
 	transition: stroke-opacity var(--dur-hover) ease-out;
 }
 /* The hovered / focused Highlight grows a little. */
-.graph :global(.hub) rect {
+.graph :global(.hub) rect:not(:global(.hit)) {
 	transform-box: fill-box;
 	transform-origin: center;
 	transition: transform var(--dur-hover) var(--ease-out);
 }
-.graph :global(.hub[data-hot]) rect {
+.graph :global(.hub[data-hot]) rect:not(:global(.hit)) {
 	transform: scale(1.3);
 }
 .graph text {
 	font-family: var(--font-mono);
+}
+/* Highlight labels: a halo in the sky colour, so lines and stars never run through the letters. (They're drawn in
+   their own layer above the photo tiles, constellation/engine.ts.) Phones use the panel colour, below. */
+.graph :global(.lbl) {
+	paint-order: stroke;
+	stroke: var(--night);
+	stroke-width: 4px;
+	stroke-linejoin: round;
 }
 .graph :global(.hub) {
 	cursor: pointer;

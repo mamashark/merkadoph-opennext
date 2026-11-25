@@ -50,6 +50,9 @@ export type MountOptions = {
 	onItemActivate?: (item: ConstellationItem) => boolean;
 	/** A top-right box (px) that nodes stay out of, e.g. under the Open/Fold button, so nothing sits where it can't be tapped. */
 	keepClear?: { width: number; height: number };
+	/** A box in the graph's own px (e.g. the hero title) that categories, labels and tiles stay out of. Read on every
+	 *  (re)build; null = none. */
+	avoid?: () => { left: number; top: number; right: number; bottom: number } | null;
 };
 
 export type ConstellationEngine = {
@@ -143,6 +146,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 
 		const css = getComputedStyle(stage);
 		const C = (n: string) => css.getPropertyValue(n).trim();
+		const AVOID = o.avoid?.() ?? null;
 		const INK = C("--ink"), BLUE = C("--blue"), SUN = C("--sun"), MUTED = C("--muted");
 		const TILE_BG = C("--tile-bg"), STAR = C("--star"), FONT_DISPLAY = C("--font-display");
 
@@ -326,6 +330,9 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		}
 		center.append("circle").attr("r", 7).attr("fill", "none").attr("stroke", SUN).attr("stroke-width", 1.5);
 		const coreDot = center.append("circle").attr("r", folded ? 3 : 0).attr("fill", SUN);
+		// Click target while folded: the sun and its cue text below it. Only a click here opens the sky (Kay, 2026-11-24).
+		center.append("circle").attr("class", "sun-hit").attr("r", 34).attr("fill", "transparent");
+		center.append("rect").attr("class", "sun-hit").attr("x", -170).attr("y", 30).attr("width", 340).attr("height", 52).attr("fill", "transparent");
 		const cue = center.append("text").attr("y", 48).attr("text-anchor", "middle").attr("opacity", folded ? 1 : 0);
 		const cueQuote = cue.append("tspan").attr("x", 0)
 			.attr("font-family", FONT_DISPLAY).attr("font-size", small ? 13 : 15).attr("fill", INK);
@@ -382,8 +389,19 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				.attr("height", (d) => (d.lines?.length ?? 1) * 15 + 14).attr("fill", "transparent");
 		}
 		hubs.append("rect").attr("x", -5).attr("y", -5).attr("width", 10).attr("height", 10).attr("fill", (d) => d.color ?? BLUE);
+		// Labels live in their own layer above every node (below), so photo tiles and lines never cover them. It's
+		// aria-hidden: each hub already carries its name in aria-label, and DOM order (= tab order) stays hub → its tiles.
+		const labelLayer = root.append("g").attr("aria-hidden", "true").attr("pointer-events", "none");
+		const labelSel = labelLayer.selectAll<SVGGElement, GNode>("g").data(nodes.filter((d) => d.kind === "hub")).join("g")
+			// data-hub pairs each label with its category (tests/e2e/constellation.spec.ts reads it).
+			.attr("data-hub", (d) => d.hub ?? null)
+			.attr("opacity", (d) => (d.shown ? 1 : 0));
+		const labelsOf = (sel: typeof nodeSel) => {
+			const ids = new Set(sel.data().map((d) => d.id));
+			return labelSel.filter((d) => ids.has(d.id));
+		};
 		if (phone) {
-			const label = hubs.append("text").attr("class", "lbl").attr("text-anchor", "middle").attr("fill", INK).attr("font-size", 12);
+			const label = labelSel.append("text").attr("class", "lbl").attr("text-anchor", "middle").attr("fill", INK).attr("font-size", 12);
 			label.each(function (d) {
 				const t = select(this);
 				(d.lines ?? [d.label ?? ""]).forEach((line, k, all) => {
@@ -392,7 +410,10 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				});
 			});
 		} else {
-			const label = hubs.append("text").attr("x", LABEL_X).attr("y", LABEL_Y).attr("fill", INK).attr("font-size", labelPx);
+			// The label's area stays part of the hub's target (hover, click), as when the text sat inside it.
+			hubs.append("rect").attr("class", "hit").attr("x", LABEL_X - 3).attr("y", LBL_TOP - 3)
+				.attr("width", (d) => (d.reach ?? LABEL_X) - LABEL_X + 6).attr("height", LBL_BOTTOM - LBL_TOP + 6).attr("fill", "transparent");
+			const label = labelSel.append("text").attr("class", "lbl").attr("x", LABEL_X).attr("y", LABEL_Y).attr("fill", INK).attr("font-size", labelPx);
 			label.append("tspan").text((d) => d.label ?? "");
 			label.append("tspan").attr("dx", LABEL_DX).attr("dy", COUNT_DY).attr("font-size", countPx).attr("fill", MUTED).text((d) => d.count ?? "");
 		}
@@ -410,12 +431,15 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 				if (crossLit(l)) reached.add(src(l)).add(tgt(l));
 			});
 			linkSel.attr("stroke-opacity", (l) => (!linkShown(l) ? 0 : l.hub === h.hub ? 0.95 : crossLit(l) ? 0.6 : 0.04));
-			nodeSel.attr("opacity", (n) => (!n.shown ? 0 : n.kind === "center" || lit.has(n) ? 1 : reached.has(n) ? 0.75 : 0.15));
+			const spot = (n: GNode) => (!n.shown ? 0 : n.kind === "center" || lit.has(n) ? 1 : reached.has(n) ? 0.75 : 0.15);
+			nodeSel.attr("opacity", spot);
+			labelSel.attr("opacity", spot);
 			hubs.attr("data-hot", (n) => (n === h ? "" : null));
 		};
 		const reset = () => {
 			linkSel.attr("stroke-opacity", (l) => (linkShown(l) ? baseOp(l) : 0));
 			nodeSel.attr("opacity", (n) => (n.shown ? 1 : 0));
+			labelSel.attr("opacity", (n) => (n.shown ? 1 : 0));
 			hubs.attr("data-hot", null);
 		};
 		let dragging = false;
@@ -504,6 +528,18 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			let py = clamp(y, n.kind === "hub" ? 40 : 16, height - 16);
 			const k = o.keepClear, below = k ? k.height + (n.kind === "hub" ? Math.ceil(-LBL_TOP) + 2 : 16) : 0;
 			if (k && n.kind !== "center" && px + reachRight(n) > width - k.width && py < below) py = below;
+			// Out of the title (AVOID): its square, label or tile may not overlap it. Move up or right, whichever is
+			// the shorter way, as long as that stays on screen.
+			if (AVOID && n.kind !== "center") {
+				// Extents around the node's centre: below, left and above (a category: its 22px square and the label over it).
+				const M = 12, up = n.kind === "hub" ? Math.max(11, LBL_BOTTOM) : 16, left = n.kind === "hub" ? 11 : 16, top = n.kind === "hub" ? Math.max(11, -LBL_TOP) : 16;
+				if (px + reachRight(n) > AVOID.left - M && px - left < AVOID.right + M && py + up > AVOID.top - M && py - top < AVOID.bottom + M) {
+					const toTop = AVOID.top - M - up, toRight = AVOID.right + M + left;
+					const canRight = toRight + reachRight(n) <= width - 16;
+					if (canRight && toRight - px < py - toTop) return { x: toRight, y: py };
+					return { x: px, y: Math.max(toTop, n.kind === "hub" ? 40 : 16) };
+				}
+			}
 			return { x: px, y: py };
 		};
 
@@ -586,6 +622,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			linkSel.attr("x1", (d) => src(d).x ?? 0).attr("y1", (d) => src(d).y ?? 0)
 				.attr("x2", (d) => tgt(d).x ?? 0).attr("y2", (d) => tgt(d).y ?? 0);
 			nodeSel.attr("transform", (d) => `translate(${d.x},${d.y})`);
+			labelSel.attr("transform", (d) => `translate(${d.x},${d.y})`);
 		};
 		s.on("tick", render);
 
@@ -637,6 +674,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 					const t = reduceMotion ? 0 : 500;
 					const sel = nodeSel.filter(mine);
 					sel.attr("pointer-events", null).transition().duration(t).attr("opacity", 1);
+					labelsOf(sel).transition().duration(t).attr("opacity", 1);
 					setReachable(sel, true);
 					linkSel.filter((l) => linkShown(l)).transition().duration(t).attr("stroke-opacity", baseOp);
 					if (reduceMotion) {
@@ -658,6 +696,7 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 			const dur = reduceMotion ? 0 : 750;
 			const others = nodeSel.filter((n) => n.kind !== "center");
 			others.attr("pointer-events", "none").transition().duration(dur).attr("opacity", 0);
+			labelSel.transition().duration(dur).attr("opacity", 0);
 			setReachable(others, false);
 			linkSel.transition().duration(dur * 0.6).attr("stroke-opacity", 0);
 			s.alphaTarget(0.3).restart();
@@ -718,9 +757,11 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		else api.unfold();
 	};
 
+	/** Folded: only a click on the sun (or its cue text) opens the sky; clicks elsewhere do nothing. */
 	const onStageClick = (e: MouseEvent) => {
-		if ((e.target as Element).closest("button, a, [data-no-unfold]")) return;
-		if (folded) setFolded(false);
+		const t = e.target as Element;
+		if (t.closest("button, a, [data-no-unfold]")) return;
+		if (folded && t.closest(".sun-hit")) setFolded(false);
 	};
 	let resizeT: ReturnType<typeof setTimeout> | undefined;
 	let lastWidth = svgEl.getBoundingClientRect().width;

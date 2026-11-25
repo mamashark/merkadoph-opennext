@@ -148,9 +148,9 @@ export async function SiteShell({
 							© {new Date().getFullYear()} {seo.legal_name || seo.business_name}. All rights reserved.
 						</p>
 						<p className="font-medium text-site-ink-2">Merkado PH: Ang Bagong Yugto</p>
-						{/* Site credit (CLAUDE.md "Design & build KLA"), linking to the public case study (Kay, 2026-11-25). */}
+						{/* Site credit ("Designed & built by KLA", Kay 2026-11-25), linking to the public case study (Kay, 2026-11-25). */}
 						<p>
-							Design &amp; build KLA ·{" "}
+							Designed &amp; built by KLA ·{" "}
 							<Link href="/case-study" className="text-site-ink-2 underline decoration-site-line-2 underline-offset-4 hover:text-site-ink hover:decoration-current">
 								How this site was built
 							</Link>

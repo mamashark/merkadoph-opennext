@@ -25,7 +25,7 @@ export const caseStudy = {
 		"Merkado PH started as a Filipino grocery shop and community hub in Gothenburg. When the groceries moved to a partner store, the business needed a new home for everything else: community events, stories, a record of its community work and three smaller business lines. I designed and built this site to replace the old Shopify store.",
 
 	facts: [
-		{ label: "Role", value: "Design & build (KLA)" },
+		{ label: "Role", value: "Designed & built by KLA" },
 		{ label: "Timeline", value: "Oct 2026 – ongoing" },
 		{ label: "Stack", value: "Next.js 16 · Cloudflare · Supabase" },
 		{ label: "Hosting", value: "About $5 a month" },

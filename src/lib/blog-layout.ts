@@ -45,6 +45,9 @@ export const PROBLEM_PART: Record<PublishProblem, "layout" | "row" | "video"> = 
 };
 export const PART_LABEL = { layout: "the layout photos", row: "the photo row", video: "the video" } as const;
 
+/** Drops only the blank lines around a text part; leading spaces stay, so an indented code block keeps its indent. */
+const trimBlankLines = (text: string) => text.replace(/^(\s*\n)+/, "").trimEnd();
+
 /** A part of the article, in reading order. */
 export type BodyPart = { kind: "text"; text: string } | { kind: "photos" } | { kind: "slideshow" };
 
@@ -90,7 +93,7 @@ export function splitBody(content: string, opts: { pair: boolean; slideshow: boo
 	let buf: string[] = [];
 	const inFence = fenceTracker();
 	const flush = () => {
-		const text = buf.join("\n").trim();
+		const text = trimBlankLines(buf.join("\n"));
 		if (text) parts.push({ kind: "text", text });
 		buf = [];
 	};
@@ -150,7 +153,7 @@ function insertHalfway(parts: BodyPart[]) {
 			parts.splice(i + 1, 0, { kind: "photos" });
 			return;
 		}
-		const before = lines.slice(0, best).join("\n").trim(), after = lines.slice(best).join("\n").trim();
+		const before = trimBlankLines(lines.slice(0, best).join("\n")), after = trimBlankLines(lines.slice(best).join("\n"));
 		parts.splice(i, 1, ...([{ kind: "text", text: before }, { kind: "photos" }, { kind: "text", text: after }] as BodyPart[]).filter((x) => x.kind !== "text" || x.text));
 		return;
 	}

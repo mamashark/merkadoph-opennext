@@ -19,8 +19,8 @@ export default async function EditBlogPage({ params, searchParams }: PageProps<"
 	const { id } = await params;
 	const { notice, kept, problems } = await searchParams;
 	const list = (v: unknown) => (typeof v === "string" ? v.split(",") : []);
-	const problemText = list(problems).filter((p): p is PublishProblem => p in PUBLISH_PROBLEMS).map((p) => PUBLISH_PROBLEMS[p]).join(" ");
-	const keptParts = list(kept).filter((k): k is keyof typeof PART_LABEL => k in PART_LABEL).map((k) => PART_LABEL[k]);
+	const problemText = list(problems).filter((p): p is PublishProblem => Object.hasOwn(PUBLISH_PROBLEMS, p)).map((p) => PUBLISH_PROBLEMS[p]).join(" ");
+	const keptParts = list(kept).filter((k): k is keyof typeof PART_LABEL => Object.hasOwn(PART_LABEL, k)).map((k) => PART_LABEL[k]);
 	// Fixed messages only (never free text from the URL).
 	const error = !problemText
 		? undefined

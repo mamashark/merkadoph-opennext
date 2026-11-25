@@ -38,7 +38,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 	const filterParams = { ...(when === "past" ? { when } : {}), ...(tag ? { tag } : {}) };
 
 	return (
-		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-events mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="Events" title="Kita-kits sa Merkado" description={description} />
 
 			<LinkTabs
@@ -105,7 +105,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 						))}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={EVENTS_PER_PAGE} total={total} basePath="/events" params={filterParams} />
+						<Pagination tone="site" page={page} perPage={EVENTS_PER_PAGE} total={total} basePath="/events" params={filterParams} />
 					</div>
 				</>
 			)}

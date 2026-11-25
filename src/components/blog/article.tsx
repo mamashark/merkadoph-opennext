@@ -17,27 +17,27 @@ const COLUMN = "mx-auto w-full max-w-[42rem] px-4 sm:px-8";
 export function ArticleHeader({ kicker, title, dek, children }: { kicker?: string | null; title: string; dek?: string | null; children?: React.ReactNode }) {
 	return (
 		<header className={`${COLUMN} pt-8 pb-7 sm:pt-14`}>
-			<Link href="/blogs" className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-stone-600 hover:text-stone-950 dark:text-stone-400 dark:hover:text-white">
+			<Link href="/blogs" className="inline-flex min-h-11 items-center gap-1.5 font-label text-xs font-medium tracking-[0.14em] text-site-muted uppercase hover:text-site-ink">
 				<ArrowLeft className="h-4 w-4" aria-hidden /> All stories
 			</Link>
-			{kicker && <p className={`${MONO} mt-6 mb-3.5 text-xs font-medium tracking-[0.14em] text-teal-800 uppercase dark:text-teal-300`}>{kicker}</p>}
-			<h1 className={`${kicker ? "" : "mt-6 "}text-[clamp(2rem,7vw,3.75rem)] leading-[1.04] font-bold tracking-tight text-balance text-stone-900 dark:text-white`}>{title}</h1>
-			{dek && <p className="mt-4 text-lg leading-snug text-stone-600 sm:text-[1.375rem] dark:text-stone-400">{dek}</p>}
-			{children && <div className={`${MONO} mt-5 text-[13px] text-stone-600 dark:text-stone-400`}>{children}</div>}
+			{kicker && <p className={`${MONO} kicker-mark mt-6 mb-3.5 text-xs font-medium tracking-[0.14em] text-accent uppercase`}>{kicker}</p>}
+			<h1 className={`${kicker ? "" : "mt-6 "}text-[clamp(2rem,7vw,3.75rem)] leading-[1.04] font-bold tracking-tight text-balance text-site-ink`}>{title}</h1>
+			{dek && <p className="mt-4 text-lg leading-snug text-site-ink-2 sm:text-[1.375rem]">{dek}</p>}
+			{children && <div className={`${MONO} mt-5 text-[13px] text-site-muted`}>{children}</div>}
 		</header>
 	);
 }
 
 function Caption({ text, wide = false }: { text?: string | null; wide?: boolean }) {
 	if (!text) return null;
-	return <figcaption className={`px-4 pt-2.5 text-sm leading-normal text-stone-600 sm:px-8 dark:text-stone-400 ${wide ? "mx-auto max-w-6xl" : ""}`}>{text}</figcaption>;
+	return <figcaption className={`px-4 pt-2.5 text-sm leading-normal text-site-muted sm:px-8 ${wide ? "mx-auto max-w-6xl" : ""}`}>{text}</figcaption>;
 }
 
 /** Layout A: one photo, edge to edge under the title (16:8; 4:3 on phones). It's the page's largest paint, so it loads first. */
 export function HeaderPhoto({ photo }: { photo: BlogPhoto }) {
 	return (
 		<figure className="m-0 w-full">
-			<div className="relative aspect-[4/3] w-full bg-stone-200 sm:aspect-[16/8] dark:bg-stone-800">
+			<div className="relative aspect-[4/3] w-full bg-site-sunken sm:aspect-[16/8]">
 				<Image src={photo.url} alt={photo.alt} fill loading="eager" fetchPriority="high" sizes="100vw" className="object-cover" />
 			</div>
 			<Caption text={photo.caption} wide />
@@ -52,7 +52,7 @@ export function PhotoPair({ photos }: { photos: BlogPhoto[] }) {
 		<div role="group" aria-label="Two photos" className="mt-11 grid gap-5 sm:grid-cols-2 sm:gap-1">
 			{photos.slice(0, 2).map((p, i) => (
 				<figure key={`${p.url}-${i}`} className="m-0">
-					<div className="relative aspect-[4/3] w-full bg-stone-200 sm:aspect-[4/5] dark:bg-stone-800">
+					<div className="relative aspect-[4/3] w-full bg-site-sunken sm:aspect-[4/5]">
 						<Image src={p.url} alt={p.alt} fill sizes="(min-width: 640px) 50vw, 100vw" className="object-cover" />
 					</div>
 					<Caption text={p.caption} />

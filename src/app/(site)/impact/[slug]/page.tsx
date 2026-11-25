@@ -49,7 +49,7 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/impac
 	const date = project.completed_on ? formatDate(project.completed_on, { day: "numeric", month: "long", year: "numeric" }) : null;
 
 	return (
-		<main>
+		<main className="accent-impact">
 			<JsonLd
 				data={[
 					{
@@ -109,7 +109,7 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/impac
 			{related.length > 0 && (
 				<section aria-labelledby="more-projects" className="mx-auto max-w-6xl border-t border-amber-900/10 px-4 py-12 dark:border-white/10 sm:px-6">
 					<div className="flex flex-wrap items-baseline justify-between gap-3">
-						<h2 id="more-projects" className="text-2xl font-semibold tracking-tight text-stone-950 dark:text-white">
+						<h2 id="more-projects" className="text-2xl font-semibold tracking-tight text-site-ink">
 							{sameEvent.length ? "The same event in other years" : "More from Community Impact"}
 						</h2>
 						{year && (

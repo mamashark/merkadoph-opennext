@@ -144,7 +144,7 @@ export function PhotoTable({ images, title, priorityFirst = false }: { images: P
 						<button type="button" onClick={() => deal(-1)} aria-label="Previous photo" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 text-stone-800 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800">
 							<ChevronLeft className="h-5 w-5" aria-hidden />
 						</button>
-						<p className="min-w-16 text-center text-sm tabular-nums text-stone-700 dark:text-stone-300" aria-live="polite">
+						<p className="min-w-16 text-center text-sm tabular-nums text-site-ink-2" aria-live="polite">
 							{top + 1} / {n}
 						</p>
 						<button type="button" onClick={() => deal(1)} aria-label="Next photo" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-teal-700 px-5 text-sm font-semibold text-white hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 dark:bg-teal-500 dark:text-stone-950 dark:hover:bg-teal-400">

@@ -48,9 +48,9 @@ export function HighlightsMenu({ shop = false }: { shop?: boolean }) {
 		<details ref={ref} className="group relative">
 			<summary
 				className={cn(
-					"flex min-h-10 cursor-pointer list-none items-center gap-1.5 rounded-lg border px-3 text-sm font-medium transition-colors [&::-webkit-details-marker]:hidden",
-					"border-transparent text-stone-800 hover:border-stone-900/15 dark:text-stone-200 dark:hover:border-white/20",
-					"group-open:border-stone-900/20 group-open:bg-white group-open:text-stone-950 dark:group-open:border-white/25 dark:group-open:bg-stone-900 dark:group-open:text-white",
+					"flex min-h-10 cursor-pointer list-none items-center gap-1.5 border px-3 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors [&::-webkit-details-marker]:hidden",
+					"border-transparent text-site-ink hover:border-site-line-2",
+					"group-open:border-site-line-2 group-open:bg-site-surface",
 				)}
 			>
 				Highlights
@@ -58,34 +58,34 @@ export function HighlightsMenu({ shop = false }: { shop?: boolean }) {
 				<ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" aria-hidden />
 			</summary>
 			{/* Phones: full width under the header. Larger screens: a panel under the button. */}
-			<div className="fixed inset-x-4 top-16 z-40 overflow-hidden sm:absolute sm:inset-x-auto sm:left-0 sm:top-full sm:mt-2 sm:w-[22rem] rounded-xl border border-stone-900/10 bg-white text-stone-900 shadow-xl dark:border-white/10 dark:bg-stone-900 dark:text-stone-100">
+			<div className="fixed inset-x-4 top-16 z-40 overflow-hidden border border-site-line-2 bg-site-surface text-site-ink shadow-xl sm:absolute sm:inset-x-auto sm:top-full sm:left-0 sm:mt-2 sm:w-[22rem]">
 				<ul>
 					{items.map((i) => {
 						const active = i === current;
 						return (
-							<li key={i.href} className="border-b border-stone-900/5 dark:border-white/5">
+							<li key={i.href} className="border-b border-site-line">
 								<Link
 									href={i.href}
 									aria-current={active ? "page" : undefined}
 									className={cn(
-										"flex items-center gap-3 px-4 py-2.5 hover:bg-stone-900/[0.04] focus-visible:bg-stone-900/[0.06] focus-visible:outline-none dark:hover:bg-white/5 dark:focus-visible:bg-white/10",
-										active && "bg-stone-900/[0.04] dark:bg-white/5",
+										"flex items-center gap-3 px-4 py-2.5 hover:bg-site-sunken focus-visible:bg-site-sunken focus-visible:outline-none",
+										active && "bg-site-sunken",
 									)}
 								>
 									<span className={cn("h-3 w-3 shrink-0", i.swatch)} aria-hidden />
 									<span className="min-w-0">
-										<span className="block text-sm font-semibold leading-tight">
+										<span className="block font-display text-sm leading-tight font-bold">
 											{i.label}
-											{active && <span className="ml-2 text-xs font-normal text-stone-600 dark:text-stone-400">You&rsquo;re here</span>}
+											{active && <span className="ml-2 font-label text-xs font-normal tracking-wide text-site-muted uppercase">You&rsquo;re here</span>}
 										</span>
-										<span className="block truncate text-xs text-stone-600 dark:text-stone-400">{i.sub}</span>
+										<span className="block truncate text-xs text-site-muted">{i.sub}</span>
 									</span>
 								</Link>
 							</li>
 						);
 					})}
 				</ul>
-				<Link href="/#index" className="flex items-center justify-center gap-1.5 px-4 py-3 text-sm font-semibold hover:bg-stone-900/[0.04] dark:hover:bg-white/5">
+				<Link href="/#index" className="flex items-center justify-center gap-1.5 px-4 py-3 font-label text-xs font-medium tracking-[0.1em] uppercase hover:bg-site-sunken">
 					View all highlights <ArrowUpRight className="h-4 w-4" aria-hidden />
 				</Link>
 			</div>

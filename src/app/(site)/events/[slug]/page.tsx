@@ -40,7 +40,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 	const past = isPastEvent(event);
 
 	return (
-		<main>
+		<main className="accent-events">
 			<JsonLd
 				data={[
 					{
@@ -83,7 +83,7 @@ export default async function EventPage({ params }: PageProps<"/events/[slug]">)
 							value: event.venue_name ? (
 								<>
 									{event.venue_name}
-									{event.venue_address && <span className="block font-normal text-stone-600 dark:text-stone-400">{event.venue_address}</span>}
+									{event.venue_address && <span className="block font-normal text-site-muted">{event.venue_address}</span>}
 								</>
 							) : null,
 						},

@@ -67,14 +67,14 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 	if (!photos.length) return null;
 
 	const roundBtn =
-		"grid h-11 w-11 place-items-center rounded-full bg-stone-200/80 text-stone-900 transition hover:bg-stone-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 disabled:cursor-default disabled:bg-stone-100 disabled:text-stone-400 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700 dark:focus-visible:outline-teal-300 dark:disabled:bg-stone-900 dark:disabled:text-stone-600";
+		"grid h-11 w-11 place-items-center rounded-full border border-site-line-2 bg-site-surface text-site-ink transition hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-40 disabled:hover:border-site-line-2 disabled:hover:text-site-ink";
 
 	return (
 		<section aria-labelledby={headingId} className="mx-auto mt-14 w-full max-w-6xl px-4 sm:px-8">
 			<div className="mb-5 flex items-end justify-between gap-4">
-				<h2 id={headingId} className="text-2xl font-semibold tracking-tight text-stone-900 sm:text-3xl dark:text-white">
+				<h2 id={headingId} className="font-display text-2xl font-bold tracking-tight text-site-ink sm:text-3xl">
 					{heading}
-					<span className={`${MONO} ml-2 align-middle text-sm font-normal text-stone-600 dark:text-stone-400`}>{photos.length}</span>
+					<span className={`${MONO} ml-2 align-middle text-sm font-normal text-site-muted`}>{photos.length}</span>
 				</h2>
 				{photos.length > 1 && (
 					<div className="flex shrink-0 gap-3">
@@ -99,20 +99,20 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 					e.preventDefault();
 					goTo(to);
 				}}
-				className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth scrollbar-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700 motion-reduce:scroll-auto dark:focus-visible:outline-teal-300 [&::-webkit-scrollbar]:hidden"
+				className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain scroll-smooth scrollbar-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent motion-reduce:scroll-auto [&::-webkit-scrollbar]:hidden"
 			>
 				{photos.map((p, i) => (
 					<li key={`${p.url}-${i}`} className="w-[85%] shrink-0 snap-start sm:w-[calc((100%-0.75rem)/2)] lg:w-[calc((100%-1.5rem)/3)]">
 						<figure className="m-0">
-							<div className="relative aspect-3/2 overflow-hidden bg-stone-200 dark:bg-stone-800">
+							<div className="relative aspect-3/2 overflow-hidden bg-site-sunken">
 								{/* Alt may be empty when the caption below already describes the photo (approved rule). */}
 								<Image src={p.url} alt={p.alt} fill sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 85vw" className="object-cover" />
 							</div>
 							<figcaption>
-								<span className={`${MONO} mt-3 block text-xs text-stone-600 dark:text-stone-400`}>
+								<span className={`${MONO} mt-3 block text-xs text-site-muted`}>
 									{pad(i + 1)} / {pad(photos.length)}
 								</span>
-								<span className="mt-1 block text-base leading-snug font-medium text-stone-900 sm:text-lg dark:text-white">{p.caption}</span>
+								<span className="mt-1 block font-display text-base leading-snug font-bold text-site-ink sm:text-lg">{p.caption}</span>
 							</figcaption>
 						</figure>
 					</li>
@@ -120,8 +120,8 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 			</ul>
 
 			{photos.length > 1 && (
-				<div className="mt-6 h-1 overflow-hidden rounded-full bg-stone-200 dark:bg-stone-800" aria-hidden>
-					<div className="h-full rounded-full bg-stone-700 transition-[margin] duration-150 dark:bg-stone-300" style={{ width: `${bar.width}%`, marginLeft: `${bar.left}%` }} />
+				<div className="mt-6 h-1 overflow-hidden rounded-full bg-site-sunken" aria-hidden>
+					<div className="h-full rounded-full bg-site-ink transition-[margin] duration-150" style={{ width: `${bar.width}%`, marginLeft: `${bar.left}%` }} />
 				</div>
 			)}
 		</section>

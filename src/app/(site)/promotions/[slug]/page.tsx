@@ -42,7 +42,7 @@ export default async function PromotionPage({ params }: PageProps<"/promotions/[
 	const terms = promo.terms?.split(/\r?\n/).map((t) => t.replace(/^[-•*]\s*/, "").trim()).filter(Boolean) ?? [];
 
 	return (
-		<main>
+		<main className="accent-promotions">
 			<JsonLd
 				data={[
 					{
@@ -96,10 +96,10 @@ export default async function PromotionPage({ params }: PageProps<"/promotions/[
 
 				{terms.length > 0 && (
 					<section aria-labelledby="terms-heading" className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
-						<h2 id="terms-heading" className="text-lg font-semibold text-stone-900 dark:text-white">
+						<h2 id="terms-heading" className="text-lg font-semibold text-site-ink">
 							Terms &amp; conditions
 						</h2>
-						<ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-stone-700 dark:text-stone-300">
+						<ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-site-ink-2">
 							{terms.map((t, i) => (
 								<li key={i}>{t}</li>
 							))}

@@ -45,19 +45,19 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 	if (page > 1 && shown === 0) notFound();
 
 	return (
-		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-bulletin mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="Bulletin Board" title="Mga Paalala" description={description} />
 
 			{EMBASSY_LINKS.length > 0 && (
-				<aside aria-labelledby="embassy-title" className="mb-10 rounded-2xl border border-stone-200 p-5 dark:border-stone-800">
-					<h2 id="embassy-title" className="font-semibold text-stone-900 dark:text-white">
+				<aside aria-labelledby="embassy-title" className="mb-10 border border-stone-200 p-5 dark:border-stone-800">
+					<h2 id="embassy-title" className="font-semibold text-site-ink">
 						Philippine Embassy in Sweden
 					</h2>
-					<p className="mt-1 text-sm text-stone-700 dark:text-stone-300">For consular services and official announcements, always check the Embassy&rsquo;s own channels.</p>
+					<p className="mt-1 text-sm text-site-ink-2">For consular services and official announcements, always check the Embassy&rsquo;s own channels.</p>
 					<ul className="mt-3 flex flex-wrap gap-3">
 						{EMBASSY_LINKS.map((l) => (
 							<li key={l.href}>
-								<a href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-lg border border-stone-300 px-4 text-sm font-semibold hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800">
+								<a href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center border border-stone-300 px-4 text-sm font-semibold hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800">
 									{l.label} ↗<span className="sr-only"> (opens in a new tab)</span>
 								</a>
 							</li>
@@ -78,7 +78,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 
 			{notices && (
 				<section aria-labelledby="notices-title" className="mt-8">
-					<h2 id="notices-title" className="text-2xl font-semibold tracking-tight text-stone-900 dark:text-white">
+					<h2 id="notices-title" className="text-2xl font-semibold tracking-tight text-site-ink">
 						Notices
 					</h2>
 					{notices.blogs.length === 0 ? (
@@ -102,7 +102,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 							</div>
 							{show === "notices" ? (
 								<div className="mt-12">
-									<Pagination page={page} perPage={BLOGS_PER_PAGE} total={notices.total} basePath="/bulletin" params={{ show }} />
+									<Pagination tone="site" page={page} perPage={BLOGS_PER_PAGE} total={notices.total} basePath="/bulletin" params={{ show }} />
 								</div>
 							) : (
 								notices.total > notices.blogs.length && (
@@ -120,7 +120,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 
 			{offers && (
 				<section aria-labelledby="offers-title" className="mt-14">
-					<h2 id="offers-title" className="text-2xl font-semibold tracking-tight text-stone-900 dark:text-white">
+					<h2 id="offers-title" className="text-2xl font-semibold tracking-tight text-site-ink">
 						Offers from friends of Merkado PH
 					</h2>
 					{offers.promotions.length === 0 ? (
@@ -144,7 +144,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 							</div>
 							{show === "offers" ? (
 								<div className="mt-12">
-									<Pagination page={page} perPage={PROMOTIONS_PER_PAGE} total={offers.total} basePath="/bulletin" params={{ show }} />
+									<Pagination tone="site" page={page} perPage={PROMOTIONS_PER_PAGE} total={offers.total} basePath="/bulletin" params={{ show }} />
 								</div>
 							) : (
 								offers.total > offers.promotions.length && (

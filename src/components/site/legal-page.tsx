@@ -21,10 +21,12 @@ export async function LegalPage({ id }: { id: LegalPageId }) {
 	return (
 		<main>
 			<JsonLd data={breadcrumbs([{ name: "Home", path: "/" }, { name: title, path }])} />
-			<header className="mx-auto max-w-3xl px-4 pt-12 sm:px-6 sm:pt-16">
-				<h1 className="text-3xl font-semibold tracking-tight text-stone-950 dark:text-white sm:text-4xl">{title}</h1>
+			{/* Same header as the other detail pages: kicker, display title, Plex Mono date line, 42rem column. */}
+			<header className="mx-auto w-full max-w-[42rem] px-4 pt-10 sm:px-8 sm:pt-16">
+				<p className="kicker-mark font-label text-xs font-medium tracking-[0.14em] text-accent uppercase">Information</p>
+				<h1 className="mt-4 font-display text-[clamp(2.25rem,6vw,3.5rem)] leading-[1.04] font-bold tracking-tight text-site-ink">{title}</h1>
 				{page.updated_at && (
-					<p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
+					<p className="mt-4 font-label text-xs tracking-wide text-site-muted">
 						Last updated <time dateTime={page.updated_at}>{formatDate(page.updated_at)}</time>
 					</p>
 				)}

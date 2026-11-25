@@ -76,7 +76,9 @@ test.describe("1280px", () => {
 
 	test("a ?world= link is never locked", async ({ page }) => {
 		await page.goto("/?world=events", { waitUntil: "load" });
-		await page.waitForTimeout(3000);
+		// Wait until the Highlight's view is open (the sky's script has run), so the check can't pass too early.
+		await page.locator("#world-title").waitFor({ timeout: 60_000 });
+		await page.waitForTimeout(1000);
 		expect(await locked(page)).toBe(false);
 	});
 

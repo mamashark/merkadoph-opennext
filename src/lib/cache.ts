@@ -38,7 +38,7 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	},
 	blogs: {
 		label: "Blogs",
-		description: "Blog data, the blog list, every post page, the RSS feed and the Bulletin Board (notices are posts).",
+		description: "Blog data, the blog list, every post page, the RSS feed, the Bulletin Board (notices are posts) and Community Impact pages linked to a post.",
 		tags: ["blogs"],
 		paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }, { path: "/blogs/rss.xml" }, { path: "/bulletin" }],
 	},
@@ -57,7 +57,7 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	},
 	portfolio: {
 		label: "Community Impact",
-		description: "Project data, the /impact list, every project page and the homepage.",
+		description: "Project data, the /impact list, every project page, the homepage and blog posts that show a linked entry.",
 		tags: ["portfolio"],
 		paths: [{ path: "/impact" }, { path: "/impact/[slug]", type: "page" }, { path: "/" }],
 	},

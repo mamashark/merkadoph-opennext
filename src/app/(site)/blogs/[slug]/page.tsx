@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { getPublishedBlogBySlug, readingMinutes, summarize } from "@/lib/blogs";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
-import { BackFooter, Body, CoverFigure, DetailHeader } from "@/components/site/detail";
+import { entryYear, getImpactEntriesForBlog, portfolioCover } from "@/lib/portfolio";
+import { BackFooter, Body, Companion, CoverFigure, DetailHeader } from "@/components/site/detail";
 import { JsonLd } from "@/components/site/json-ld";
 
 // Cached as an ISR page; refreshed once a day or when the content is saved / purged in Admin → Cache.
@@ -36,6 +37,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 	if (!blog) notFound();
 
 	const path = `/blogs/${blog.slug}`;
+	const impact = await getImpactEntriesForBlog(blog.id).catch(() => []);
 	const edited = blog.published_at && new Date(blog.updated_at).getTime() - new Date(blog.published_at).getTime() > 24 * 3600 * 1000;
 
 	return (
@@ -89,6 +91,20 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 
 				<CoverFigure src={blog.cover_image_url} alt={blog.cover_image_alt || blog.title} caption={blog.cover_image_alt} />
 				<Body content={blog.content} />
+
+				<Companion
+					heading={impact.length > 1 ? "See the photos from these events" : "See the photos"}
+					items={impact.map((p) => {
+						const n = p.images?.length ?? 0;
+						return {
+							href: `/impact/${p.slug}`,
+							title: p.title,
+							excerpt: p.excerpt,
+							image: portfolioCover(p),
+							meta: ["Community Impact", entryYear(p), n ? `${n} photo${n === 1 ? "" : "s"}` : null].filter(Boolean).join(" · "),
+						};
+					})}
+				/>
 			</article>
 
 			<BackFooter href="/blogs" label="Back to all stories" />

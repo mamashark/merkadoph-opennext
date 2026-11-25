@@ -27,16 +27,39 @@ function read(formData: FormData) {
 	};
 }
 
-const qs = (params: Record<string, string>) => new URLSearchParams(params).toString();
+/**
+ * Create/edit form state. Errors come back through useActionState instead of the URL, so no email or
+ * free text ends up in the address bar, browser history or logs; what was typed (never the password) is kept.
+ */
+export type UserFormState = {
+	error?: string;
+	/** Success message after an edit (shown in the form; creating a user redirects to its page instead). */
+	notice?: string;
+	/** Changes on every save, so the form remounts with fresh values and an empty password field. */
+	savedAt?: number;
+	values?: { name: string; email: string; hasAccess: boolean };
+};
 
-export async function createUser(formData: FormData) {
+const SAVE_FAILED = "Couldn't save the user. Please try again, or check the Supabase status if it keeps happening.";
+
+/** Plain-English message for a Supabase Auth error; anything unexpected is logged on the server only. */
+function authErrorMessage(where: string, error: { code?: string; status?: number; message: string }): string {
+	if (error.code === "weak_password") return WEAK_PASSWORD;
+	if (error.code === "email_exists" || /already/i.test(error.message)) return "A user with this email already exists.";
+	if (error.code === "email_address_invalid") return "Enter a valid email address.";
+	// Code and status only: Supabase's message text could contain an email (Strict rule 11). Look it up in the Supabase logs.
+	console.error(`[admin/users] ${where}`, error.code ?? "unknown", error.status ?? "");
+	return SAVE_FAILED;
+}
+
+export async function createUser(_prev: UserFormState, formData: FormData): Promise<UserFormState> {
 	await requireAdmin();
 	const { name, email, password, hasAccess } = read(formData);
-	const fail = (error: string): never => redirect(`/admin/users/new?${qs({ error, name, email })}`);
+	const fail = (error: string): UserFormState => ({ error, values: { name, email, hasAccess } });
 
-	if (!EMAIL.test(email)) fail("Enter a valid email address.");
+	if (!EMAIL.test(email)) return fail("Enter a valid email address.");
 	const problem = passwordProblem(password);
-	if (problem) fail(problem);
+	if (problem) return fail(problem);
 
 	const { data, error } = await createAdminClient().auth.admin.createUser({
 		email,
@@ -45,23 +68,23 @@ export async function createUser(formData: FormData) {
 		user_metadata: { full_name: name },
 		app_metadata: { role: hasAccess ? ADMIN_ROLE : "none" },
 	});
-	if (error) fail(error.code === "weak_password" ? WEAK_PASSWORD : /already/i.test(error.message) ? "A user with this email already exists." : error.message);
+	if (error || !data.user) return fail(error ? authErrorMessage("createUser", error) : SAVE_FAILED);
 
 	revalidatePath("/admin/users");
-	await audit({ kind: "admin", action: "users.create", entity: "users", entityId: data.user!.id, summary: email, details: { adminAccess: hasAccess } });
-	redirect(`/admin/users/${data.user!.id}?notice=created`);
+	await audit({ kind: "admin", action: "users.create", entity: "users", entityId: data.user.id, summary: email, details: { adminAccess: hasAccess } });
+	redirect(`/admin/users/${data.user.id}?notice=created`);
 }
 
-export async function updateUser(formData: FormData) {
+export async function updateUser(_prev: UserFormState, formData: FormData): Promise<UserFormState> {
 	const me = await requireAdmin();
 	const id = String(formData.get("id") ?? "");
 	const { name, email, password, hasAccess } = read(formData);
-	const fail = (error: string): never => redirect(`/admin/users/${id}?${qs({ error })}`);
+	const fail = (error: string): UserFormState => ({ error, values: { name, email, hasAccess } });
 
-	if (!EMAIL.test(email)) fail("Enter a valid email address.");
+	if (!EMAIL.test(email)) return fail("Enter a valid email address.");
 	const problem = password ? passwordProblem(password) : null;
-	if (problem) fail(problem);
-	if (id === me.id && !hasAccess) fail("You can't remove your own admin access.");
+	if (problem) return fail(problem);
+	if (id === me.id && !hasAccess) return fail("You can't remove your own admin access.");
 
 	const { error } = await createAdminClient().auth.admin.updateUserById(id, {
 		email,
@@ -70,21 +93,25 @@ export async function updateUser(formData: FormData) {
 		app_metadata: { role: hasAccess ? ADMIN_ROLE : "none" },
 		...(password ? { password } : {}),
 	});
-	if (error) fail(error.code === "weak_password" ? WEAK_PASSWORD : error.message);
+	if (error) return fail(authErrorMessage("updateUser", error));
 
 	revalidatePath("/admin/users");
 	revalidatePath("/admin", "layout");
 	await audit({ kind: "admin", action: "users.update", entity: "users", entityId: id, summary: email, details: { adminAccess: hasAccess, passwordChanged: !!password } });
-	redirect(`/admin/users/${id}?notice=${password ? "password" : "saved"}`);
+	return { notice: password ? "Changes saved and password updated." : "Changes saved.", savedAt: Date.now() };
 }
 
 export async function deleteUser(formData: FormData) {
 	const me = await requireAdmin();
 	const id = String(formData.get("id") ?? "");
-	if (id === me.id) redirect(`/admin/users?${qs({ error: "You can't delete your own account." })}`);
+	// Only short codes go in the URL; the page maps them to text (DELETE_ERRORS), so a crafted link can't show made-up messages.
+	if (id === me.id) redirect("/admin/users?error=delete-self");
 
 	const { error } = await createAdminClient().auth.admin.deleteUser(id);
-	if (error) redirect(`/admin/users?${qs({ error: error.message })}`);
+	if (error) {
+		console.error("[admin/users] deleteUser", error.code ?? "unknown", error.status ?? "");
+		redirect("/admin/users?error=delete-failed");
+	}
 
 	revalidatePath("/admin/users");
 	await audit({ kind: "admin", action: "users.delete", entity: "users", entityId: id });

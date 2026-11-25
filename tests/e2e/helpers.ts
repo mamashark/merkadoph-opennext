@@ -18,6 +18,19 @@ export function watchErrors(page: Page) {
 export const hasHorizontalScroll = (page: Page) =>
 	page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
 
+/**
+ * The homepage's first screen is the folded sky alone: on a fresh visit (wider screens) the page doesn't scroll until
+ * the visitor opens the sky (Kay, 2026-11-24; highlights-stage.tsx, html[data-hero-lock]). Opens it like a visitor
+ * would (the Open button) when the lock is on, and waits until the page scrolls again. No-op when it isn't locked.
+ */
+export async function openHero(page: Page) {
+	// The lock is applied once the constellation script is ready, so wait for the Open button first.
+	await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+	if (!(await page.evaluate(() => "heroLock" in document.documentElement.dataset))) return;
+	await page.getByRole("button", { name: "Open", exact: true }).click();
+	await page.waitForFunction(() => !("heroLock" in document.documentElement.dataset), undefined, { timeout: 10_000 });
+}
+
 /** Opens the constellation (the "Open" button) and waits until the categories ("hubs") are laid out. */
 export async function openConstellation(page: Page) {
 	await page.goto("/", { waitUntil: "load" });
@@ -49,8 +62,9 @@ export async function hubPoint(page: Page, id: string) {
 
 export const worldOf = (page: Page) => new URL(page.url()).searchParams.get("world");
 
-/** Scrolls like a visitor (small steps) until the band's top is near the viewport top. */
+/** Scrolls like a visitor (small steps) until the band's top is near the viewport top. Opens the hero first, as a visitor must. */
 export async function scrollToBand(page: Page, id: string) {
+	await openHero(page);
 	for (let i = 0; i < 400; i++) {
 		const t = await page.evaluate((id) => document.getElementById(id)?.getBoundingClientRect().top ?? null, id);
 		if (t !== null && t <= 120) break;

@@ -393,6 +393,8 @@ export function mountConstellation(o: MountOptions): ConstellationEngine {
 		// aria-hidden: each hub already carries its name in aria-label, and DOM order (= tab order) stays hub → its tiles.
 		const labelLayer = root.append("g").attr("aria-hidden", "true").attr("pointer-events", "none");
 		const labelSel = labelLayer.selectAll<SVGGElement, GNode>("g").data(nodes.filter((d) => d.kind === "hub")).join("g")
+			// data-hub pairs each label with its category (tests/e2e/constellation.spec.ts reads it).
+			.attr("data-hub", (d) => d.hub ?? null)
 			.attr("opacity", (d) => (d.shown ? 1 : 0));
 		const labelsOf = (sel: typeof nodeSel) => {
 			const ids = new Set(sel.data().map((d) => d.id));

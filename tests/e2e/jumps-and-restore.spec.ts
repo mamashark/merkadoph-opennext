@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { scrollToBand, settledBandTop, watchErrors } from "./helpers";
+import { openHero, scrollToBand, settledBandTop, watchErrors } from "./helpers";
 
 // B28: in-page jumps land at the 64px scroll margin. B29: Back and reload restore the scroll position.
 for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
@@ -24,8 +24,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
 				expect(top, `dive ${id}`).toBeGreaterThanOrEqual(62);
 				expect(top, `dive ${id}`).toBeLessThanOrEqual(66);
 			}
-			// The header "Contact" link.
+			// The header "Contact" link. The page scrolls only once the sky is open (hero-first lock), so open it first.
 			await page.goto("/", { waitUntil: "load" });
+			await openHero(page);
 			await page.waitForTimeout(1500);
 			// The header hides while the page is at the top or scrolling down, and slides in on scroll up.
 			await page.mouse.move(vp.width / 2, vp.height / 2);

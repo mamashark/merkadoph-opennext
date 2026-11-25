@@ -170,6 +170,14 @@ export const caseStudy = {
 			fix: "One explicit import of that module, so the bundler always keeps it, and the library back on its normal version range. The previously failing tests all pass.",
 			result: "Caught before anything went live, and fixed at the cause instead of by holding the library back.",
 		},
+		{
+			area: "Release process",
+			title: "A release that only broke for logged-in visitors",
+			problem: "Right after an evening release, every visitor whose browser sent a cookie got a Cloudflare error page, including me in the admin. Visitors without cookies saw a working site, so every automated check stayed green.",
+			cause: "A small patch update of the adapter that runs Next.js on Cloudflare changed how it read incoming requests, and it failed whenever a cookie was present. My tests ran the app on Node rather than on Cloudflare's own runtime, and the checks after a release sent no cookies, so nothing tried that path. The review had flagged that the update hadn't been run on the real runtime, and I let it through as a note instead of a blocker.",
+			fix: "Rolled the site back to the previous version the same evening, pinned the adapter to the last version that worked, confirmed it on Cloudflare's runtime with and without cookies, and released again.",
+			result: "A change that hasn't been run on the real platform no longer ships. Every release is now tried on Cloudflare's runtime as a logged-in visitor first, and the checks after it go live send cookies too.",
+		},
 	] satisfies Challenge[],
 
 	results: [

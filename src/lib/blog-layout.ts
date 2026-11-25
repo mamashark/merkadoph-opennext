@@ -19,22 +19,61 @@ export const SLIDESHOW_MARKER = "[[slideshow]]";
 
 export const isPhotoLayout = (v: unknown): v is PhotoLayout => PHOTO_LAYOUTS.includes(v as PhotoLayout);
 
+/** Caption length for layout and row photos (the form fields use the same limit). */
+export const CAPTION_MAX = 300;
+
+/**
+ * The layout photos a layout actually shows, by slot position (slot 0 = header / left, slot 1 = right). Slots keep
+ * their position when stored, so an empty slot 0 never lets slot 1 slip into its place (Arvid, 2026-11-25).
+ */
+export const shownLayoutPhotos = (layout: PhotoLayout, photos: BlogPhoto[]) => photos.slice(0, LAYOUT_SLOTS[layout]).filter((p) => !!p?.url);
+
+/** Publish rules as fixed codes, so the admin shows fixed messages (never free text from the URL; Sig F6). */
+export const PUBLISH_PROBLEMS = {
+	"layout-two": "Layout B needs two photos. Pick both, or choose another layout.",
+	"layout-alt": "Add alt text to the layout photos: it describes them for screen readers and Google.",
+	"row-caption": "Add a caption to every photo in the photo row.",
+	"video-transcript": "Add a transcript for the video: it's how people who can't watch or hear it get its content.",
+} as const;
+export type PublishProblem = keyof typeof PUBLISH_PROBLEMS;
+/** Which part of the post each rule belongs to; on a live post that part keeps its live version. */
+export const PROBLEM_PART: Record<PublishProblem, "layout" | "row" | "video"> = {
+	"layout-two": "layout",
+	"layout-alt": "layout",
+	"row-caption": "row",
+	"video-transcript": "video",
+};
+export const PART_LABEL = { layout: "the layout photos", row: "the photo row", video: "the video" } as const;
+
 /** A part of the article, in reading order. */
 export type BodyPart = { kind: "text"; text: string } | { kind: "photos" } | { kind: "slideshow" };
 
 /** A marker counts only on a line of its own (outside code fences), so it can never break a paragraph. */
 const markerLine = (line: string) => {
+	if (/^( {4}|\t)/.test(line)) return null; // an indented code block, not a marker
 	const t = line.trim();
 	return t === PHOTOS_MARKER ? "photos" : t === SLIDESHOW_MARKER ? "slideshow" : null;
 };
 
+/** Tracks Markdown code fences: a fence opened with ``` closes only with ``` (and ~~~ with ~~~). */
+function fenceTracker() {
+	let open: string | null = null;
+	return (line: string) => {
+		const m = /^\s{0,3}(`{3,}|~{3,})/.exec(line);
+		if (m) {
+			if (!open) open = m[1][0];
+			else if (m[1][0] === open) open = null;
+		}
+		return open !== null || !!m;
+	};
+}
+
 /** How many times each marker sits on its own line (for the editor's "placed twice" warning). */
 export function countMarkers(content: string) {
 	const n = { photos: 0, slideshow: 0 };
-	let fenced = false;
+	const inFence = fenceTracker();
 	for (const line of content.split("\n")) {
-		if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
-		const m = !fenced && markerLine(line);
+		const m = !inFence(line) && markerLine(line);
 		if (m) n[m]++;
 	}
 	return n;
@@ -49,15 +88,14 @@ export function splitBody(content: string, opts: { pair: boolean; slideshow: boo
 	const parts: BodyPart[] = [];
 	const used = { photos: false, slideshow: false };
 	let buf: string[] = [];
-	let fenced = false;
+	const inFence = fenceTracker();
 	const flush = () => {
 		const text = buf.join("\n").trim();
 		if (text) parts.push({ kind: "text", text });
 		buf = [];
 	};
 	for (const line of content.split("\n")) {
-		if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
-		const m = !fenced && markerLine(line);
+		const m = !inFence(line) && markerLine(line);
 		if (!m) {
 			buf.push(line);
 			continue;
@@ -94,10 +132,10 @@ function insertHalfway(parts: BodyPart[]) {
 		}
 		// Block boundaries in this part: blank lines outside fences.
 		const lines = p.text.split("\n");
-		let fenced = false;
+		const inFenceHere = fenceTracker();
 		let best = -1, bestDist = Infinity, pos = seen;
 		lines.forEach((line, k) => {
-			if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+			const fenced = inFenceHere(line);
 			pos += line.length + 1;
 			if (!fenced && line.trim() === "" && k > 0) {
 				const d = Math.abs(pos - total / 2);

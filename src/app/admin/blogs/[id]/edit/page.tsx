@@ -8,6 +8,7 @@ import { adminGetBlog } from "@/lib/blogs";
 import { contentState } from "@/lib/content";
 import { PageHeader } from "@/components/admin/page-header";
 import { DangerZone, saveNotices, UUID } from "@/components/admin/form-parts";
+import { PART_LABEL, PUBLISH_PROBLEMS, type PublishProblem } from "@/lib/blog-layout";
 import { FlashMessage } from "@/components/ui/alert";
 import { buttonClass } from "@/lib/ui";
 
@@ -16,7 +17,16 @@ export const metadata: Metadata = { title: "Edit post" };
 export default async function EditBlogPage({ params, searchParams }: PageProps<"/admin/blogs/[id]/edit">) {
 	await requireAdmin();
 	const { id } = await params;
-	const { notice, error } = await searchParams;
+	const { notice, kept, problems } = await searchParams;
+	const list = (v: unknown) => (typeof v === "string" ? v.split(",") : []);
+	const problemText = list(problems).filter((p): p is PublishProblem => p in PUBLISH_PROBLEMS).map((p) => PUBLISH_PROBLEMS[p]).join(" ");
+	const keptParts = list(kept).filter((k): k is keyof typeof PART_LABEL => k in PART_LABEL).map((k) => PART_LABEL[k]);
+	// Fixed messages only (never free text from the URL).
+	const error = !problemText
+		? undefined
+		: keptParts.length
+			? `The post stays live, but ${keptParts.join(" and ")} kept the live version: ${problemText}`
+			: `Saved, but not published. ${problemText}`;
 	if (!UUID.test(id)) notFound();
 
 	const blog = await adminGetBlog(id);
@@ -40,7 +50,7 @@ export default async function EditBlogPage({ params, searchParams }: PageProps<"
 				}
 			/>
 			<div className="mb-6">
-				<FlashMessage notice={typeof notice === "string" ? saveNotices[notice] : undefined} error={typeof error === "string" ? error : undefined} />
+				<FlashMessage notice={typeof notice === "string" ? saveNotices[notice] : undefined} error={error} />
 			</div>
 			<BlogForm key={blog.updated_at} blog={blog} />
 			<DangerZone

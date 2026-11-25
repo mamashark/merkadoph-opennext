@@ -19,6 +19,9 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 	const [edges, setEdges] = useState({ start: true, end: photos.length <= 1 });
 	const [bar, setBar] = useState({ left: 0, width: 100 });
 	const headingId = useId();
+	/** Where a button or key press last sent the row, until the scroll gets there: a fast double press moves two photos. */
+	const target = useRef<number | null>(null);
+	const settle = useRef<ReturnType<typeof setTimeout>>(undefined);
 	const reduce = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 	const measure = useCallback(() => {
@@ -26,6 +29,9 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 		if (!el) return;
 		const max = el.scrollWidth - el.clientWidth;
 		setEdges({ start: el.scrollLeft <= 2, end: el.scrollLeft >= max - 2 });
+		// Arrived (or the visitor scrolled themselves): read the position from the row again.
+		clearTimeout(settle.current);
+		settle.current = setTimeout(() => (target.current = null), 150);
 		const width = el.scrollWidth ? (el.clientWidth / el.scrollWidth) * 100 : 100;
 		setBar({ width, left: max > 0 ? (el.scrollLeft / max) * (100 - width) : 0 });
 	}, []);
@@ -44,10 +50,12 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 		const el = track.current;
 		const item = el?.children[Math.max(0, Math.min(photos.length - 1, i))] as HTMLElement | undefined;
 		if (!el || !item) return;
+		target.current = Math.max(0, Math.min(photos.length - 1, i));
 		el.scrollTo({ left: item.offsetLeft - el.offsetLeft, behavior: reduce() ? "auto" : "smooth" });
 	};
 	/** The photo currently at the left edge. */
 	const current = () => {
+		if (target.current !== null) return target.current;
 		const el = track.current;
 		if (!el) return 0;
 		const items = [...el.children] as HTMLElement[];
@@ -104,7 +112,7 @@ export function PhotoRow({ photos, heading = "Mga larawan" }: { photos: BlogPhot
 								<span className={`${MONO} mt-3 block text-xs text-stone-600 dark:text-stone-400`}>
 									{pad(i + 1)} / {pad(photos.length)}
 								</span>
-								<span className="mt-1 line-clamp-3 block text-base leading-snug font-medium text-stone-900 sm:text-lg dark:text-white">{p.caption}</span>
+								<span className="mt-1 block text-base leading-snug font-medium text-stone-900 sm:text-lg dark:text-white">{p.caption}</span>
 							</figcaption>
 						</figure>
 					</li>

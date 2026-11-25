@@ -1,4 +1,5 @@
 import "server-only";
+import { z } from "zod";
 import { SUPABASE_URL, toSitePath } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { purgeContent, type ContentTag } from "@/lib/cache";
@@ -36,31 +37,51 @@ export function optionalUrl(formData: FormData, key: string): string | null {
 	return value && isHttpUrl(value) ? value : null;
 }
 
-/** Public URL prefix of our media library (Supabase Storage). Only these URLs are accepted for images and videos. */
-const MEDIA_PREFIX = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/`;
+/** Our media library (Supabase Storage): only public objects on this origin are accepted for images and videos. */
+const MEDIA_ORIGIN = new URL(SUPABASE_URL).origin;
+const MEDIA_PATH = "/storage/v1/object/public/";
+
+/**
+ * True for a public file in our Storage. Parsed, not prefix-matched (Sig F4): same origin, the public-object path,
+ * and no path tricks (`..`, encoded dots/slashes, backslashes, whitespace) that could point elsewhere on the host.
+ */
+export function isMediaUrl(value: string): boolean {
+	if (!value || value.length > 1000 || /[\s\\]|\.\.|%2e|%2f|%5c/i.test(value)) return false;
+	try {
+		const u = new URL(value);
+		return u.origin === MEDIA_ORIGIN && u.pathname.startsWith(MEDIA_PATH) && u.pathname.length > MEDIA_PATH.length;
+	} catch {
+		return false;
+	}
+}
+
+/** A text field cut to `max` characters (never rejected, so a long caption doesn't lose the whole photo). */
+const clipped = (max: number) => z.unknown().transform((v) => (typeof v === "string" ? v.trim().slice(0, max) : ""));
+/** Zod schemas for media inputs (Strict rule 5; Sig F5). */
+export const galleryItemSchema = z.object({ url: z.string().trim().refine(isMediaUrl), alt: clipped(200), description: clipped(500) });
+export const blogPhotoSchema = z.object({ url: z.string().trim().refine(isMediaUrl), alt: clipped(200), caption: clipped(300) });
 
 /** A URL from our media library, or null (anything else is dropped, never stored). */
 export function mediaUrl(formData: FormData, key: string): string | null {
 	const value = text(formData, key, 1000);
-	return value.startsWith(MEDIA_PREFIX) && !/\s/.test(value) ? value : null;
+	return isMediaUrl(value) ? value : null;
 }
 
 /** A gallery field (GalleryField's JSON): media library images only, trimmed, at most `max`. Bad input → []. */
 export function readGallery(raw: FormDataEntryValue | null, max: number): GalleryImage[] {
+	let parsed: unknown;
 	try {
-		const parsed = JSON.parse(String(raw ?? "[]"));
-		if (!Array.isArray(parsed)) return [];
-		return parsed
-			.filter((g) => g && typeof g.url === "string" && g.url.startsWith(MEDIA_PREFIX) && g.url.length <= 1000)
-			.slice(0, max)
-			.map((g) => ({
-				url: String(g.url),
-				alt: String(g.alt ?? "").trim().slice(0, 200),
-				description: String(g.description ?? "").trim().slice(0, 500),
-			}));
+		parsed = JSON.parse(String(raw ?? "[]"));
 	} catch {
 		return [];
 	}
+	if (!Array.isArray(parsed)) return [];
+	// Each item on its own: a bad one is dropped, the rest are kept.
+	return parsed
+		.map((g) => galleryItemSchema.safeParse(g))
+		.filter((r) => r.success)
+		.map((r) => r.data)
+		.slice(0, max);
 }
 
 export function readTags(raw: FormDataEntryValue | null): string[] {

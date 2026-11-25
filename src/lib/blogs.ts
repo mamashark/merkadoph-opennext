@@ -47,6 +47,8 @@ export type BlogSummary = Pick<
 >;
 
 const SUMMARY_COLUMNS = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,status,published_at,author_name,created_at,updated_at";
+/** Public post page: everything it shows, and nothing private (no author_id; Sig/Arvid 2026-11-25, rule 0.8). */
+const DETAIL_COLUMNS = `${SUMMARY_COLUMNS},content,meta_title,meta_description,photo_layout,layout_photos,slideshow,video_url,video_poster_url,video_transcript`;
 
 export const BLOGS_PER_PAGE = 9;
 /** Posts tagged with this (Admin → Tags) are notices: they appear on the Bulletin Board (/bulletin) and the homepage Highlight. */
@@ -90,7 +92,7 @@ export const getPublishedBlogByTitle = cached(async (title: string): Promise<Blo
 
 /** Deduplicated per request so `generateMetadata` and the page share one query. */
 export const getPublishedBlogBySlug = cache(cached(async (slug: string): Promise<Blog | null> => {
-	const { data, error } = await onlyLive(createPublicClient().from("blogs").select("*").eq("slug", slug)).maybeSingle();
+	const { data, error } = await onlyLive(createPublicClient().from("blogs").select(DETAIL_COLUMNS).eq("slug", slug)).maybeSingle();
 	if (error) throw new Error(`Failed to load blog: ${error.message}`);
 	return data as Blog | null;
 }, "blogs:getPublishedBlogBySlug", ["blogs"]));

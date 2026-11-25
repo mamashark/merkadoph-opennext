@@ -38,7 +38,7 @@ export function HeaderPhoto({ photo }: { photo: BlogPhoto }) {
 	return (
 		<figure className="m-0 w-full">
 			<div className="relative aspect-[4/3] w-full bg-stone-200 sm:aspect-[16/8] dark:bg-stone-800">
-				<Image src={photo.url} alt={photo.alt} fill priority sizes="100vw" className="object-cover" />
+				<Image src={photo.url} alt={photo.alt} fill loading="eager" fetchPriority="high" sizes="100vw" className="object-cover" />
 			</div>
 			<Caption text={photo.caption} wide />
 		</figure>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { MediaField } from "@/components/media/media-field";
-import { LAYOUT_SLOTS, type BlogPhoto, type PhotoLayout } from "@/lib/blog-layout";
+import { CAPTION_MAX, LAYOUT_SLOTS, type BlogPhoto, type PhotoLayout } from "@/lib/blog-layout";
 import { cn, hintClass, inputClass, labelClass } from "@/lib/ui";
 
 const OPTIONS: { value: PhotoLayout; title: string; sub: string }[] = [
@@ -40,8 +40,9 @@ function Thumb({ layout }: { layout: PhotoLayout }) {
 
 /**
  * Admin → Blogs: the photo layout picker and its photo slots (A: one, B: two). Slots the chosen layout doesn't use
- * stay in the form (hidden), so switching layouts back and forth never loses a picked photo; the save action keeps
- * only the ones the layout uses. Submits plain named inputs, so it works in the server-rendered form.
+ * stay in the form (hidden), so switching layouts back and forth never loses a picked photo; the save action stores
+ * both slots by position and the page shows only the ones the layout uses. Plain named inputs, so it works in the
+ * server-rendered form.
  */
 export function PhotoLayoutField({ layout: initialLayout, photos }: { layout: PhotoLayout; photos: BlogPhoto[] }) {
 	const [layout, setLayout] = useState<PhotoLayout>(initialLayout);
@@ -89,7 +90,7 @@ export function PhotoLayoutField({ layout: initialLayout, photos }: { layout: Ph
 								<label htmlFor={`layout_caption_${i}`} className={labelClass}>
 									Caption (shown under the photo)
 								</label>
-								<input id={`layout_caption_${i}`} name={`layout_caption_${i}`} maxLength={300} defaultValue={p?.caption ?? ""} className={inputClass} />
+								<input id={`layout_caption_${i}`} name={`layout_caption_${i}`} maxLength={CAPTION_MAX} defaultValue={p?.caption ?? ""} className={inputClass} />
 							</div>
 						</div>
 					</div>

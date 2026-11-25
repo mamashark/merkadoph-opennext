@@ -4,24 +4,48 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { adminImpactSlugsForBlog } from "@/lib/portfolio";
-import { commonFields, deleteRow, fetchExisting, mediaUrl, optional, readGallery, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
-import { isPhotoLayout, LAYOUT_SLOTS, MAX_SLIDESHOW, type BlogPhoto, type PhotoLayout } from "@/lib/blog-layout";
+import { blogPhotoSchema, commonFields, deleteRow, fetchExisting, mediaUrl, optional, readGallery, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+	CAPTION_MAX,
+	isPhotoLayout,
+	MAX_SLIDESHOW,
+	PROBLEM_PART,
+	shownLayoutPhotos,
+	type BlogPhoto,
+	type PhotoLayout,
+	type PublishProblem,
+} from "@/lib/blog-layout";
 
-/** The A / B photo slots (media library URLs only); empty slots are skipped. */
+/** The A / B photo slots (media library URLs only), by position: an empty slot is kept as an empty entry so the
+ *  other slot never moves into its place; trailing empty slots are dropped. */
 function readLayoutPhotos(formData: FormData): BlogPhoto[] {
-	return [0, 1]
-		.map((i) => ({ url: mediaUrl(formData, `layout_url_${i}`), alt: text(formData, `layout_alt_${i}`, 200), caption: text(formData, `layout_caption_${i}`, 300) }))
-		.filter((p): p is BlogPhoto => !!p.url);
+	const slots = [0, 1].map((i) => {
+		const r = blogPhotoSchema.safeParse({ url: formData.get(`layout_url_${i}`), alt: formData.get(`layout_alt_${i}`), caption: formData.get(`layout_caption_${i}`) });
+		return r.success ? r.data : { url: "", alt: "", caption: "" };
+	});
+	while (slots.length && !slots[slots.length - 1].url) slots.pop();
+	return slots;
 }
 
-/** What still blocks publishing under the approved layout rules, or null. */
-function publishProblem(layout: PhotoLayout, photos: BlogPhoto[], slideshow: BlogPhoto[]): string | null {
-	const shown = photos.slice(0, LAYOUT_SLOTS[layout]);
-	if (layout === "B" && shown.length < 2) return "Layout B needs two photos. Pick both, or choose another layout.";
-	if (shown.some((p) => !p.alt)) return `Add alt text to the ${layout === "A" ? "header photo" : "two photos"}: it describes the photo for screen readers and Google.`;
-	const noCaption = slideshow.filter((p) => !p.caption).length;
-	if (noCaption) return `Add a caption to ${noCaption === 1 ? "1 photo" : `${noCaption} photos`} in the photo row.`;
-	return null;
+type Media = { photo_layout: PhotoLayout; layout_photos: BlogPhoto[]; slideshow: BlogPhoto[]; video_url: string | null; video_poster_url: string | null; video_transcript: string | null };
+
+/** What still blocks publishing under the approved rules (empty = none). */
+function publishProblems(m: Media): PublishProblem[] {
+	const problems: PublishProblem[] = [];
+	const shown = shownLayoutPhotos(m.photo_layout, m.layout_photos);
+	if (m.photo_layout === "B" && shown.length < 2) problems.push("layout-two");
+	if (shown.some((p) => !p.alt)) problems.push("layout-alt");
+	if (m.slideshow.some((p) => !p.caption)) problems.push("row-caption");
+	if (m.video_url && !m.video_transcript) problems.push("video-transcript"); // Kay, 2026-11-25 (WCAG 1.2.2)
+	return problems;
+}
+
+/** The media columns as they are now (for a live post whose new version breaks a rule). */
+async function liveMedia(id: string): Promise<Media> {
+	const { data, error } = await createAdminClient().from("blogs").select("photo_layout,layout_photos,slideshow,video_url,video_poster_url,video_transcript").eq("id", id).single();
+	if (error || !data) throw new Error("Couldn't read the live version of this post. Try saving again.");
+	return data as Media;
 }
 
 export async function saveBlog(formData: FormData) {
@@ -35,17 +59,35 @@ export async function saveBlog(formData: FormData) {
 	const resolved = resolvePublishing(formData, existing);
 
 	const layoutRaw = text(formData, "photo_layout", 8);
-	const photo_layout: PhotoLayout = isPhotoLayout(layoutRaw) ? layoutRaw : "A";
-	const layout_photos = readLayoutPhotos(formData);
-	// GalleryField sends the caption as `description`; alt may be left empty when the caption describes the photo.
-	const slideshow: BlogPhoto[] = readGallery(formData.get("slideshow"), MAX_SLIDESHOW).map((g) => ({ url: g.url, alt: g.alt, caption: g.description.slice(0, 300) }));
 	const video_url = mediaUrl(formData, "video_url");
+	let media: Media = {
+		photo_layout: isPhotoLayout(layoutRaw) ? layoutRaw : "A",
+		layout_photos: readLayoutPhotos(formData),
+		// GalleryField sends the caption as `description`; alt may be empty when the caption describes the photo.
+		slideshow: readGallery(formData.get("slideshow"), MAX_SLIDESHOW).map((g) => ({ url: g.url, alt: g.alt, caption: g.description.slice(0, CAPTION_MAX) })),
+		video_url,
+		video_poster_url: video_url ? mediaUrl(formData, "video_poster_url") : null,
+		video_transcript: video_url ? optional(text(formData, "video_transcript", 5000)) : null,
+	};
 
-	// Publish rules (approved mock-up). If one isn't met the post is still saved (as a draft, or keeping its current
-	// status) so nothing typed is lost, and the message says what to fix.
-	const problem = resolved.status === "published" ? publishProblem(photo_layout, layout_photos, slideshow) : null;
-	const status = problem ? (existing?.status ?? "draft") : resolved.status;
-	const published_at = problem ? (existing?.published_at ?? null) : resolved.published_at;
+	// Publish rules (approved mock-up + Kay 2026-11-25). Nothing typed is lost:
+	// - a draft that can't be published yet is saved as a draft, with the reasons;
+	// - a post that is already live stays live: each part that breaks a rule (layout photos, photo row, video) keeps
+	//   its live version, everything else is saved, and the message says which parts weren't updated (Arvid M1).
+	const problems = resolved.status === "published" ? publishProblems(media) : [];
+	const wasLive = existing?.status === "published";
+	let status = resolved.status, published_at = resolved.published_at;
+	const kept = new Set<"layout" | "row" | "video">();
+	if (problems.length && wasLive && id) {
+		const live = await liveMedia(id);
+		problems.forEach((p) => kept.add(PROBLEM_PART[p]));
+		if (kept.has("layout")) media = { ...media, photo_layout: live.photo_layout, layout_photos: live.layout_photos };
+		if (kept.has("row")) media = { ...media, slideshow: live.slideshow };
+		if (kept.has("video")) media = { ...media, video_url: live.video_url, video_poster_url: live.video_poster_url, video_transcript: live.video_transcript };
+	} else if (problems.length) {
+		status = existing?.status ?? "draft";
+		published_at = existing?.published_at ?? null;
+	}
 
 	const savedId = await upsertRow(
 		"blogs",
@@ -56,19 +98,22 @@ export async function saveBlog(formData: FormData) {
 			status,
 			published_at,
 			author_name: optional(text(formData, "author_name", 120)),
-			photo_layout,
-			layout_photos,
-			slideshow,
-			video_url,
-			video_poster_url: video_url ? mediaUrl(formData, "video_poster_url") : null,
-			video_transcript: video_url ? optional(text(formData, "video_transcript", 5000)) : null,
+			...media,
 		},
 		{ author_id: user.id },
 	);
 
 	revalidateContent("/blogs", "/admin/blogs", [slug, existing?.slug]);
 	await revalidateLinkedImpact(savedId);
-	redirect(`/admin/blogs/${savedId}/edit?${new URLSearchParams(problem ? { error: `Saved, but not published. ${problem}` } : { notice: resolved.notice ?? "saved" })}`);
+	// Only fixed codes go in the URL; the edit page maps them to fixed messages.
+	const qs = new URLSearchParams(
+		!problems.length
+			? { notice: resolved.notice ?? "saved" }
+			: kept.size
+				? { notice: "saved", kept: [...kept].join(","), problems: problems.join(",") }
+				: { problems: problems.join(",") },
+	);
+	redirect(`/admin/blogs/${savedId}/edit?${qs}`);
 }
 
 export async function deleteBlog(formData: FormData) {

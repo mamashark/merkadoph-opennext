@@ -16,7 +16,6 @@ export function Reel({ src, poster, transcript, title }: { src: string; poster?:
 						poster={poster ?? undefined}
 						className="aspect-[9/16] max-h-[78svh] w-full object-contain"
 						aria-label={`Video: ${title}`}
-						aria-describedby={transcript ? "reel-transcript" : undefined}
 					>
 						<source src={src} type={type} />
 						Your browser can&apos;t play this video.{" "}

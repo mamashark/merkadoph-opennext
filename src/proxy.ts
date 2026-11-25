@@ -7,8 +7,18 @@ import { SESSION_COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import { SHOP_CODE_ENABLED, SHOP_PATH } from "@/lib/shop-gate";
 import { safeEqual, STAGE_COOKIE, STAGE_COOKIE_MAX_AGE, STAGE_PARAM, stageGateEnabled, stageToken } from "@/lib/stage";
 
+/** Largest POST body a public page accepts (its server actions: contact form, login). Admin keeps the 22 MB limit
+ *  for video uploads (next.config.ts). Sig F2, Kay 2026-11-25. */
+const PUBLIC_POST_MAX = 1_000_000;
+
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
 	const { pathname } = request.nextUrl;
+	// Public pages only get POSTs from server actions; refuse big (or unsized) bodies before Next buffers them, so the
+	// raised admin upload limit can't be used against the contact form or login.
+	if (request.method === "POST" && !(pathname === "/admin" || pathname.startsWith("/admin/"))) {
+		const size = Number(request.headers.get("content-length"));
+		if (!Number.isFinite(size) || size <= 0 || size > PUBLIC_POST_MAX) return new NextResponse("Payload too large", { status: 413 });
+	}
 	if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/login" || pathname.startsWith("/login/")) return authProxy(request);
 
 	// Moved pages (Admin → SEO → Redirects, and automatic ones from slug changes). Query string is kept.

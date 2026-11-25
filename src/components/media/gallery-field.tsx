@@ -21,6 +21,7 @@ export function GalleryField({
 	addLabel = "Add gallery image",
 	minWidth,
 	captionRequired = false,
+	descriptionMax = 500,
 }: {
 	name: string;
 	defaultValue?: Item[];
@@ -33,6 +34,8 @@ export function GalleryField({
 	minWidth?: number;
 	/** Caption mode (blog photo row): the description is the caption, required to publish; alt text is optional. */
 	captionRequired?: boolean;
+	/** Longest description/caption (matches what the save action keeps). */
+	descriptionMax?: number;
 }) {
 	const [items, setItems] = useState<Item[]>(defaultValue);
 	/** Real pixel width of each picked image, read from the preview once it loads. */
@@ -102,7 +105,7 @@ export function GalleryField({
 										<textarea
 											id={`${name}-desc-${i}`}
 											value={it.description ?? ""}
-											maxLength={500}
+											maxLength={descriptionMax}
 											rows={2}
 											onChange={(e) => update(i, { description: e.target.value })}
 											placeholder={captionRequired ? "Caption (required), shown under the photo" : "Caption, e.g. “Lumpia queue at the Spring Market”"}

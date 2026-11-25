@@ -150,8 +150,8 @@ const VIDEO_FOLDER = "videos";
 export async function uploadVideo(file: File): Promise<MediaFile> {
 	const problem = videoProblem(file);
 	if (problem) throw new Error(problem);
-	const body = await file.arrayBuffer();
-	const kind = videoKind(body);
+	// Only the first bytes are read to check the format (Sig F3); the file itself is streamed to Storage.
+	const kind = videoKind(await file.slice(0, 12).arrayBuffer());
 	const ext = file.name.split(".").pop()?.toLowerCase();
 	if (!kind || kind !== ext) throw new Error(`${file.name}: this isn't a real ${ext?.toUpperCase() ?? "MP4/WebM"} video (it may be renamed). Export it again as MP4 or WebM.`);
 	const [bucket] = await listBuckets();
@@ -161,7 +161,7 @@ export async function uploadVideo(file: File): Promise<MediaFile> {
 	for (let attempt = 0; attempt < 5; attempt++) {
 		const name = attempt === 0 ? clean : clean.replace(/(\.[a-z0-9]+)?$/, `-${Math.random().toString(36).slice(2, 7)}$1`);
 		const filePath = `${VIDEO_FOLDER}/${name}`;
-		const { error } = await storage.upload(filePath, body, { contentType: VIDEO_TYPES[kind], cacheControl: "31536000", upsert: false });
+		const { error } = await storage.upload(filePath, file, { contentType: VIDEO_TYPES[kind], cacheControl: "31536000", upsert: false });
 		if (!error) return { name, path: filePath, url: publicUrl(bucket, filePath), size: file.size, type: VIDEO_TYPES[kind], updatedAt: new Date().toISOString() };
 		if (!/exists|duplicate/i.test(error.message) || attempt === 4) throw new Error(`${file.name}: ${error.message}`);
 	}

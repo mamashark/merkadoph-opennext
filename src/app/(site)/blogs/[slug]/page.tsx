@@ -9,7 +9,7 @@ import { ArticleHeader, ArticleText, HeaderPhoto, PhotoPair } from "@/components
 import { PhotoRow } from "@/components/blog/photo-row";
 import { Reel } from "@/components/blog/reel";
 import { plexMono } from "@/components/constellation/fonts";
-import { countMarkers, LAYOUT_SLOTS, splitBody, type BlogPhoto } from "@/lib/blog-layout";
+import { countMarkers, shownLayoutPhotos, splitBody, type BlogPhoto } from "@/lib/blog-layout";
 import { JsonLd } from "@/components/site/json-ld";
 
 // Cached as an ISR page; refreshed once a day or when the content is saved / purged in Admin → Cache.
@@ -45,11 +45,13 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 	const impact = await getImpactEntriesForBlog(blog.id).catch(() => []);
 	// Layout (approved mock-up). A: one header photo, falling back to the cover image. B: the middle pair, placed by
 	// [[photos]] or halfway. The photo row goes where [[slideshow]] is, or at the end.
-	const layoutPhotos = (blog.layout_photos ?? []).slice(0, LAYOUT_SLOTS[blog.photo_layout ?? "A"] ?? 1);
+	const layout = blog.photo_layout ?? "A";
+	const layoutPhotos = shownLayoutPhotos(layout, blog.layout_photos ?? []);
 	const cover: BlogPhoto | null = blog.cover_image_url ? { url: blog.cover_image_url, alt: blog.cover_image_alt || blog.title, caption: "" } : null;
-	const headerPhoto = blog.photo_layout === "A" || !blog.photo_layout ? (layoutPhotos[0] ?? cover) : null;
+	// Slot 0 is the header photo; an empty slot 0 means the cover (slots keep their position when stored).
+	const headerPhoto = layout === "A" ? (blog.layout_photos?.[0]?.url ? blog.layout_photos[0] : cover) : null;
 	const slideshow = blog.slideshow ?? [];
-	const parts = splitBody(blog.content, { pair: blog.photo_layout === "B" && layoutPhotos.length >= 2, slideshow: slideshow.length > 0 });
+	const parts = splitBody(blog.content, { pair: layout === "B" && layoutPhotos.length >= 2, slideshow: slideshow.length > 0 });
 	// With no [[slideshow]] marker the row ends the article, so the video goes just before it.
 	const rowAtEnd = slideshow.length > 0 && countMarkers(blog.content).slideshow === 0;
 	const reel = blog.video_url ? <Reel src={blog.video_url} poster={blog.video_poster_url} transcript={blog.video_transcript} title={blog.title} /> : null;

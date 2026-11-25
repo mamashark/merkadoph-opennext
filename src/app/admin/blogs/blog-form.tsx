@@ -1,6 +1,6 @@
 import { saveBlog } from "./actions";
 import type { Blog } from "@/lib/blogs";
-import { MAX_SLIDESHOW } from "@/lib/blog-layout";
+import { CAPTION_MAX, MAX_SLIDESHOW } from "@/lib/blog-layout";
 import { BasicsSection, ContentForm, ContentSection, CoverCard, Field, FormCard, PublishCard, SeoCard, TagsCard } from "@/components/admin/form-parts";
 import { PhotoLayoutField } from "@/components/admin/photo-layout-field";
 import { GalleryField } from "@/components/media/gallery-field";
@@ -34,6 +34,7 @@ export function BlogForm({ blog, defaultAuthor }: { blog?: Blog; defaultAuthor?:
 							max={MAX_SLIDESHOW}
 							withDescription
 							captionRequired
+							descriptionMax={CAPTION_MAX}
 							addLabel="Add photo"
 							minWidth={1200}
 							hint="A row of big photos visitors swipe or step through, with the caption under each. It goes where you put [[slideshow]] in the text, or at the end. Caption required to publish; alt text is optional when the caption describes the photo. Use the arrows to reorder."
@@ -53,7 +54,7 @@ export function BlogForm({ blog, defaultAuthor }: { blog?: Blog; defaultAuthor?:
 								Shown before the video plays. Without one, the first frame is shown.
 							</p>
 						</div>
-						<Field id="video_transcript" label="Transcript" hint="What is said and shown in the video, for people who can't watch or hear it. If it has speech, use a video with burned-in captions too.">
+						<Field id="video_transcript" label="Transcript" hint="Required to publish a post with a video: what is said and shown in it, for people who can't watch or hear it. If it has speech, use a video with burned-in captions too.">
 							<textarea id="video_transcript" name="video_transcript" rows={4} maxLength={5000} defaultValue={blog?.video_transcript ?? ""} className={inputClass} />
 						</Field>
 					</FormCard>

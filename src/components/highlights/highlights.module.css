@@ -316,13 +316,15 @@
    mono "The Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel starts to its
    right, so the graph never runs underneath it. The word is sized from the screen height so it always fits. */
 .stage {
-	--chapter-size: clamp(1.6rem, calc((100vh - 56px) / 8.6), 8rem);
+	/* The word starts below the site header (65px) when that slides in on focus (Ally B-A2); short screens keep 24px. */
+	--chapter-top: 80px;
+	--chapter-size: clamp(1.6rem, calc((100vh - var(--chapter-top) - 32px) / 8.6), 8rem);
 	--chapter-w: calc(var(--chapter-size) + 58px + env(safe-area-inset-left, 0px));
 }
 /* The visible height (svh, as the stage uses) where supported; 100vh above is the fallback. */
 @supports (height: 100svh) {
 	.stage {
-		--chapter-size: clamp(1.6rem, calc((100svh - 56px) / 8.6), 8rem);
+		--chapter-size: clamp(1.6rem, calc((100svh - var(--chapter-top) - 32px) / 8.6), 8rem);
 	}
 }
 .chapter {
@@ -336,7 +338,7 @@
 	align-items: flex-end;
 	justify-content: flex-end;
 	gap: 10px;
-	padding: 24px 16px max(24px, env(safe-area-inset-bottom, 0px) + 12px) max(12px, env(safe-area-inset-left, 0px));
+	padding: var(--chapter-top) 16px max(24px, env(safe-area-inset-bottom, 0px) + 12px) max(12px, env(safe-area-inset-left, 0px));
 	border-right: 1px solid var(--line);
 	color: var(--ink);
 	text-decoration: none;
@@ -370,6 +372,11 @@
 	color: var(--sun);
 }
 /* Very short screens (small phones held sideways): only "Read the blog →" fits beside the word. */
+@media (max-height: 500px) and (orientation: landscape) {
+	.stage {
+		--chapter-top: 24px;
+	}
+}
 @media (max-height: 420px) and (orientation: landscape) {
 	.chapterLead {
 		display: none;

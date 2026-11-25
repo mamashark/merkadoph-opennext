@@ -174,7 +174,7 @@ export const caseStudy = {
 
 	results: [
 		{ label: "Lighthouse, desktop homepage", value: "100 / 100 / 100 / 100" },
-		{ label: "Lighthouse, mobile homepage (light)", value: "97 performance, 100 accessibility" },
+		{ label: "Lighthouse, mobile homepage", value: "92 performance, 100 accessibility" },
 		{ label: "Automated end-to-end tests", value: "103, on every push" },
 		{ label: "Database tables with Row Level Security", value: "All 26" },
 		{ label: "Accessibility checks (axe, WCAG 2.2 AA)", value: "0 violations on 14 page types, light and dark" },
@@ -182,7 +182,7 @@ export const caseStudy = {
 	] satisfies Fact[],
 
 	next: [
-		"Mobile performance from 97 to 100: a lighter stylesheet for public pages and a smaller JavaScript bundle.",
+		"Mobile performance from 92 to 100: a faster first paint for the homepage's big title, a lighter stylesheet for public pages and a smaller JavaScript bundle.",
 		"Testing on real phones and with screen readers. Phone testing so far is emulated.",
 		"Captions for videos with speech.",
 		"Launch: switching off the coming-soon gate once the content is ready.",

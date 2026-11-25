@@ -73,7 +73,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 					tabs={[{ label: "All years", value: "", href: impactHref({ tag }) }, ...years.map((y) => ({ label: y, value: y, href: impactHref({ year: y, tag }) }))]}
 				/>
 			)}
-			{tags.length > 1 && <ChipFilter label="Events and themes" allLabel="Everything" items={tags} current={tag} href={(t) => impactHref({ year, tag: t })} />}
+			{tags.length > 1 && <ChipFilter label="Events and themes" allLabel="Everything" items={tags} current={tag} visible={10} href={(t) => impactHref({ year, tag: t })} />}
 
 			{portfolios.length === 0 ? (
 				<EmptyNotice

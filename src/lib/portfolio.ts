@@ -4,7 +4,7 @@ import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import { PastEndError, pastEnd, type ContentStatus, type GalleryImage } from "@/lib/content";
+import { PastEndError, pastEnd, tagsByUse, type ContentStatus, type GalleryImage } from "@/lib/content";
 
 /** One project image from the media library, with its own description (shown on hover). */
 export type PortfolioImage = GalleryImage;
@@ -87,7 +87,7 @@ export const getImpactYears = cached(async (): Promise<string[]> => {
 /** Distinct tags of live projects (for the URL filter on /portfolio). */
 export const getPortfolioTags = cached(async (): Promise<string[]> => {
 	const { data } = await onlyLive(createPublicClient().from("portfolios").select("tags")).limit(1000);
-	return Array.from(new Set((data ?? []).flatMap((r) => (r.tags as string[]) ?? []))).sort((a, b) => a.localeCompare(b));
+	return tagsByUse((data ?? []) as Array<{ tags: string[] | null }>);
 }, "portfolio:getPortfolioTags", ["portfolio"]);
 
 export const getPublicPortfolioBySlug = cache(

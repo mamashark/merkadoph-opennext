@@ -114,26 +114,55 @@ export function LinkTabs({ tabs, current, label }: { tabs: Array<{ label: string
 	);
 }
 
-/** URL-based chip filter (e.g. /events?tag=…): the first chip ("" value) clears it. Square mono chips, as on the homepage. */
-export function ChipFilter({ label, allLabel, items, current, href }: { label: string; allLabel: string; items: string[]; current: string; href: (value: string) => string }) {
+const CHIP = "inline-flex min-h-10 items-center border px-3.5 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors";
+
+/**
+ * URL-based chip filter (e.g. /events?tag=…): the first chip ("" value) clears it. Square mono chips, as on the homepage.
+ * With `visible`, only that many are shown (pass them most-used first); the rest open from "More tags" (a <details>,
+ * so it works without JavaScript). A selected tag is always shown.
+ */
+export function ChipFilter({
+	label,
+	allLabel,
+	items,
+	current,
+	href,
+	visible,
+}: {
+	label: string;
+	allLabel: string;
+	items: string[];
+	current: string;
+	href: (value: string) => string;
+	visible?: number;
+}) {
+	const limit = visible && items.length > visible + 2 ? visible : items.length;
+	const shown = items.slice(0, limit);
+	if (current && !shown.includes(current) && items.includes(current)) shown.push(current);
+	const rest = items.filter((v) => !shown.includes(v));
+	const chip = (v: string) => (
+		<li key={v || "all"}>
+			<Link
+				href={href(v)}
+				aria-current={v === current ? "page" : undefined}
+				className={cn(CHIP, v === current ? "border-accent bg-accent text-on-accent" : "border-site-line-2 text-site-ink-2 hover:border-accent hover:text-accent")}
+			>
+				{v || allLabel}
+			</Link>
+		</li>
+	);
 	return (
 		<nav aria-label={label} className="mb-8">
-			<ul className="flex flex-wrap gap-2">
-				{["", ...items].map((v) => (
-					<li key={v || "all"}>
-						<Link
-							href={href(v)}
-							aria-current={v === current ? "page" : undefined}
-							className={cn(
-								"inline-flex min-h-10 items-center border px-3.5 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors",
-								v === current ? "border-accent bg-accent text-on-accent" : "border-site-line-2 text-site-ink-2 hover:border-accent hover:text-accent",
-							)}
-						>
-							{v || allLabel}
-						</Link>
-					</li>
-				))}
-			</ul>
+			<ul className="flex flex-wrap gap-2">{["", ...shown].map(chip)}</ul>
+			{rest.length > 0 && (
+				<details className="group mt-2">
+					<summary className={cn(CHIP, "cursor-pointer list-none border-dashed border-site-line-2 text-site-muted hover:border-accent hover:text-accent [&::-webkit-details-marker]:hidden")}>
+						<span className="group-open:hidden">More tags ({rest.length})</span>
+						<span className="hidden group-open:inline">Fewer tags</span>
+					</summary>
+					<ul className="flex flex-wrap gap-2 pt-2">{rest.map(chip)}</ul>
+				</details>
+			)}
 		</nav>
 	);
 }

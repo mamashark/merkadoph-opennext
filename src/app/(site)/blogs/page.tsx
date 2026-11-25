@@ -43,7 +43,7 @@ export default async function BlogsPage({ searchParams }: PageProps<"/blogs">) {
 		<main className="accent-blogs mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="The Merkado PH Blog" title="Kwento mula sa Merkado" description={description} />
 
-			{tags.length > 0 && <ChipFilter label="Filter posts by tag" allLabel="All posts" items={tags} current={tag} href={(t) => listHref(t)} />}
+			{tags.length > 0 && <ChipFilter label="Filter posts by tag" allLabel="All posts" items={tags} current={tag} visible={10} href={(t) => listHref(t)} />}
 
 			{!lead && rest.length === 0 ? (
 				<EmptyNotice

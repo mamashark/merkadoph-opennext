@@ -29,6 +29,13 @@ export const isPastEnd = (e: unknown) => e instanceof Error && e.name === "PastE
 /** Highest ?page= we look up; anything above is past the end of every list (defence in depth with F1). */
 export const MAX_PAGE = 1000;
 
+/** Distinct tags across rows, most used first (then A–Z): the filters show the common ones before "More tags". */
+export function tagsByUse(rows: Array<{ tags?: string[] | null }>): string[] {
+	const counts = new Map<string, number>();
+	for (const r of rows) for (const t of r.tags ?? []) counts.set(t, (counts.get(t) ?? 0) + 1);
+	return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
+}
+
 export type ContentTable = "blogs" | "events" | "promotions" | "services" | "portfolios" | "products" | "product_categories" | "product_tags";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {

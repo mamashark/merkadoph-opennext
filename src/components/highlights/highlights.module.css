@@ -369,9 +369,10 @@
 	text-transform: uppercase;
 	color: var(--muted);
 }
-/* "Read the blog →": says the mark is a link to a post. */
+/* "Read the blog →": says the mark is a link to a post. White, so it stands apart from the yellow word (Kay, 2026-11-25). */
 .chapterCta {
-	color: var(--sun);
+	color: var(--ink);
+	transition: color 0.2s;
 }
 /* Very short screens (small phones held sideways): only "Read the blog →" fits beside the word. */
 @media (max-height: 500px) and (orientation: landscape) {
@@ -386,6 +387,10 @@
 }
 .chapter:hover .chapterTitle {
 	color: var(--ink);
+}
+/* On hover the two swap: the word turns white, the cue turns yellow. */
+.chapter:hover .chapterCta {
+	color: var(--sun);
 }
 .chapter:focus-visible {
 	outline: 2px solid var(--sun);

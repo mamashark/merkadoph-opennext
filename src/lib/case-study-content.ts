@@ -138,7 +138,7 @@ export const caseStudy = {
 			problem: "Desktop scored 100, but mobile Performance was 90, with the largest paint at about 3.6 s on a simulated slow phone.",
 			cause: "The browser downloaded eight preloaded fonts, render-blocking CSS and JavaScript before it could paint the hero text, and laid out the whole long page up front.",
 			fix: "Preloaded only the fonts the first screen uses, and let the browser skip rendering sections until they're near the screen. One change at a time, each measured as the median of three runs. Inlining all CSS was tried and dropped: the page grew with no gain.",
-			result: "Mobile 97 on the homepage (production build, light mode). Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
+			result: "Mobile 97 on the homepage at the time (production build, light mode); a later hero redesign brought it to 92, which is the next performance task. Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
 		},
 		{
 			area: "Accessibility",
@@ -170,11 +170,19 @@ export const caseStudy = {
 			fix: "One explicit import of that module, so the bundler always keeps it, and the library back on its normal version range. The previously failing tests all pass.",
 			result: "Caught before anything went live, and fixed at the cause instead of by holding the library back.",
 		},
+		{
+			area: "Release process",
+			title: "A release that only broke for logged-in visitors",
+			problem: "Right after a release, every request that carried a cookie crashed with a Cloudflare error, including the admin. Requests without cookies worked, so the automated tests and the health checks after the deploy were all green.",
+			cause: "A small update of the Cloudflare adapter pulled in a new version of its shared core, whose request handling crashed on the cookie header. The tests ran the site on Node, not on Cloudflare's own runtime, and the checks after the deploy never sent a cookie.",
+			fix: "I rolled the live site back to the previous version the same evening, pinned the adapter to the last working version, checked it on the Cloudflare runtime with and without cookies, and released it again.",
+			result: "Down for logged-in visitors for about ten minutes. Every dependency update is now run on the Cloudflare runtime and requested with a cookie before release, and the checks after each deploy send cookies too.",
+		},
 	] satisfies Challenge[],
 
 	results: [
 		{ label: "Lighthouse, desktop homepage", value: "100 / 100 / 100 / 100" },
-		{ label: "Lighthouse, mobile homepage (light)", value: "97 performance, 100 accessibility" },
+		{ label: "Lighthouse, mobile homepage", value: "92 performance, 100 accessibility" },
 		{ label: "Automated end-to-end tests", value: "103, on every push" },
 		{ label: "Database tables with Row Level Security", value: "All 26" },
 		{ label: "Accessibility checks (axe, WCAG 2.2 AA)", value: "0 violations on 14 page types, light and dark" },
@@ -182,7 +190,7 @@ export const caseStudy = {
 	] satisfies Fact[],
 
 	next: [
-		"Mobile performance from 97 to 100: a lighter stylesheet for public pages and a smaller JavaScript bundle.",
+		"Mobile performance from 92 to 100: a faster first paint for the homepage's big title, a lighter stylesheet for public pages and a smaller JavaScript bundle.",
 		"Testing on real phones and with screen readers. Phone testing so far is emulated.",
 		"Captions for videos with speech.",
 		"Launch: switching off the coming-soon gate once the content is ready.",

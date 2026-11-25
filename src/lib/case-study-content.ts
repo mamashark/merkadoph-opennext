@@ -170,6 +170,14 @@ export const caseStudy = {
 			fix: "One explicit import of that module, so the bundler always keeps it, and the library back on its normal version range. The previously failing tests all pass.",
 			result: "Caught before anything went live, and fixed at the cause instead of by holding the library back.",
 		},
+		{
+			area: "Release process",
+			title: "A release that only broke for logged-in visitors",
+			problem: "Right after a release, every request that carried a cookie crashed with a Cloudflare error, including the admin. Requests without cookies worked, so the automated tests and the health checks after the deploy were all green.",
+			cause: "A small update of the Cloudflare adapter pulled in a new version of its shared core, whose request handling crashed on the cookie header. The tests ran the site on Node, not on Cloudflare's own runtime, and the checks after the deploy never sent a cookie.",
+			fix: "I rolled the live site back to the previous version the same evening, pinned the adapter to the last working version, checked it on the Cloudflare runtime with and without cookies, and released it again.",
+			result: "Down for logged-in visitors for about ten minutes. Every dependency update is now run on the Cloudflare runtime and requested with a cookie before release, and the checks after each deploy send cookies too.",
+		},
 	] satisfies Challenge[],
 
 	results: [

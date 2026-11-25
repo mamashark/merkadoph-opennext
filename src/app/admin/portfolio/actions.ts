@@ -3,34 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
-import { SUPABASE_URL } from "@/lib/env";
-import { commonFields, deleteRow, fetchExisting, optional, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
+import { commonFields, deleteRow, fetchExisting, optional, readGallery, resolvePublishing, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { UUID, uuidSchema } from "@/lib/validation";
-import type { PortfolioImage } from "@/lib/portfolio";
 import { adminIsBlogMoved } from "@/lib/blogs";
 
 const MAX_IMAGES = 40;
-/** Only images from our media library (Supabase Storage) — they're what next/image is allowed to load. */
-const MEDIA_PREFIX = `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/public/`;
-
-function readImages(raw: FormDataEntryValue | null): PortfolioImage[] {
-	try {
-		const parsed = JSON.parse(String(raw ?? "[]"));
-		if (!Array.isArray(parsed)) return [];
-		return parsed
-			.filter((g) => g && typeof g.url === "string" && g.url.startsWith(MEDIA_PREFIX) && g.url.length <= 1000)
-			.slice(0, MAX_IMAGES)
-			.map((g) => ({
-				url: String(g.url),
-				alt: String(g.alt ?? "").trim().slice(0, 200),
-				description: String(g.description ?? "").trim().slice(0, 500),
-			}));
-	} catch {
-		return [];
-	}
-}
-
 /** "YYYY-MM-DD" or null. */
 function dateOnly(value: FormDataEntryValue | null): string | null {
 	const v = String(value ?? "").trim();
@@ -74,7 +52,7 @@ export async function savePortfolio(formData: FormData) {
 	const fields = commonFields(formData);
 	if (!fields.title) throw new Error("Title is required.");
 
-	const images = readImages(formData.get("images"));
+	const images = readGallery(formData.get("images"), MAX_IMAGES);
 	const existing = await fetchExisting("portfolios", id);
 	const [link, previousBlogId] = await Promise.all([readBlogId(formData.get("blog_id")), id ? currentBlogId(id) : null]);
 	const blog_id = link.id;

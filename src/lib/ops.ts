@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { searchTerm } from "@/lib/content";
+import { pastEnd, searchTerm } from "@/lib/content";
 
 // Service-role only. Callers must have passed requireAdmin() or the cron secret check.
 
@@ -33,8 +33,8 @@ export async function listOps(opts: { kind: OpsKind; q?: string; source?: string
 	const from = (page - 1) * perPage;
 	const order = sort === "oldest" ? { column: "created_at", ascending: true } : sort === "slowest" ? { column: "duration_ms", ascending: false } : { column: "created_at", ascending: false };
 	const { data, count, error } = await query.order(order.column, { ascending: order.ascending, nullsFirst: false }).range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load logs: ${error.message}`);
-	return { rows: (data ?? []) as OpsLog[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load logs: ${error.message}`);
+	return { rows: (error ? [] : (data ?? [])) as OpsLog[], total: count ?? 0 };
 }
 
 export async function latestOp(kind: OpsKind, filter: { source?: "manual" | "cron"; status?: "success" | "error" } = {}): Promise<OpsLog | null> {

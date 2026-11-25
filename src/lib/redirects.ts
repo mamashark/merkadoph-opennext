@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { searchTerm, type ContentTable } from "@/lib/content";
+import { pastEnd, searchTerm, type ContentTable } from "@/lib/content";
 
 /** Public URL prefix per content table (for automatic slug-change redirects). Tags have no page. */
 export const PUBLIC_BASE: Partial<Record<ContentTable, string>> = {
@@ -54,8 +54,8 @@ export async function listRedirects({ q, source, status, sort = "", page = 1, pe
 	const [column, ascending] = orders[sort] ?? orders[""];
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await query.order(column, { ascending, nullsFirst: false }).range(from, from + perPage - 1);
-	if (error) throw new Error(error.message);
-	return { rows: (data ?? []) as RedirectRow[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(error.message);
+	return { rows: (error ? [] : (data ?? [])) as RedirectRow[], total: count ?? 0 };
 }
 
 export async function getRedirect(id: string): Promise<RedirectRow | null> {

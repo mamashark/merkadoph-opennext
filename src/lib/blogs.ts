@@ -1,10 +1,11 @@
 import "server-only";
 import { cache } from "react";
-import { cached } from "@/lib/cache";
+import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState, onlyLive } from "@/lib/content-server";
-import { searchTerm, type ContentStatus } from "@/lib/content";
+import { PastEndError, pastEnd, searchTerm, type ContentStatus } from "@/lib/content";
+import type { BlogPhoto, PhotoLayout } from "@/lib/blog-layout";
 
 export { slugify, toPlainText, summarize, readingMinutes } from "@/lib/content";
 export { formatDate } from "@/lib/datetime";
@@ -26,6 +27,16 @@ export type Blog = {
 	published_at: string | null;
 	author_id: string | null;
 	author_name: string | null;
+	/** Photo layout (migration 20261124120000): A = header photo, B = middle pair, none = text only. */
+	photo_layout: PhotoLayout;
+	/** The A / B photos, in order (A uses the first; none set = the cover image). */
+	layout_photos: BlogPhoto[];
+	/** The photo row ("Mga larawan"), placed by [[slideshow]] or at the end. */
+	slideshow: BlogPhoto[];
+	/** An MP4 / WebM in our Storage, with an optional poster still and transcript. */
+	video_url: string | null;
+	video_poster_url: string | null;
+	video_transcript: string | null;
 	created_at: string;
 	updated_at: string;
 };
@@ -36,6 +47,8 @@ export type BlogSummary = Pick<
 >;
 
 const SUMMARY_COLUMNS = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,status,published_at,author_name,created_at,updated_at";
+/** Public post page: everything it shows, and nothing private (no author_id; Sig/Arvid 2026-11-25, rule 0.8). */
+const DETAIL_COLUMNS = `${SUMMARY_COLUMNS},content,meta_title,meta_description,photo_layout,layout_photos,slideshow,video_url,video_poster_url,video_transcript`;
 
 export const BLOGS_PER_PAGE = 9;
 /** Posts tagged with this (Admin → Tags) are notices: they appear on the Bulletin Board (/bulletin) and the homepage Highlight. */
@@ -47,7 +60,7 @@ export const ANNOUNCEMENT_TAG = "Announcement";
 export const PINNED_BLOG_TITLE = "Bagong yugto: the next chapter for Merkado PH";
 
 /** `tag` filters (the /blogs?tag= filter); `excludeId` leaves out a post shown separately (the pinned one). */
-export const getPublishedBlogs = cached(async (page: number = 1, perPage: number = BLOGS_PER_PAGE, opts: { tag?: string; excludeId?: string } = {}) => {
+export const getPublishedBlogs = cachedPaged(async (page: number = 1, perPage: number = BLOGS_PER_PAGE, opts: { tag?: string; excludeId?: string } = {}) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS, { count: "exact" }));
 	if (opts.tag) query = query.contains("tags", [opts.tag]);
@@ -56,9 +69,12 @@ export const getPublishedBlogs = cached(async (page: number = 1, perPage: number
 		.order("published_at", { ascending: false })
 		.range(from, from + perPage - 1);
 
-	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
+	if (error) {
+		if (pastEnd(error)) throw new PastEndError();
+		throw new Error(`Failed to load blogs: ${error.message}`);
+	}
 	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
-}, "blogs:getPublishedBlogs", ["blogs"]);
+}, "blogs:getPublishedBlogs", ["blogs"], { blogs: [] as BlogSummary[], total: 0 });
 
 /** Distinct tags of live posts, for the tag filter. */
 export const getBlogTags = cached(async (): Promise<string[]> => {
@@ -76,7 +92,7 @@ export const getPublishedBlogByTitle = cached(async (title: string): Promise<Blo
 
 /** Deduplicated per request so `generateMetadata` and the page share one query. */
 export const getPublishedBlogBySlug = cache(cached(async (slug: string): Promise<Blog | null> => {
-	const { data, error } = await onlyLive(createPublicClient().from("blogs").select("*").eq("slug", slug)).maybeSingle();
+	const { data, error } = await onlyLive(createPublicClient().from("blogs").select(DETAIL_COLUMNS).eq("slug", slug)).maybeSingle();
 	if (error) throw new Error(`Failed to load blog: ${error.message}`);
 	return data as Blog | null;
 }, "blogs:getPublishedBlogBySlug", ["blogs"]));
@@ -130,8 +146,8 @@ export async function adminListBlogs({
 
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await query.order(order.column, { ascending: order.ascending, nullsFirst: false }).range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
-	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load blogs: ${error.message}`);
+	return { blogs: (error ? [] : (data ?? [])) as BlogSummary[], total: count ?? 0 };
 }
 
 export async function adminGetBlog(id: string): Promise<Blog | null> {

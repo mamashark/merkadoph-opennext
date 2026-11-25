@@ -349,6 +349,15 @@ body {
 	}
 }
 
+/* Blog post reading column (approved mock-up): larger body text and headings than other Markdown pages. */
+.prose-article .prose-blog {
+	font-size: 1.125rem;
+}
+.prose-article .prose-blog h2 {
+	font-size: 1.75rem;
+	line-height: 1.25;
+}
+
 /* Homepage: until the visitor opens the constellation, the page doesn't scroll (set by highlights-stage.tsx, only
    once its script has loaded; without JS the page scrolls as normal). The gutter keeps the layout from shifting
    when the scrollbar comes back. */

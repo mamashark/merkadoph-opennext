@@ -20,6 +20,8 @@ export function GalleryField({
 	hint = "Shown under the main image on the product page.",
 	addLabel = "Add gallery image",
 	minWidth,
+	captionRequired = false,
+	descriptionMax = 500,
 }: {
 	name: string;
 	defaultValue?: Item[];
@@ -30,6 +32,10 @@ export function GalleryField({
 	addLabel?: string;
 	/** Flags photos narrower than this (px): they look blurry when shown large. */
 	minWidth?: number;
+	/** Caption mode (blog photo row): the description is the caption, required to publish; alt text is optional. */
+	captionRequired?: boolean;
+	/** Longest description/caption (matches what the save action keeps). */
+	descriptionMax?: number;
 }) {
 	const [items, setItems] = useState<Item[]>(defaultValue);
 	/** Real pixel width of each picked image, read from the preview once it loads. */
@@ -77,8 +83,14 @@ export function GalleryField({
 									value={it.alt}
 									maxLength={200}
 									onChange={(e) => update(i, { alt: e.target.value })}
-									placeholder={withDescription ? "Alt text — required to publish: what's in the image" : "Alt text: what's in the image"}
-									className={`${inputClass} h-9 py-1 ${withDescription && !it.alt.trim() ? "border-amber-400 dark:border-amber-600" : ""}`}
+									placeholder={
+										captionRequired
+											? "Alt text (optional if the caption describes the photo)"
+											: withDescription
+												? "Alt text — required to publish: what's in the image"
+												: "Alt text: what's in the image"
+									}
+									className={`${inputClass} h-9 py-1 ${withDescription && !captionRequired && !it.alt.trim() ? "border-amber-400 dark:border-amber-600" : ""}`}
 								/>
 								{minWidth && widths[it.url] > 0 && widths[it.url] < minWidth && (
 									<p className="text-xs font-medium text-amber-700 dark:text-amber-300">
@@ -88,16 +100,16 @@ export function GalleryField({
 								{withDescription && (
 									<>
 										<label className="sr-only" htmlFor={`${name}-desc-${i}`}>
-											Description for image {i + 1}
+											{captionRequired ? "Caption" : "Description"} for image {i + 1}
 										</label>
 										<textarea
 											id={`${name}-desc-${i}`}
 											value={it.description ?? ""}
-											maxLength={500}
+											maxLength={descriptionMax}
 											rows={2}
 											onChange={(e) => update(i, { description: e.target.value })}
-											placeholder="Caption, e.g. “Lumpia queue at the Spring Market”"
-											className={`${inputClass} py-1.5 text-sm`}
+											placeholder={captionRequired ? "Caption (required), shown under the photo" : "Caption, e.g. “Lumpia queue at the Spring Market”"}
+											className={`${inputClass} py-1.5 text-sm ${captionRequired && !(it.description ?? "").trim() ? "border-amber-400 dark:border-amber-600" : ""}`}
 										/>
 									</>
 								)}

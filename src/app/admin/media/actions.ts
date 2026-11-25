@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import { assertBucket, cleanFolder, createFolder, deleteFile, listBuckets, listFolder, uploadImages, type MediaFile, type MediaListing } from "@/lib/media";
+import { assertBucket, cleanFolder, createFolder, deleteFile, listBuckets, listFolder, uploadImages, uploadVideo, type MediaFile, type MediaListing } from "@/lib/media";
 
 function mediaUrl(bucket: string, path: string, flash: Record<string, string> = {}) {
 	const params = new URLSearchParams({ bucket, ...(path ? { path } : {}), ...flash });
@@ -99,6 +99,21 @@ export async function uploadFromPicker(formData: FormData): Promise<Result<Media
 		const files = filesFrom(formData);
 		if (files.length === 0) return { ok: false, error: "Choose an image to upload." };
 		const uploaded = await uploadImages(bucket, String(formData.get("path") ?? ""), files);
+		revalidatePath("/admin/media");
+		return { ok: true, data: uploaded };
+	} catch (err) {
+		return { ok: false, error: message(err) };
+	}
+}
+
+/** Blog video / reel field: uploads one MP4 or WebM and returns its public URL. */
+export async function uploadVideoFromField(formData: FormData): Promise<Result<MediaFile>> {
+	await requireAdmin();
+	try {
+		const file = formData.get("file");
+		if (!(file instanceof File) || file.size === 0) return { ok: false, error: "Choose a video to upload." };
+		const uploaded = await uploadVideo(file);
+		await audit({ kind: "admin", action: "media.upload", entity: "media", entityId: uploaded.path, summary: `Uploaded video ${uploaded.name}.` });
 		revalidatePath("/admin/media");
 		return { ok: true, data: uploaded };
 	} catch (err) {

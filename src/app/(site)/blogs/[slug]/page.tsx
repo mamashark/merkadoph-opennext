@@ -4,7 +4,12 @@ import { getPublishedBlogBySlug, readingMinutes, summarize } from "@/lib/blogs";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
 import { entryYear, getImpactEntriesForBlog, portfolioCover } from "@/lib/portfolio";
-import { BackFooter, Body, Companion, CoverFigure, DetailHeader } from "@/components/site/detail";
+import { BackFooter, Companion } from "@/components/site/detail";
+import { ArticleHeader, ArticleText, HeaderPhoto, PhotoPair } from "@/components/blog/article";
+import { PhotoRow } from "@/components/blog/photo-row";
+import { Reel } from "@/components/blog/reel";
+import { plexMono } from "@/components/constellation/fonts";
+import { countMarkers, shownLayoutPhotos, splitBody, type BlogPhoto } from "@/lib/blog-layout";
 import { JsonLd } from "@/components/site/json-ld";
 
 // Cached as an ISR page; refreshed once a day or when the content is saved / purged in Admin → Cache.
@@ -38,7 +43,21 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 
 	const path = `/blogs/${blog.slug}`;
 	const impact = await getImpactEntriesForBlog(blog.id).catch(() => []);
-	const edited = blog.published_at && new Date(blog.updated_at).getTime() - new Date(blog.published_at).getTime() > 24 * 3600 * 1000;
+	// Layout (approved mock-up). A: one header photo, falling back to the cover image. B: the middle pair, placed by
+	// [[photos]] or halfway. The photo row goes where [[slideshow]] is, or at the end.
+	const layout = blog.photo_layout ?? "A";
+	const layoutPhotos = shownLayoutPhotos(layout, blog.layout_photos ?? []);
+	const cover: BlogPhoto | null = blog.cover_image_url ? { url: blog.cover_image_url, alt: blog.cover_image_alt || blog.title, caption: "" } : null;
+	// Slot 0 is the header photo; an empty slot 0 means the cover (slots keep their position when stored).
+	const headerPhoto = layout === "A" ? (blog.layout_photos?.[0]?.url ? blog.layout_photos[0] : cover) : null;
+	const slideshow = blog.slideshow ?? [];
+	const parts = splitBody(blog.content, { pair: layout === "B" && layoutPhotos.length >= 2, slideshow: slideshow.length > 0 });
+	// With no [[slideshow]] marker the row ends the article, so the video goes just before it.
+	const rowAtEnd = slideshow.length > 0 && countMarkers(blog.content).slideshow === 0;
+	const reel = blog.video_url ? <Reel src={blog.video_url} poster={blog.video_poster_url} transcript={blog.video_transcript} title={blog.title} /> : null;
+	const kicker = blog.tags.find((t) => t.toLowerCase() !== "sample") ?? null;
+	/** Cover, layout photos and row photos, for search results. */
+	const ldImages = [...new Set([cover?.url, ...layoutPhotos.map((p) => p.url), ...slideshow.map((p) => p.url)].filter((u): u is string => !!u))].slice(0, 10);
 
 	return (
 		<main>
@@ -49,7 +68,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 						"@type": "BlogPosting",
 						headline: blog.title,
 						description: summarize(blog),
-						image: blog.cover_image_url ? [blog.cover_image_url] : undefined,
+						image: ldImages.length ? ldImages : undefined,
 						datePublished: blog.published_at,
 						dateModified: blog.updated_at,
 						author: blog.author_name ? { "@type": "Person", name: blog.author_name } : organization,
@@ -64,33 +83,38 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 				]}
 			/>
 
-			<article>
-				<DetailHeader backHref="/blogs" backLabel="All stories" tags={blog.tags} title={blog.title} excerpt={blog.excerpt}>
-					<p className="mt-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-stone-600 dark:text-stone-400">
+			<article className={plexMono.variable}>
+				<ArticleHeader kicker={kicker} title={blog.title} dek={blog.excerpt}>
+					<p className="flex flex-wrap items-center gap-x-2 gap-y-1">
 						{blog.author_name && (
 							<>
 								<span className="font-medium text-stone-800 dark:text-stone-200">{blog.author_name}</span>
 								<span aria-hidden>·</span>
 							</>
 						)}
-						<span>
-							Published <time dateTime={blog.published_at ?? undefined}>{formatDate(blog.published_at, { dateStyle: "long" })}</time>
-						</span>
-						{edited && (
-							<>
-								<span aria-hidden>·</span>
-								<span>
-									Updated <time dateTime={blog.updated_at}>{formatDate(blog.updated_at, { dateStyle: "long" })}</time>
-								</span>
-							</>
-						)}
+						{/* Kay (2026-11-24): author, the date the post first appeared, and reading time only; no "Updated" date. */}
+						<time dateTime={blog.published_at ?? undefined}>{formatDate(blog.published_at, { dateStyle: "long" })}</time>
 						<span aria-hidden>·</span>
 						<span>{readingMinutes(blog.content)} min read</span>
 					</p>
-				</DetailHeader>
+				</ArticleHeader>
 
-				<CoverFigure src={blog.cover_image_url} alt={blog.cover_image_alt || blog.title} caption={blog.cover_image_alt} />
-				<Body content={blog.content} />
+				{headerPhoto && <HeaderPhoto photo={headerPhoto} />}
+
+				{parts.map((part, i) =>
+					part.kind === "text" ? (
+						<ArticleText key={i} content={part.text} />
+					) : part.kind === "photos" ? (
+						<PhotoPair key={i} photos={layoutPhotos} />
+					) : (
+						<div key={i}>
+							{rowAtEnd && reel}
+							<PhotoRow photos={slideshow} />
+						</div>
+					),
+				)}
+				{!rowAtEnd && reel}
+				<div className="h-14" aria-hidden />
 
 				<Companion
 					heading={impact.length > 1 ? "See the photos from these events" : "See the photos"}

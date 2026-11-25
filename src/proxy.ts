@@ -7,8 +7,22 @@ import { SESSION_COOKIE_OPTIONS } from "@/lib/supabase/cookie-options";
 import { SHOP_CODE_ENABLED, SHOP_PATH } from "@/lib/shop-gate";
 import { safeEqual, STAGE_COOKIE, STAGE_COOKIE_MAX_AGE, STAGE_PARAM, stageGateEnabled, stageToken } from "@/lib/stage";
 
+/** Largest POST body a public page accepts (its server actions: contact form, login). Admin keeps the 22 MB limit
+ *  for video uploads (next.config.ts). Sig F2, Kay 2026-11-25. */
+const PUBLIC_POST_MAX = 1_000_000;
+
 export async function proxy(request: NextRequest, event: NextFetchEvent) {
 	const { pathname } = request.nextUrl;
+	// Paths with a file extension (robots.txt, sitemap.xml, rss.xml, images…) skip everything below; a POST to one is
+	// refused, since only pages take POSTs and no page slug has a dot (Sig R1: the matcher used to skip them entirely,
+	// so a big multipart POST to /blogs/a.b reached the [slug] page without the size check).
+	if (/\.\w+$/.test(pathname)) return request.method === "POST" ? new NextResponse("Not found", { status: 404 }) : NextResponse.next();
+	// Public pages only get POSTs from server actions; refuse big (or unsized) bodies before Next buffers them, so the
+	// raised admin upload limit can't be used against the contact form or login.
+	if (request.method === "POST" && !(pathname === "/admin" || pathname.startsWith("/admin/"))) {
+		const size = Number(request.headers.get("content-length"));
+		if (!Number.isFinite(size) || size <= 0 || size > PUBLIC_POST_MAX) return new NextResponse("Payload too large", { status: 413 });
+	}
 	if (pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/login" || pathname.startsWith("/login/")) return authProxy(request);
 
 	// Moved pages (Admin → SEO → Redirects, and automatic ones from slug changes). Query string is kept.
@@ -166,5 +180,6 @@ async function authProxy(request: NextRequest) {
 
 export const config = {
 	// Every page except Next internals, API routes and files with an extension (images, robots.txt, sitemap.xml…).
-	matcher: ["/((?!_next/|api/|.*\\.\\w+$).*)"],
+	// Paths with a file extension are matched too, but return at once (see the top of proxy()).
+	matcher: ["/((?!_next/|api/).*)"],
 };

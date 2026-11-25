@@ -2,7 +2,7 @@ import "server-only";
 import { headers } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentUser } from "@/lib/auth";
-import { searchTerm } from "@/lib/content";
+import { pastEnd, searchTerm } from "@/lib/content";
 
 /**
  * Audit trail (security.md §9): admin changes ("admin") and security events ("security").
@@ -68,8 +68,8 @@ export async function listAuditLogs({ q, kind, area, sort = "", page = 1, perPag
 	const from = (page - 1) * perPage;
 	const [column, ascending] = sort === "oldest" ? ["created_at", true] : sort === "action" ? ["action", true] : sort === "actor" ? ["actor_email", true] : ["created_at", false];
 	const { data, count, error } = await query.order(column as string, { ascending: ascending as boolean }).range(from, from + perPage - 1);
-	if (error) throw new Error(error.message);
-	return { rows: (data ?? []) as AuditRow[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(error.message);
+	return { rows: (error ? [] : (data ?? [])) as AuditRow[], total: count ?? 0 };
 }
 
 export function securityEvent(action: string, summary: string, details?: Record<string, unknown>) {

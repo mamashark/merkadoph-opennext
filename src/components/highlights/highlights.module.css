@@ -345,6 +345,67 @@
 	pointer-events: none;
 	text-align: right;
 }
+/* The chapter mark (Kay, 2026-11-25): "Bagong Yugto" in big display type running up the hero's left edge, with a small
+   mono "Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel and the title start to its
+   right, so the graph never runs underneath it. The word is sized from the screen height so it always fits. */
+.stage {
+	--chapter-size: clamp(2rem, calc((100svh - 56px) / 6.4), 10rem);
+	--chapter-w: calc(var(--chapter-size) + 58px + env(safe-area-inset-left, 0px));
+}
+.chapter {
+	position: absolute;
+	z-index: 3;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: var(--chapter-w);
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: 24px 16px max(24px, env(safe-area-inset-bottom, 0px) + 12px) max(12px, env(safe-area-inset-left, 0px));
+	border-right: 1px solid var(--line);
+	color: var(--ink);
+	text-decoration: none;
+	transition: opacity 0.4s;
+}
+.chapterTitle,
+.chapterSub {
+	/* Read bottom to top. */
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+	white-space: nowrap;
+}
+.chapterTitle {
+	font-family: var(--font-display);
+	font-size: var(--chapter-size);
+	font-weight: 700;
+	/* 1, not tighter: the line box must hold the g's descenders, or they reach the band's edge. */
+	line-height: 1;
+	letter-spacing: -0.03em;
+	transition: color 0.2s;
+}
+.chapterSub {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+.chapter:hover .chapterTitle {
+	color: var(--sun);
+}
+.chapter:focus-visible {
+	outline: 2px solid var(--sun);
+	outline-offset: -6px;
+}
+.stage:has(.chapter) .panel {
+	left: var(--chapter-w);
+}
+.stage:has(.chapter) .intro {
+	padding-left: calc(var(--chapter-w) + 24px);
+	max-width: calc(36rem + var(--chapter-w));
+}
 @media (max-width: 560px) {
 	.lede {
 		font-size: 0.95rem;
@@ -1344,6 +1405,7 @@
 	transition: opacity 0.4s;
 }
 .stage[data-world] .intro,
+.stage[data-world] .chapter,
 .stage[data-world] .hint,
 .stage[data-world] .peek,
 .stage[data-world] .tip {
@@ -2059,5 +2121,38 @@
 	.world,
 	.contact {
 		content-visibility: visible;
+	}
+}
+
+/* Upright phones: the chapter mark runs across, under the title and above the sky panel, so the panel keeps its width. */
+@media (max-width: 767px) and (orientation: portrait) {
+	.chapter {
+		position: static;
+		width: auto;
+		flex-direction: column-reverse;
+		align-items: flex-start;
+		gap: 6px;
+		margin-top: 18px;
+		padding: 0 var(--side);
+		border-right: 0;
+	}
+	.chapterTitle,
+	.chapterSub {
+		writing-mode: horizontal-tb;
+		transform: none;
+	}
+	.chapterTitle {
+		font-size: clamp(2rem, 10.5vw, 2.75rem);
+		line-height: 1;
+	}
+	.chapter:focus-visible {
+		outline-offset: 4px;
+	}
+	.stage:has(.chapter) .panel {
+		left: auto;
+	}
+	.stage:has(.chapter) .intro {
+		padding-left: var(--side);
+		max-width: none;
 	}
 }

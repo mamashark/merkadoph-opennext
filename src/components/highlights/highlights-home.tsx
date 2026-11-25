@@ -374,6 +374,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 					eyebrow={HOME.hero.eyebrow}
 					title={HOME.hero.title}
 					lede={HOME.hero.lede}
+					chapter={HOME.hero.chapter}
 					label={label}
 					worlds={worldInfo}
 				/>

@@ -15,6 +15,8 @@ export const HOME = {
 		eyebrow: "Est. 2023 · Gothenburg",
 		title: "Merkado PH",
 		lede: "The store has a new home. This is what comes next: Filipino culture, festivals and pop-ups, and three years of stories from our community.",
+		/** The big vertical word down the hero's left edge (upright phones: across the top), linking to the Bagong Yugto post. */
+		chapter: { title: "Bagong Yugto", sub: "Next Chapter", href: "/blogs/bagong-yugto-next-chapter-for-merkado-ph" },
 	},
 
 	/**

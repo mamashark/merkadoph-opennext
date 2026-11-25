@@ -143,11 +143,18 @@ export async function SiteShell({
 					)}
 				</div>
 				<div className="border-t border-site-line">
-					<div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 font-label text-xs text-site-muted sm:flex-row sm:px-6">
+					<div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-4 py-5 text-center font-label text-xs text-site-muted sm:flex-row sm:flex-wrap sm:gap-x-6 sm:px-6">
 						<p>
 							© {new Date().getFullYear()} {seo.legal_name || seo.business_name}. All rights reserved.
 						</p>
-						<p className="font-medium text-site-ink-2">Merkado PH: Bagong Yugto, coming soon! Abangan!</p>
+						<p className="font-medium text-site-ink-2">Merkado PH: Ang Bagong Yugto</p>
+						{/* Site credit (CLAUDE.md "Design & build KLA"), linking to the public case study (Kay, 2026-11-25). */}
+						<p>
+							Design &amp; build KLA ·{" "}
+							<Link href="/case-study" className="text-site-ink-2 underline decoration-site-line-2 underline-offset-4 hover:text-site-ink hover:decoration-current">
+								How this site was built
+							</Link>
+						</p>
 					</div>
 				</div>
 			</footer>

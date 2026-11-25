@@ -63,6 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${SITE_URL}/digital`, changeFrequency: "weekly", priority: 0.9 },
 		{ url: `${SITE_URL}/tahooo`, changeFrequency: "weekly", priority: 0.9 },
 		{ url: `${SITE_URL}/bulletin`, changeFrequency: "daily", priority: 0.8 },
+		{ url: `${SITE_URL}/case-study`, changeFrequency: "monthly", priority: 0.4 },
 		...section("/blogs", blogs, "weekly"),
 		...section("/events", events, "weekly"),
 		...section("/promotions", promotions, "daily"),

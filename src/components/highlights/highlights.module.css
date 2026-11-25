@@ -345,11 +345,11 @@
 	pointer-events: none;
 	text-align: right;
 }
-/* The chapter mark (Kay, 2026-11-25): "Bagong Yugto" in big display type running up the hero's left edge, with a small
-   mono "Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel and the title start to its
+/* The chapter mark (Kay, 2026-11-25): "Ang Bagong Yugto" in big display type running up the hero's left edge, with a small
+   mono "The Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel and the title start to its
    right, so the graph never runs underneath it. The word is sized from the screen height so it always fits. */
 .stage {
-	--chapter-size: clamp(2rem, calc((100svh - 56px) / 6.4), 10rem);
+	--chapter-size: clamp(1.6rem, calc((100svh - 56px) / 8.6), 8rem);
 	--chapter-w: calc(var(--chapter-size) + 58px + env(safe-area-inset-left, 0px));
 }
 .chapter {
@@ -2142,7 +2142,7 @@
 		transform: none;
 	}
 	.chapterTitle {
-		font-size: clamp(2rem, 10.5vw, 2.75rem);
+		font-size: clamp(1.75rem, 9vw, 2.75rem);
 		line-height: 1;
 	}
 	.chapter:focus-visible {

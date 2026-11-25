@@ -748,7 +748,7 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, chapter, la
 			{/* The chapter mark: a big vertical word down the left edge (across the top on upright phones). The sky starts to its right. */}
 			{chapter && (
 				<Link href={chapter.href} className={styles.chapter}>
-					<span className={styles.chapterSub}>{chapter.sub}</span>
+					<span className={styles.chapterSub}>{chapter.sub}</span>{" "}
 					<span className={styles.chapterTitle} lang="tl">
 						{chapter.title}
 					</span>

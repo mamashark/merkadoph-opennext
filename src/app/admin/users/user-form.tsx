@@ -2,7 +2,7 @@ import { createUser, updateUser } from "./actions";
 import type { AdminUser } from "@/lib/users";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cardClass, hintClass, inputClass, labelClass } from "@/lib/ui";
-import { PASSWORD_MIN } from "@/lib/validation";
+import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/validation";
 
 type Props = {
 	user?: AdminUser;
@@ -43,7 +43,7 @@ export function UserForm({ user, isSelf, draft }: Props) {
 					<label htmlFor="password" className={labelClass}>
 						{user ? "New password" : "Password"}
 					</label>
-					<input id="password" name="password" type="password" minLength={PASSWORD_MIN} maxLength={72} required={!user} autoComplete="new-password" className={inputClass} />
+					<input id="password" name="password" type="password" minLength={PASSWORD_MIN} maxLength={PASSWORD_MAX} required={!user} autoComplete="new-password" className={inputClass} />
 					<p className={hintClass}>{user ? "Leave blank to keep the current password. " : ""}At least {PASSWORD_MIN} characters, with lowercase, uppercase, a number and a symbol.</p>
 				</div>
 			</div>

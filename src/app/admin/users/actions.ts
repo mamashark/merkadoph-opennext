@@ -7,11 +7,15 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { audit } from "@/lib/audit";
 import { passwordSchema } from "@/lib/validation";
 
-/** First problem with a new password, or null when it meets the policy (same rules as Supabase Auth). */
+/** Every unmet password rule in one message, or null when it meets the policy (same rules as Supabase Auth). */
 function passwordProblem(password: string): string | null {
 	const result = passwordSchema.safeParse(password);
-	return result.success ? null : (result.error.issues[0]?.message ?? "Choose a stronger password.");
+	if (result.success) return null;
+	return [...new Set(result.error.issues.map((i) => i.message))].join(" ") || WEAK_PASSWORD;
 }
+
+/** Shown if Supabase rejects a password our own check accepted (its policy can be changed in the dashboard). */
+const WEAK_PASSWORD = "Supabase rejected this password as too weak. Choose a longer one with lowercase and uppercase letters, a number and a symbol.";
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function read(formData: FormData) {
@@ -41,7 +45,7 @@ export async function createUser(formData: FormData) {
 		user_metadata: { full_name: name },
 		app_metadata: { role: hasAccess ? ADMIN_ROLE : "none" },
 	});
-	if (error) fail(/already/i.test(error.message) ? "A user with this email already exists." : error.message);
+	if (error) fail(error.code === "weak_password" ? WEAK_PASSWORD : /already/i.test(error.message) ? "A user with this email already exists." : error.message);
 
 	revalidatePath("/admin/users");
 	await audit({ kind: "admin", action: "users.create", entity: "users", entityId: data.user!.id, summary: email, details: { adminAccess: hasAccess } });
@@ -66,7 +70,7 @@ export async function updateUser(formData: FormData) {
 		app_metadata: { role: hasAccess ? ADMIN_ROLE : "none" },
 		...(password ? { password } : {}),
 	});
-	if (error) fail(error.message);
+	if (error) fail(error.code === "weak_password" ? WEAK_PASSWORD : error.message);
 
 	revalidatePath("/admin/users");
 	revalidatePath("/admin", "layout");

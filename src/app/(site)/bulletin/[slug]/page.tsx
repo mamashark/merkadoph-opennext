@@ -22,7 +22,8 @@ export async function generateMetadata({ params }: PageProps<"/bulletin/[slug]">
 	if (!n) return { title: "Notice not found", robots: { index: false } };
 	return pageMetadata({
 		title: n.meta_title || n.title,
-		description: n.meta_description || summarize({ excerpt: n.excerpt, content: n.content, meta_description: null }),
+		// Never empty (guidelines §0.1; Ally): an item without a summary gets a plain fallback.
+		description: n.meta_description || summarize({ excerpt: n.excerpt, content: n.content, meta_description: null }) || `${n.category.name}: ${n.title}. From the Merkado PH Bulletin Board.`,
 		path: `/bulletin/${n.slug}`,
 		image: n.cover_image_url ? { url: n.cover_image_url, alt: n.cover_image_alt } : null,
 		type: "article",
@@ -41,6 +42,7 @@ export default async function BulletinItemPage({ params }: PageProps<"/bulletin/
 	const path = `/bulletin/${n.slug}`;
 	const official = n.content_type === "embassy_update";
 	const external = !!n.publisher || official;
+	const description = summarize({ excerpt: n.excerpt, content: n.content, meta_description: n.meta_description });
 	const caption = [n.image_caption, n.image_credit && `Photo: ${n.image_credit}`].filter(Boolean).join(" · ") || null;
 
 	return (
@@ -51,7 +53,8 @@ export default async function BulletinItemPage({ params }: PageProps<"/bulletin/
 						"@context": "https://schema.org",
 						"@type": "Article",
 						headline: n.title,
-						description: summarize({ excerpt: n.excerpt, content: n.content, meta_description: n.meta_description }),
+						// Omitted when there is nothing to say (an empty string is invalid structured data; Quinn).
+						...(description ? { description } : {}),
 						url: absoluteUrl(path),
 						image: n.cover_image_url ?? undefined,
 						datePublished: n.published_at ?? undefined,

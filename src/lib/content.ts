@@ -7,6 +7,12 @@ export type ContentState = "draft" | "scheduled" | "published";
 /** One photo in a gallery (Community Impact entry, blog post), picked from the media library. */
 export type GalleryImage = { url: string; alt: string; description: string };
 
+/**
+ * B32: a page past the end. PostgREST answers `.range()` beyond the last row with "Requested range not satisfiable"
+ * (code PGRST103); that is an empty page, not a failure, so callers return no rows and the page shows its 404.
+ */
+export const pastEnd = (error: { code?: string } | null) => error?.code === "PGRST103";
+
 export type ContentTable = "blogs" | "events" | "promotions" | "services" | "portfolios" | "products" | "product_categories" | "product_tags";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {

@@ -4,7 +4,7 @@ import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import type { ContentStatus } from "@/lib/content";
+import { pastEnd, type ContentStatus } from "@/lib/content";
 
 export type Service = {
 	id: string;
@@ -60,8 +60,8 @@ export const getPublicServices = cached(async (category: string | undefined, pag
 		.order("sort_order", { ascending: true })
 		.order("title", { ascending: true })
 		.range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load services: ${error.message}`);
-	return { services: (data ?? []) as ServiceSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load services: ${error.message}`);
+	return { services: (error ? [] : (data ?? [])) as ServiceSummary[], total: count ?? 0 };
 }, "services:getPublicServices", ["services"]);
 
 /** Distinct categories of live services (public) or of all services (admin). */

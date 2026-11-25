@@ -4,7 +4,7 @@ import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import type { ContentStatus, GalleryImage } from "@/lib/content";
+import { pastEnd, type ContentStatus, type GalleryImage } from "@/lib/content";
 
 /** One project image from the media library, with its own description (shown on hover). */
 export type PortfolioImage = GalleryImage;
@@ -61,8 +61,8 @@ export const getPublicPortfolios = cached(async (tag: string | undefined, page: 
 		.order("completed_on", { ascending: false, nullsFirst: false })
 		.order("published_at", { ascending: false })
 		.range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load portfolio: ${error.message}`);
-	return { portfolios: (data ?? []) as PortfolioSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load portfolio: ${error.message}`);
+	return { portfolios: (error ? [] : (data ?? [])) as PortfolioSummary[], total: count ?? 0 };
 }, "portfolio:getPublicPortfolios", ["portfolio"]);
 
 /** Every live entry with a date, newest first: the Community Impact years on the homepage (one cached read). */

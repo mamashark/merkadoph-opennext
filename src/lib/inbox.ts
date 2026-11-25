@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { searchTerm } from "@/lib/content";
+import { pastEnd, searchTerm } from "@/lib/content";
 
 // Service-role only. Callers must have passed requireAdmin().
 
@@ -24,8 +24,8 @@ export async function listMessages({ q, status, sort = "", page = 1, perPage = 2
 	const from = (page - 1) * perPage;
 	const order = sort === "oldest" ? { column: "created_at", ascending: true } : sort === "name" ? { column: "name", ascending: true } : { column: "created_at", ascending: false };
 	const { data, count, error } = await query.order(order.column, { ascending: order.ascending }).range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load messages: ${error.message}`);
-	return { rows: (data ?? []) as ContactMessage[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load messages: ${error.message}`);
+	return { rows: (error ? [] : (data ?? [])) as ContactMessage[], total: count ?? 0 };
 }
 
 export async function countNewMessages(): Promise<number> {

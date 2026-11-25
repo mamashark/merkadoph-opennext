@@ -3,7 +3,7 @@ import { cache } from "react";
 import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import type { ContentStatus } from "@/lib/content";
+import { pastEnd, type ContentStatus } from "@/lib/content";
 
 export type Promotion = {
 	id: string;
@@ -68,8 +68,8 @@ export const getPublicPromotions = cached(async (show: "current" | "ended", page
 	const { data, count, error } = await query
 		.order(show === "ended" ? "ends_at" : "published_at", { ascending: false, nullsFirst: false })
 		.range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load promotions: ${error.message}`);
-	return { promotions: (data ?? []) as PromotionSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load promotions: ${error.message}`);
+	return { promotions: (error ? [] : (data ?? [])) as PromotionSummary[], total: count ?? 0 };
 }, "promotions:getPublicPromotions", ["promotions"]);
 
 /** Distinct tags of live current or ended promotions, for the tag filter on /promotions. */

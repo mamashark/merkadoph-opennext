@@ -4,7 +4,7 @@ import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState, onlyLive } from "@/lib/content-server";
-import { searchTerm, type ContentStatus } from "@/lib/content";
+import { pastEnd, searchTerm, type ContentStatus } from "@/lib/content";
 import type { BlogPhoto, PhotoLayout } from "@/lib/blog-layout";
 
 export { slugify, toPlainText, summarize, readingMinutes } from "@/lib/content";
@@ -67,8 +67,8 @@ export const getPublishedBlogs = cached(async (page: number = 1, perPage: number
 		.order("published_at", { ascending: false })
 		.range(from, from + perPage - 1);
 
-	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
-	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load blogs: ${error.message}`);
+	return { blogs: (error ? [] : (data ?? [])) as BlogSummary[], total: count ?? 0 };
 }, "blogs:getPublishedBlogs", ["blogs"]);
 
 /** Distinct tags of live posts, for the tag filter. */
@@ -141,8 +141,8 @@ export async function adminListBlogs({
 
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await query.order(order.column, { ascending: order.ascending, nullsFirst: false }).range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load blogs: ${error.message}`);
-	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load blogs: ${error.message}`);
+	return { blogs: (error ? [] : (data ?? [])) as BlogSummary[], total: count ?? 0 };
 }
 
 export async function adminGetBlog(id: string): Promise<Blog | null> {

@@ -3,7 +3,7 @@ import { cache } from "react";
 import { cached } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import type { ContentStatus } from "@/lib/content";
+import { pastEnd, type ContentStatus } from "@/lib/content";
 
 export type EventItem = {
 	id: string;
@@ -52,8 +52,8 @@ export const getPublicEvents = cached(async (when: "upcoming" | "past", page: nu
 	const { data, count, error } = await query
 		.order("starts_at", { ascending: when === "upcoming" })
 		.range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load events: ${error.message}`);
-	return { events: (data ?? []) as EventSummary[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load events: ${error.message}`);
+	return { events: (error ? [] : (data ?? [])) as EventSummary[], total: count ?? 0 };
 }, "events:getPublicEvents", ["events"]);
 
 /** Distinct tags of live upcoming or past events, for the tag filter. */

@@ -6,7 +6,7 @@ import { audit } from "@/lib/audit";
 import { onSlugChange } from "@/lib/redirects";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { fromDateTimeInput } from "@/lib/datetime";
-import { isHttpUrl, slugify, type ContentStatus, type ContentTable, type GalleryImage } from "@/lib/content";
+import { isHttpUrl, pastEnd, slugify, type ContentStatus, type ContentTable, type GalleryImage } from "@/lib/content";
 
 // Server-side helpers shared by the content Server Actions. Callers must have passed requireAdmin().
 
@@ -159,8 +159,8 @@ export async function adminList<T>(table: ContentTable, { columns, q, searchColu
 
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await query.order(order.column, { ascending: order.ascending, nullsFirst: false }).range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load ${table}: ${error.message}`);
-	return { rows: (data ?? []) as T[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load ${table}: ${error.message}`);
+	return { rows: (error ? [] : (data ?? [])) as T[], total: count ?? 0 };
 }
 
 export async function adminGet<T>(table: ContentTable, id: string): Promise<T | null> {

@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { searchTerm } from "@/lib/content";
+import { pastEnd, searchTerm } from "@/lib/content";
 
 /**
  * Shared tags for blogs, events, promotions, services and portfolios (public.tags).
@@ -52,8 +52,8 @@ export async function adminListSharedTags(opts: { q?: string; used?: string; sor
 	if (order.column !== "name") query = query.order("name", { ascending: true });
 	const from = (page - 1) * perPage;
 	const { data, count, error } = await query.range(from, from + perPage - 1);
-	if (error) throw new Error(`Failed to load tags: ${error.message}`);
-	return { rows: (data ?? []) as TagUsage[], total: count ?? 0 };
+	if (error && !pastEnd(error)) throw new Error(`Failed to load tags: ${error.message}`);
+	return { rows: (error ? [] : (data ?? [])) as TagUsage[], total: count ?? 0 };
 }
 
 export async function adminGetSharedTag(id: string): Promise<TagUsage | null> {

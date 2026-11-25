@@ -24,7 +24,6 @@ import { ChipFilter } from "./chip-filter";
 import styles from "./highlights.module.css";
 
 /** The old shop now lives here. */
-const GROCERY_URL = HOME.groceryUrl;
 const H = HOME.highlights;
 const L = HOME.labels;
 
@@ -711,20 +710,6 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 						<div className={styles.form}>
 							<ContactForm topics={[BUSINESSES.bygg.name, BUSINESSES.digital.name, ...offerings.map((s) => s.title)]} />
 						</div>
-					</div>
-				</section>
-
-				<section className={styles.signoff} aria-label="Sign-off">
-					<div className={`${styles.wrap} ${styles.signoffRow}`}>
-						<div>
-							<p className={styles.signoffTitle}>{HOME.signoff.title}</p>
-							<p>{HOME.signoff.line}</p>
-						</div>
-						<p>
-							<a href={GROCERY_URL} rel="noopener">
-								{HOME.signoff.groceryLink}
-							</a>
-						</p>
 					</div>
 				</section>
 			</main>

@@ -90,14 +90,4 @@ export const HOME = {
 		heading: "Let’s create something *good*.",
 		lede: "Have an idea, a project or a story worth sharing? Let’s collaborate! Contact us.",
 	},
-
-	/** The last strip of the page. */
-	signoff: {
-		title: "Salamat, kababayan.",
-		line: "Merkado PH · Gothenburg, Sweden",
-		groceryLink: "Groceries → PH Asian Market ↗",
-	},
-
-	/** The partner shop that took over the groceries (used in the About text and the sign-off). */
-	groceryUrl: "https://phasianmarket.se",
 };

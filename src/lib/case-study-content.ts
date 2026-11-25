@@ -33,7 +33,7 @@ export const caseStudy = {
 
 	goals: [
 		{ title: "Own the content", body: "A custom admin where the business can publish stories, events, offers and community projects without a developer." },
-		{ title: "Keep the search traffic", body: "Every old Shopify address moved across with a permanent redirect, so rankings and shared links keep working." },
+		{ title: "Keep the search traffic", body: "Old Shopify addresses move across with permanent redirects, so rankings and shared links keep working." },
 		{ title: "Fast, accessible, in light and dark", body: "Targets: Lighthouse 100, WCAG 2.2 AA, both colour modes, and every screen from 320px phones up." },
 		{ title: "Cheap and calm to run", body: "No servers to maintain, near-free hosting, backups and monitoring, and an approval step before anything goes live." },
 	] satisfies Feature[],
@@ -113,7 +113,7 @@ export const caseStudy = {
 			problem: "Some requests failed with Cloudflare's \"Error 1102\", clustered around a site crawl and busy editing sessions.",
 			cause: "The metrics showed every failure was the CPU time limit. Rendering a page on an uncached request took 44–58 ms, and the free plan allows 10 ms.",
 			fix: "Moved to the paid Workers plan ($5 a month) and cut useless load at the edge.",
-			result: "Errors stopped. The lesson: read the metrics before guessing. It looked like a code bug but was a platform limit.",
+			result: "No CPU-limit errors since the upgrade so far, and it stays monitored. The lesson: read the metrics before guessing. It looked like a code bug but was a platform limit.",
 		},
 		{
 			area: "Release control",
@@ -136,14 +136,14 @@ export const caseStudy = {
 			problem: "Desktop scored 100, but mobile Performance was 90, with the largest paint at about 3.6 s on a simulated slow phone.",
 			cause: "The browser downloaded eight preloaded fonts, render-blocking CSS and JavaScript before it could paint the hero text, and laid out the whole long page up front.",
 			fix: "Preloaded only the fonts the first screen uses, and let the browser skip rendering sections until they're near the screen. One change at a time, each measured as the median of three runs. Inlining all CSS was tried and dropped: the page grew with no gain.",
-			result: "Mobile 97 on the live homepage. Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
+			result: "Mobile 97 on the homepage (production build, light mode). Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
 		},
 		{
 			area: "Accessibility",
 			title: "Labels hidden behind photos",
 			problem: "On the homepage sky, some section names were partly covered by photos, and the hero title could sit on top of a cluster.",
 			cause: "Not the colour (15:1 contrast). SVG paints in document order, so later photos covered earlier labels, and moving the labels would have broken the keyboard order.",
-			fix: "Labels are drawn in their own top layer that follows every movement, and the title has a keep-out area.",
+			fix: "Labels are drawn in their own top layer that follows every movement, and the hero title of the time got a keep-out area (the title has since moved out of the sky).",
 			result: "Checked on 44 random layouts in both modes: no label, photo or star inside the title, and labels still clickable.",
 		},
 		{
@@ -171,8 +171,8 @@ export const caseStudy = {
 	] satisfies Challenge[],
 
 	results: [
-		{ label: "Lighthouse, desktop", value: "100 / 100 / 100 / 100" },
-		{ label: "Lighthouse, mobile homepage", value: "97 performance, 100 accessibility" },
+		{ label: "Lighthouse, desktop homepage", value: "100 / 100 / 100 / 100" },
+		{ label: "Lighthouse, mobile homepage (light)", value: "97 performance, 100 accessibility" },
 		{ label: "Automated end-to-end tests", value: "103, on every push" },
 		{ label: "Database tables with Row Level Security", value: "All 26" },
 		{ label: "Accessibility checks (axe, WCAG 2.2 AA)", value: "0 violations on 14 page types, light and dark" },

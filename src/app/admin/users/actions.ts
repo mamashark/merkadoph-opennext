@@ -43,11 +43,12 @@ export type UserFormState = {
 const SAVE_FAILED = "Couldn't save the user. Please try again, or check the Supabase status if it keeps happening.";
 
 /** Plain-English message for a Supabase Auth error; anything unexpected is logged on the server only. */
-function authErrorMessage(where: string, error: { code?: string; message: string }): string {
+function authErrorMessage(where: string, error: { code?: string; status?: number; message: string }): string {
 	if (error.code === "weak_password") return WEAK_PASSWORD;
 	if (error.code === "email_exists" || /already/i.test(error.message)) return "A user with this email already exists.";
 	if (error.code === "email_address_invalid") return "Enter a valid email address.";
-	console.error(`[admin/users] ${where}`, error.code ?? "", error.message);
+	// Code and status only: Supabase's message text could contain an email (Strict rule 11). Look it up in the Supabase logs.
+	console.error(`[admin/users] ${where}`, error.code ?? "unknown", error.status ?? "");
 	return SAVE_FAILED;
 }
 
@@ -108,7 +109,7 @@ export async function deleteUser(formData: FormData) {
 
 	const { error } = await createAdminClient().auth.admin.deleteUser(id);
 	if (error) {
-		console.error("[admin/users] deleteUser", error.code ?? "", error.message);
+		console.error("[admin/users] deleteUser", error.code ?? "unknown", error.status ?? "");
 		redirect("/admin/users?error=delete-failed");
 	}
 

@@ -352,7 +352,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 	const storyCats = Array.from(new Set(stories.slice(0, 5).map((b) => firstTag(b.tags)).filter((t): t is string => !!t))).map(cap);
 
 	return (
-		<SiteShell contactHref="#contact" tone="night" revealAt="index">
+		<SiteShell contactHref="#contact" revealAt="index">
 			<JsonLd
 				data={{
 					"@context": "https://schema.org",

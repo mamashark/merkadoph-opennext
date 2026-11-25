@@ -94,14 +94,14 @@ export function PageIntro({ eyebrow, title, description, children }: { eyebrow: 
 export function LinkTabs({ tabs, current, label }: { tabs: Array<{ label: string; href: string; value: string }>; current: string; label: string }) {
 	return (
 		<nav aria-label={label} className="mb-8 border-b border-site-line">
-			<ul className="-mb-px flex gap-6">
+			<ul className="-mb-px flex flex-wrap gap-x-6">
 				{tabs.map((t) => (
 					<li key={t.value}>
 						<Link
 							href={t.href}
 							aria-current={t.value === current ? "page" : undefined}
 							className={cn(
-								"inline-flex min-h-11 items-center border-b-2 font-label text-xs font-medium tracking-[0.12em] uppercase",
+								"inline-flex min-h-11 items-center border-b-2 font-label text-xs font-medium tracking-[0.12em] uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 								t.value === current ? "border-accent text-site-ink" : "border-transparent text-site-muted hover:text-site-ink",
 							)}
 						>
@@ -114,7 +114,7 @@ export function LinkTabs({ tabs, current, label }: { tabs: Array<{ label: string
 	);
 }
 
-const CHIP = "inline-flex min-h-10 items-center border px-3.5 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors";
+const CHIP = "inline-flex min-h-10 items-center border px-3.5 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 /**
  * URL-based chip filter (e.g. /events?tag=…): the first chip ("" value) clears it. Square mono chips, as on the homepage.

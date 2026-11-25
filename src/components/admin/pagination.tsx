@@ -30,7 +30,7 @@ export function Pagination({
 	const btn = (disabled: boolean) =>
 		site
 			? cn(
-					"inline-flex min-h-10 items-center gap-1.5 border border-site-line-2 px-3.5 font-label text-xs font-medium tracking-[0.1em] text-site-ink uppercase hover:border-accent hover:text-accent",
+					"inline-flex min-h-10 items-center gap-1.5 border border-site-line-2 px-3.5 font-label text-xs font-medium tracking-[0.1em] text-site-ink uppercase hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 					disabled && "pointer-events-none opacity-40",
 				)
 			: cn(buttonClass("secondary", "sm"), disabled && "pointer-events-none opacity-50");

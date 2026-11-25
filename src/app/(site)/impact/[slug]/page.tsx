@@ -107,13 +107,13 @@ export default async function PortfolioProjectPage({ params }: PageProps<"/impac
 			</article>
 
 			{related.length > 0 && (
-				<section aria-labelledby="more-projects" className="mx-auto max-w-6xl border-t border-amber-900/10 px-4 py-12 dark:border-white/10 sm:px-6">
+				<section aria-labelledby="more-projects" className="mx-auto max-w-6xl border-t border-site-line px-4 py-12 sm:px-6">
 					<div className="flex flex-wrap items-baseline justify-between gap-3">
 						<h2 id="more-projects" className="text-2xl font-semibold tracking-tight text-site-ink">
 							{sameEvent.length ? "The same event in other years" : "More from Community Impact"}
 						</h2>
 						{year && (
-							<Link href={`/impact?year=${year}`} className="text-sm font-semibold text-teal-800 underline-offset-4 hover:underline dark:text-teal-300">
+							<Link href={`/impact?year=${year}`} className="font-label text-xs font-medium tracking-[0.1em] text-accent uppercase underline-offset-4 hover:underline">
 								Everything from {year} →
 							</Link>
 						)}

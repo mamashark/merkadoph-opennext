@@ -49,7 +49,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 			<PageIntro eyebrow="Bulletin Board" title="Mga Paalala" description={description} />
 
 			{EMBASSY_LINKS.length > 0 && (
-				<aside aria-labelledby="embassy-title" className="mb-10 border border-stone-200 p-5 dark:border-stone-800">
+				<aside aria-labelledby="embassy-title" className="mb-10 border border-site-line bg-site-surface p-5">
 					<h2 id="embassy-title" className="font-semibold text-site-ink">
 						Philippine Embassy in Sweden
 					</h2>
@@ -57,7 +57,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 					<ul className="mt-3 flex flex-wrap gap-3">
 						{EMBASSY_LINKS.map((l) => (
 							<li key={l.href}>
-								<a href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center border border-stone-300 px-4 text-sm font-semibold hover:bg-stone-50 dark:border-stone-700 dark:hover:bg-stone-800">
+								<a href={l.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center gap-2 border border-site-line-2 px-4 font-label text-xs font-medium tracking-[0.1em] text-site-ink uppercase transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
 									{l.label} ↗<span className="sr-only"> (opens in a new tab)</span>
 								</a>
 							</li>
@@ -107,7 +107,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 							) : (
 								notices.total > notices.blogs.length && (
 									<p className="mt-6">
-										<a href={listHref("notices")} className="font-semibold text-teal-800 hover:underline dark:text-teal-300">
+										<a href={listHref("notices")} className="font-semibold text-accent hover:underline">
 											All {notices.total} notices →
 										</a>
 									</p>
@@ -149,7 +149,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 							) : (
 								offers.total > offers.promotions.length && (
 									<p className="mt-6">
-										<a href={listHref("offers")} className="font-semibold text-teal-800 hover:underline dark:text-teal-300">
+										<a href={listHref("offers")} className="font-semibold text-accent hover:underline">
 											All {offers.total} offers →
 										</a>
 									</p>

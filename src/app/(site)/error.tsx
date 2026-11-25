@@ -7,23 +7,23 @@ import { Home, RotateCw } from "lucide-react";
 export default function SiteError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
 	return (
 		<main className="mx-auto max-w-2xl px-4 py-24 text-center sm:px-6">
-			<p className="inline-flex items-center gap-2 rounded-full border border-amber-900/15 bg-white/70 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-teal-800 dark:border-white/10 dark:bg-white/5 dark:text-teal-300">
-				<span className="h-1.5 w-1.5 rounded-full bg-orange-500" aria-hidden /> Something went wrong
+			<p className="kicker-mark font-label text-xs font-medium tracking-[0.14em] text-accent uppercase">
+				Something went wrong
 			</p>
-			<h1 className="mt-6 text-3xl font-semibold tracking-tight text-site-ink sm:text-4xl">Pasensya na, may problema.</h1>
+			<h1 className="mt-6 font-display text-4xl font-bold tracking-tight text-site-ink sm:text-5xl">Pasensya na, may problema.</h1>
 			<p className="mt-3 text-lg text-site-ink-2">This page couldn&apos;t load right now. Please try again in a moment.</p>
 			{error.digest && <p className="mt-2 font-mono text-xs text-site-muted">Reference: {error.digest}</p>}
 			<div className="mt-8 flex flex-wrap justify-center gap-3">
 				<button
 					type="button"
 					onClick={retry}
-					className="inline-flex h-12 items-center gap-2 bg-stone-900 px-6 text-sm font-semibold text-white hover:bg-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200 dark:focus-visible:ring-offset-stone-950"
+					className="inline-flex min-h-12 items-center gap-2 border border-site-ink bg-site-ink px-6 font-label text-xs font-medium tracking-[0.1em] text-site-bg uppercase transition-colors hover:bg-transparent hover:text-site-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 				>
 					<RotateCw className="h-4 w-4" aria-hidden /> Try again
 				</button>
 				<Link
 					href="/"
-					className="inline-flex h-12 items-center gap-2 border border-stone-300 px-6 text-sm font-semibold text-stone-800 hover:bg-white dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-900"
+					className="inline-flex min-h-12 items-center gap-2 border border-site-line-2 px-6 font-label text-xs font-medium tracking-[0.1em] text-site-ink uppercase transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 				>
 					<Home className="h-4 w-4" aria-hidden /> Back to home
 				</Link>

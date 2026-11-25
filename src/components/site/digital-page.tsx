@@ -28,7 +28,7 @@ export function digitalMetadata(): Promise<Metadata> {
  */
 export function DigitalPage() {
 	return (
-		<SiteShell contactHref="#contact" tone="night">
+		<SiteShell contactHref="#contact">
 			<JsonLd
 				data={[
 					{

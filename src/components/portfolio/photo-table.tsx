@@ -32,7 +32,7 @@ function Print({ img, i, label, onOpen, priority, buttonRef, tabIndex }: { img: 
 				onClick={onOpen}
 				aria-haspopup="dialog"
 				aria-label={`Open photo ${i + 1} full screen: ${label}`}
-				className="relative block aspect-square w-full cursor-zoom-in overflow-hidden bg-stone-200 ring-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700"
+				className="relative block aspect-square w-full cursor-zoom-in overflow-hidden bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 			>
 				<Image src={img.url} alt={label} fill sizes="(max-width: 640px) 45vw, 256px" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} className="object-cover" />
 			</button>
@@ -72,7 +72,7 @@ export function PhotoTable({ images, title, priorityFirst = false }: { images: P
 		<>
 			{n > 1 && (
 				<div className="mb-6 flex justify-center">
-					<div className="inline-flex gap-1 rounded-full bg-stone-900/5 p-1 text-sm font-medium dark:bg-white/10" role="group" aria-label="How to show the photos">
+					<div className="inline-flex border border-site-line-2" role="group" aria-label="How to show the photos">
 						{(
 							[
 								{ v: "table", label: "Spread out", Icon: LayoutGrid },
@@ -85,8 +85,8 @@ export function PhotoTable({ images, title, priorityFirst = false }: { images: P
 								aria-pressed={view === v}
 								onClick={() => setView(v)}
 								className={cn(
-									"inline-flex min-h-11 items-center gap-2 rounded-full px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700",
-									view === v ? "bg-white text-stone-900 shadow-sm dark:bg-stone-800 dark:text-white" : "text-stone-700 hover:text-stone-950 dark:text-stone-300 dark:hover:text-white",
+									"inline-flex min-h-11 items-center gap-2 px-4 font-label text-xs font-medium tracking-[0.1em] uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+									view === v ? "bg-accent text-on-accent" : "text-site-ink-2 hover:text-accent",
 								)}
 							>
 								<Icon className="h-4 w-4" aria-hidden />
@@ -141,13 +141,13 @@ export function PhotoTable({ images, title, priorityFirst = false }: { images: P
 						})}
 					</div>
 					<div className="mt-8 flex items-center gap-4">
-						<button type="button" onClick={() => deal(-1)} aria-label="Previous photo" className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-stone-300 text-stone-800 hover:bg-stone-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800">
+						<button type="button" onClick={() => deal(-1)} aria-label="Previous photo" className="inline-flex h-11 w-11 items-center justify-center border border-site-line-2 text-site-ink hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
 							<ChevronLeft className="h-5 w-5" aria-hidden />
 						</button>
-						<p className="min-w-16 text-center text-sm tabular-nums text-site-ink-2" aria-live="polite">
+						<p className="min-w-16 text-center font-label text-xs tabular-nums text-site-ink-2" aria-live="polite">
 							{top + 1} / {n}
 						</p>
-						<button type="button" onClick={() => deal(1)} aria-label="Next photo" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-teal-700 px-5 text-sm font-semibold text-white hover:bg-teal-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-700 focus-visible:ring-offset-2 dark:bg-teal-500 dark:text-stone-950 dark:hover:bg-teal-400">
+						<button type="button" onClick={() => deal(1)} aria-label="Next photo" className="inline-flex h-11 items-center gap-1.5 border border-accent bg-accent px-5 font-label text-xs font-medium tracking-[0.1em] text-on-accent uppercase hover:bg-transparent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
 							Next photo <ChevronRight className="h-4 w-4" aria-hidden />
 						</button>
 					</div>

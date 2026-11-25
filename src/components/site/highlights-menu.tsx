@@ -68,7 +68,7 @@ export function HighlightsMenu({ shop = false }: { shop?: boolean }) {
 									href={i.href}
 									aria-current={active ? "page" : undefined}
 									className={cn(
-										"flex items-center gap-3 px-4 py-2.5 hover:bg-site-sunken focus-visible:bg-site-sunken focus-visible:outline-none",
+										"flex items-center gap-3 px-4 py-2.5 hover:bg-site-sunken focus-visible:bg-site-sunken focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent",
 										active && "bg-site-sunken",
 									)}
 								>
@@ -85,7 +85,7 @@ export function HighlightsMenu({ shop = false }: { shop?: boolean }) {
 						);
 					})}
 				</ul>
-				<Link href="/#index" className="flex items-center justify-center gap-1.5 px-4 py-3 font-label text-xs font-medium tracking-[0.1em] uppercase hover:bg-site-sunken">
+				<Link href="/#index" className="flex items-center justify-center gap-1.5 px-4 py-3 font-label text-xs font-medium tracking-[0.1em] uppercase hover:bg-site-sunken focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent">
 					View all highlights <ArrowUpRight className="h-4 w-4" aria-hidden />
 				</Link>
 			</div>

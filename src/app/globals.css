@@ -108,7 +108,8 @@
 	--home-tint-orange: #fde9da;
 	--home-highlight: #ffcc3f;
 	/* Site colours, light (day): the homepage's cream page with olive text; accents are the homepage's light-mode
-	   section colours (each ≥ 4.5:1 on the cream page, and white text on them ≥ 4.5:1). */
+	   section colours (each ≥ 4.5:1 on the cream page, and white text on them ≥ 4.5:1).
+	   Accent TEXT only on --site-bg or --site-surface: on --site-sunken some accents drop to ~4.3:1 (Arvid). */
 	--site-bg: #f7f5ee;
 	--site-surface: #ffffff;
 	--site-sunken: #eeebe0;
@@ -286,7 +287,7 @@ body {
 .prose-blog figure img {
 	width: 100%;
 	height: auto;
-		background: var(--site-sunken);
+	background: var(--site-sunken);
 }
 .prose-blog figcaption {
 	margin-top: 0.75em;
@@ -304,7 +305,7 @@ body {
 }
 .prose-blog pre {
 	overflow-x: auto;
-		background: var(--site-sunken);
+	background: var(--site-sunken);
 	padding: 1em 1.25em;
 	color: var(--site-ink);
 	font-size: 0.875rem;
@@ -395,8 +396,6 @@ html[data-hero-lock] {
 .accent-bulletin,
 .accent-promotions { --accent: var(--site-coral); }
 .accent-services { --accent: var(--site-orange); }
-.accent-digital { --accent: var(--site-blue); }
-.accent-tahooo { --accent: var(--site-caramel); }
 
 /* A small square in the section colour before a label (the homepage's kicker mark). */
 .kicker-mark::before {

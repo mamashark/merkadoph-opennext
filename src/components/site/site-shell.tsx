@@ -14,23 +14,22 @@ const SOCIAL_LABELS: Record<string, string> = { facebook: "Facebook", instagram:
 /**
  * Public site chrome (header with section navigation + footer), shared by (site)/* and the homepage.
  * Every page uses the site design system (globals.css `--site-*`, Kay 2026-11-25): the homepage's cream day page in
- * light mode and its night sky in dark mode, square corners, thin lines and Plex Mono labels. `tone` is kept for the
- * callers but no longer changes the colours.
+ * light mode and its night sky in dark mode, square corners, thin lines and Plex Mono labels, the same on every page.
  * Header: Merkado PH (home) · Highlights menu · Search ··· Get in touch (`contactHref`, else the homepage's contact section).
  * With `revealAt` (the homepage) the header has no logo and stays hidden until that section scrolls into view.
  */
 export async function SiteShell({
 	children,
 	contactHref,
-	tone = "default",
 	revealAt,
 }: {
 	children: React.ReactNode;
 	contactHref?: string;
-	tone?: "default" | "home" | "night";
 	revealAt?: string;
+	/** @deprecated No effect: every page has the same look. Only the old, unrendered home-page.tsx still passes it
+	 *  (guidelines §8: that file isn't edited). */
+	tone?: string;
 }) {
-	void tone;
 	const [shop, seo] = await Promise.all([getShopSettings().catch(() => null), getSeoSettings()]);
 	const shopEnabled = shop?.enabled ?? false;
 	const social = socialLinks(seo);
@@ -99,7 +98,7 @@ export async function SiteShell({
 								</span>
 							))}
 							{seo.phone && (
-								<a href={`tel:${seo.phone.replace(/[^d+]/g, "")}`} className="block hover:text-site-ink hover:underline">
+								<a href={`tel:${seo.phone.replace(/[^\d+]/g, "")}`} className="block hover:text-site-ink hover:underline">
 									{seo.phone}
 								</a>
 							)}

@@ -96,7 +96,7 @@ export function Facts({ facts, children }: { facts: Fact[]; children?: React.Rea
 export function CtaLink({ href, children, variant = "primary" }: { href: string; children: React.ReactNode; variant?: "primary" | "secondary" }) {
 	const external = /^https?:\/\//.test(href);
 	const className = cn(
-		"inline-flex min-h-11 items-center gap-1.5 border px-4 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors",
+		"inline-flex min-h-11 items-center gap-1.5 border px-4 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
 		variant === "primary" ? "border-accent bg-accent text-on-accent hover:bg-transparent hover:text-accent" : "border-site-line-2 text-site-ink hover:border-accent hover:text-accent",
 	);
 	// Paths on this site stay on the current deployment's domain (NEXT_PUBLIC_SITE_URL).

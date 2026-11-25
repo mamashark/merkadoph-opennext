@@ -166,9 +166,9 @@ export const caseStudy = {
 			area: "Testing",
 			title: "A small dependency update that broke the homepage",
 			problem: "A routine update of libraries within their allowed versions passed lint, type checks and the build, but several end-to-end browser tests on the homepage graph started failing.",
-			cause: "The same tests passed on the unchanged code, so the update was to blame. Comparing the old and new lockfiles narrowed it to a few packages, and rolling back the graph library (d3) by one patch release fixed every test.",
-			fix: "I pinned that library to the working version and kept the other updates. The full test suite passed again before merge.",
-			result: "Caught before anything went live. A pinned library doesn't get fixes automatically, so finding the root cause and unpinning it is on my list.",
+			cause: "The same tests passed on the unchanged code, so the update was to blame. Comparing the old and new lockfiles narrowed it to a few packages, and rolling back the graph library (d3) by one patch release fixed every test. The new release marks itself as free of side effects, so the bundler could drop its animation module, which only registers itself when it is loaded; my graph code never imported it directly.",
+			fix: "One explicit import of that module, so the bundler always keeps it, and the library back on its normal version range. The previously failing tests all pass.",
+			result: "Caught before anything went live, and fixed at the cause instead of by holding the library back.",
 		},
 	] satisfies Challenge[],
 

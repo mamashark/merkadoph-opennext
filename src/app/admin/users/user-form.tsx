@@ -1,19 +1,29 @@
-import { createUser, updateUser } from "./actions";
+"use client";
+
+import { useActionState } from "react";
+import { createUser, updateUser, type UserFormState } from "./actions";
 import type { AdminUser } from "@/lib/users";
+import { Alert } from "@/components/ui/alert";
 import { SubmitButton } from "@/components/ui/submit-button";
 import { cardClass, hintClass, inputClass, labelClass } from "@/lib/ui";
-import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/validation";
+import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
 
 type Props = {
 	user?: AdminUser;
 	isSelf?: boolean;
-	/** Values echoed back after a failed create. */
-	draft?: { name?: string; email?: string };
 };
 
-export function UserForm({ user, isSelf, draft }: Props) {
+export function UserForm({ user, isSelf }: Props) {
+	const [state, action] = useActionState<UserFormState, FormData>(user ? updateUser : createUser, {});
+	// After a failed save, show what was typed (never the password); the key remounts the inputs with it.
+	const draft = state.values;
 	return (
-		<form action={user ? updateUser : createUser} className={`${cardClass} max-w-2xl divide-y divide-slate-100 dark:divide-slate-800`}>
+		<form key={`${state.savedAt ?? 0}-${JSON.stringify(draft ?? null)}`} action={action} className={`${cardClass} max-w-2xl divide-y divide-slate-100 dark:divide-slate-800`}>
+			{(state.error || state.notice) && (
+				<div className="p-5">
+					{state.error ? <Alert tone="error">{state.error}</Alert> : <Alert>{state.notice}</Alert>}
+				</div>
+			)}
 			{user && <input type="hidden" name="id" value={user.id} />}
 
 			<div className="grid gap-5 p-5 sm:grid-cols-2">
@@ -21,7 +31,7 @@ export function UserForm({ user, isSelf, draft }: Props) {
 					<label htmlFor="name" className={labelClass}>
 						Full name
 					</label>
-					<input id="name" name="name" maxLength={100} defaultValue={user?.name ?? draft?.name} autoComplete="off" placeholder="Juan Dela Cruz" className={inputClass} />
+					<input id="name" name="name" maxLength={100} defaultValue={draft?.name ?? user?.name} autoComplete="off" placeholder="Juan Dela Cruz" className={inputClass} />
 				</div>
 				<div>
 					<label htmlFor="email" className={labelClass}>
@@ -33,7 +43,7 @@ export function UserForm({ user, isSelf, draft }: Props) {
 						type="email"
 						required
 						maxLength={254}
-						defaultValue={user?.email ?? draft?.email}
+						defaultValue={draft?.email ?? user?.email}
 						autoComplete="off"
 						placeholder="name@merkado.ph"
 						className={inputClass}
@@ -53,7 +63,7 @@ export function UserForm({ user, isSelf, draft }: Props) {
 					<input
 						type="checkbox"
 						name="access"
-						defaultChecked={user ? user.hasAccess : true}
+						defaultChecked={draft ? draft.hasAccess : user ? user.hasAccess : true}
 						disabled={isSelf}
 						className="mt-0.5 h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-teal-600 focus:ring-teal-500"
 					/>

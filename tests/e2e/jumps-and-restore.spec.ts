@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { bandTop, scrollToBand, watchErrors } from "./helpers";
+import { scrollToBand, settledBandTop, watchErrors } from "./helpers";
 
 // B28: in-page jumps land at the 64px scroll margin. B29: Back and reload restore the scroll position.
 for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
@@ -18,9 +18,11 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
 				const link = page.locator(`a[data-dive="${id}"]`);
 				await link.scrollIntoViewIfNeeded();
 				await link.click();
-				await expect.poll(() => bandTop(page, id), { timeout: 8000, message: `dive ${id}` }).toBeGreaterThanOrEqual(62);
-				await page.waitForTimeout(1500);
-				expect(await bandTop(page, id), `dive ${id}`).toBeLessThanOrEqual(66);
+				// The smooth scroll may not have started yet under load, so a "settled" reading can be the pre-jump position: keep reading until the band has landed.
+				await expect.poll(() => settledBandTop(page, id, { quietMs: 400 }), { timeout: 25_000, message: `dive ${id}` }).toBeLessThanOrEqual(66);
+				const top = await settledBandTop(page, id);
+				expect(top, `dive ${id}`).toBeGreaterThanOrEqual(62);
+				expect(top, `dive ${id}`).toBeLessThanOrEqual(66);
 			}
 			// The header "Contact" link.
 			await page.goto("/", { waitUntil: "load" });
@@ -34,8 +36,8 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
 			const contact = page.locator('header a[href="#contact"]').first();
 			await expect(contact).toBeInViewport({ timeout: 5000 });
 			await contact.click();
-			await page.waitForTimeout(2500);
-			const t = await bandTop(page, "contact");
+			await expect.poll(() => settledBandTop(page, "contact", { quietMs: 400 }), { timeout: 25_000, message: "header #contact" }).toBeLessThanOrEqual(66);
+			const t = await settledBandTop(page, "contact");
 			expect(t, "header #contact").toBeGreaterThanOrEqual(62);
 			expect(t, "header #contact").toBeLessThanOrEqual(66);
 			expect(errors.list).toEqual([]);
@@ -48,14 +50,14 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
 				const link = page.locator(`#${band} a[href^="${prefix}"]`).first();
 				if ((await link.count()) === 0) continue; // no published card in this band
 				await link.evaluate((a) => a.scrollIntoView({ block: "nearest" }));
-				const before = await bandTop(page, band);
+				const before = await settledBandTop(page, band);
 				await link.click();
 				await page.waitForURL((u) => u.pathname !== "/", { timeout: 15_000 });
 				await page.waitForTimeout(1500);
 				await page.goBack();
 				await page.waitForURL((u) => u.pathname === "/", { timeout: 15_000 });
-				await page.waitForTimeout(2500);
-				expect(Math.abs((await bandTop(page, band)) - before), `Back from ${band}`).toBeLessThanOrEqual(2);
+				// Restore can land after the first quiet reading, so keep reading until the position matches (or time out).
+				await expect.poll(async () => Math.abs((await settledBandTop(page, band, { quietMs: 400 })) - before), { timeout: 25_000, message: `Back from ${band}` }).toBeLessThanOrEqual(2);
 			}
 		});
 
@@ -63,10 +65,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 1280, height: 800 }]) {
 			for (const band of ["tahooo", "bulletin", "events"]) {
 				await page.goto("/", { waitUntil: "load" });
 				await scrollToBand(page, band);
-				const before = await bandTop(page, band);
+				const before = await settledBandTop(page, band);
 				await page.reload({ waitUntil: "load" });
-				await page.waitForTimeout(5000);
-				expect(Math.abs((await bandTop(page, band)) - before), `reload at ${band}`).toBeLessThanOrEqual(2);
+				await expect.poll(async () => Math.abs((await settledBandTop(page, band, { quietMs: 400 })) - before), { timeout: 25_000, message: `reload at ${band}` }).toBeLessThanOrEqual(2);
 			}
 		});
 	});

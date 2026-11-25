@@ -62,3 +62,22 @@ export async function scrollToBand(page: Page, id: string) {
 
 export const bandTop = (page: Page, id: string) =>
 	page.evaluate((id) => Math.round(document.getElementById(id)!.getBoundingClientRect().top), id);
+
+/** A band's top once the scroll has settled: polls until scrollY and the top are unchanged for `quietMs`, so CPU load can't make a fixed wait too short. */
+export async function settledBandTop(page: Page, id: string, { quietMs = 600, timeout = 20_000 } = {}) {
+	const read = () =>
+		page.evaluate((id) => `${Math.round(window.scrollY)}:${Math.round(document.getElementById(id)!.getBoundingClientRect().top)}`, id);
+	const start = Date.now();
+	let last = await read();
+	let since = Date.now();
+	while (Date.now() - since < quietMs) {
+		if (Date.now() - start > timeout) throw new Error(`scroll to #${id} did not settle within ${timeout} ms`);
+		await page.waitForTimeout(50);
+		const now = await read();
+		if (now !== last) {
+			last = now;
+			since = Date.now();
+		}
+	}
+	return Number(last.split(":")[1]);
+}

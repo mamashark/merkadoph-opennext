@@ -392,6 +392,16 @@
 	text-transform: uppercase;
 	color: var(--muted);
 }
+/* "Read the blog →": says the mark is a link to a post. */
+.chapterCta {
+	color: var(--sun);
+}
+/* Very short screens (small phones held sideways): only "Read the blog →" fits beside the word. */
+@media (max-height: 420px) and (orientation: landscape) {
+	.chapterLead {
+		display: none;
+	}
+}
 .chapter:hover .chapterTitle {
 	color: var(--sun);
 }
@@ -402,9 +412,14 @@
 .stage:has(.chapter) .panel {
 	left: var(--chapter-w);
 }
+/* With the chapter mark on the left, the title sits bottom right (Kay, 2026-11-25). The graph's keep-out box is
+   measured from the title wherever it is, so stars stay clear of it here too. */
 .stage:has(.chapter) .intro {
-	padding-left: calc(var(--chapter-w) + 24px);
-	max-width: calc(36rem + var(--chapter-w));
+	left: auto;
+	right: 0;
+	align-items: flex-end;
+	text-align: right;
+	max-width: min(36rem, calc(100% - var(--chapter-w)));
 }
 @media (max-width: 560px) {
 	.lede {
@@ -2154,5 +2169,7 @@
 	.stage:has(.chapter) .intro {
 		padding-left: var(--side);
 		max-width: none;
+		align-items: stretch;
+		text-align: left;
 	}
 }

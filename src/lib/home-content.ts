@@ -16,7 +16,7 @@ export const HOME = {
 		title: "Merkado PH",
 		lede: "The store has a new home. This is what comes next: Filipino culture, festivals and pop-ups, and three years of stories from our community.",
 		/** The big vertical word down the hero's left edge (upright phones: across the top), linking to the Bagong Yugto post. */
-		chapter: { title: "Ang Bagong Yugto", sub: "The Next Chapter", href: "/blogs/bagong-yugto-next-chapter-for-merkado-ph" },
+		chapter: { title: "Ang Bagong Yugto", sub: "The Next Chapter", cta: "Read the blog", href: "/blogs/bagong-yugto-next-chapter-for-merkado-ph" },
 	},
 
 	/**

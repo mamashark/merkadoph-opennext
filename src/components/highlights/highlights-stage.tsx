@@ -19,7 +19,7 @@ type Props = {
 	title: string;
 	lede: string;
 	/** Big vertical word down the left edge, linking to a page (Kay, 2026-11-25). */
-	chapter?: { title: string; sub: string; href: string };
+	chapter?: { title: string; sub: string; cta: string; href: string };
 	label: string;
 	worlds: WorldInfo[];
 };
@@ -748,7 +748,10 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, chapter, la
 			{/* The chapter mark: a big vertical word down the left edge (across the top on upright phones). The sky starts to its right. */}
 			{chapter && (
 				<Link href={chapter.href} className={styles.chapter}>
-					<span className={styles.chapterSub}>{chapter.sub}</span>{" "}
+					<span className={styles.chapterSub}>
+						<span className={styles.chapterLead}>{chapter.sub} · </span>
+						<span className={styles.chapterCta}>{chapter.cta} →</span>
+					</span>{" "}
 					<span className={styles.chapterTitle} lang="tl">
 						{chapter.title}
 					</span>

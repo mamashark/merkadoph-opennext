@@ -36,7 +36,18 @@ export function tagsByUse(rows: Array<{ tags?: string[] | null }>): string[] {
 	return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
 }
 
-export type ContentTable = "blogs" | "events" | "promotions" | "services" | "portfolios" | "products" | "product_categories" | "product_tags";
+export type ContentTable =
+	| "blogs"
+	| "events"
+	| "promotions"
+	| "services"
+	| "portfolios"
+	| "products"
+	| "product_categories"
+	| "product_tags"
+	| "bulletin_items"
+	| "bulletin_categories"
+	| "bulletin_publishers";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {
 	if (row.status !== "published") return "draft";
@@ -94,4 +105,12 @@ export function param(params: Record<string, string | string[] | undefined>, key
 
 export function pageParam(params: Record<string, string | string[] | undefined>): number {
 	return Math.min(MAX_PAGE + 1, Math.max(1, Math.floor(Number(param(params, "page"))) || 1));
+}
+
+/**
+ * Looks up `key` in a fixed message map (e.g. ?error=<code> → text) without picking up Object built-ins
+ * like "__proto__" or "constructor", which would crash the page (Sig, 2026-11-25).
+ */
+export function messageFor(map: Record<string, string>, key: string): string | undefined {
+	return Object.hasOwn(map, key) ? map[key] : undefined;
 }

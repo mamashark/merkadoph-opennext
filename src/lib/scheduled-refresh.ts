@@ -17,6 +17,8 @@ const CHECKS: { tag: ContentTag; table: string; columns: string[] }[] = [
 	{ tag: "promotions", table: "promotions", columns: ["published_at", "starts_at", "ends_at"] },
 	{ tag: "services", table: "services", columns: ["published_at"] },
 	{ tag: "portfolio", table: "portfolios", columns: ["published_at"] },
+	// Expired items are hidden by RLS; purge so cached lists drop them within 15 minutes, not a day.
+	{ tag: "bulletin", table: "bulletin_items", columns: ["published_at", "expires_at"] },
 ];
 
 /** Purges the content types with a scheduled moment in the last window. Returns which ones (for the cron log). */

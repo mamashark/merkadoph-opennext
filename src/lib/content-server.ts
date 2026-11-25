@@ -29,7 +29,8 @@ export function optional(value: string): string | null {
 export function optionalLink(formData: FormData, key: string): string | null {
 	const value = toSitePath(text(formData, key, 1000));
 	if (!value) return null;
-	if (value.startsWith("/") && !value.startsWith("//") && !/\s/.test(value)) return value;
+	// No whitespace or backslashes: "/\\evil.example" would resolve to another site (Sig, 2026-11-25).
+	if (value.startsWith("/") && !value.startsWith("//") && !/[\s\\]/.test(value)) return value;
 	return isHttpUrl(value) ? value : null;
 }
 

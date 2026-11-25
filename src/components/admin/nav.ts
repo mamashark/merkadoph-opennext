@@ -1,4 +1,4 @@
-import { BriefcaseBusiness, GalleryHorizontalEnd, CalendarDays, Tag, Database, FileText, Globe, Images, Inbox, LayoutDashboard, ScrollText, ShieldCheck, ShoppingBag, TicketPercent, Users, Zap, type LucideIcon } from "lucide-react";
+import { BriefcaseBusiness, GalleryHorizontalEnd, CalendarDays, Tag, Database, FileText, Globe, Images, Inbox, LayoutDashboard, ScrollText, ShieldCheck, ShoppingBag, TicketPercent, Users, Zap, type LucideIcon, Megaphone } from "lucide-react";
 
 export type NavLeaf = { label: string; href: string };
 export type NavItem = { label: string; icon: LucideIcon; href?: string; children?: NavLeaf[] };
@@ -37,6 +37,16 @@ export const adminNav: NavSection[] = [
 				children: [
 					{ label: "All promotions", href: "/admin/promotions" },
 					{ label: "New promotion", href: "/admin/promotions/new" },
+				],
+			},
+			{
+				label: "Bulletin Board",
+				icon: Megaphone,
+				children: [
+					{ label: "All items", href: "/admin/bulletin" },
+					{ label: "New item", href: "/admin/bulletin/new" },
+					{ label: "Categories", href: "/admin/bulletin/categories" },
+					{ label: "Publishers", href: "/admin/bulletin/publishers" },
 				],
 			},
 			{

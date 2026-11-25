@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-	/* Brand cream and olive: the same cream as the site pages (--site-bg). */
-	--background: #f7f5ee;
+	/* Light page background and olive text: the same background as the site pages (--site-bg). */
+	--background: #fafafa;
 	--foreground: #33331e;
 }
 
@@ -107,10 +107,10 @@
 	--home-tint-teal: #e0f7ef;
 	--home-tint-orange: #fde9da;
 	--home-highlight: #ffcc3f;
-	/* Site colours, light (day): the homepage's cream page with olive text; accents are the homepage's light-mode
-	   section colours (each ≥ 4.5:1 on the cream page, and white text on them ≥ 4.5:1).
+	/* Site colours, light (day): the homepage's off-white page with olive text; accents are the homepage's light-mode
+	   section colours (each ≥ 4.5:1 on the page background, and white text on them ≥ 4.5:1).
 	   Accent TEXT only on --site-bg or --site-surface: on --site-sunken some accents drop to ~4.3:1 (Arvid). */
-	--site-bg: #f7f5ee;
+	--site-bg: #fafafa; /* Light page background (Kay, 2026-11-25: was cream #f7f5ee). */
 	--site-surface: #ffffff;
 	--site-sunken: #eeebe0;
 	--site-ink: #33331e;

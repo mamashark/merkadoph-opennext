@@ -1,7 +1,7 @@
 /* Night-sky constellation (day sky in light mode); headline anchored bottom-left, hub labels float in the graph. */
 .stage {
 	/* Light: daytime sky. The graph reads these variables too (see engine.ts). */
-	--night: #f7f5ee;
+	--night: #fafafa;
 	--ink: #33331e;
 	--muted: #5f5c4a;
 	--blue: #2f5bd8;

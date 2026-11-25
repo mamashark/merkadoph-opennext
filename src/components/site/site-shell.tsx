@@ -13,7 +13,7 @@ const SOCIAL_LABELS: Record<string, string> = { facebook: "Facebook", instagram:
 
 /**
  * Public site chrome (header with section navigation + footer), shared by (site)/* and the homepage.
- * Every page uses the site design system (globals.css `--site-*`, Kay 2026-11-25): the homepage's cream day page in
+ * Every page uses the site design system (globals.css `--site-*`, Kay 2026-11-25): the homepage's light day page (#fafafa) in
  * light mode and its night sky in dark mode, square corners, thin lines and Plex Mono labels, the same on every page.
  * Header: Merkado PH (home) · Highlights menu · Search ··· Get in touch (`contactHref`, else the homepage's contact section).
  * With `revealAt` (the homepage) the header has no logo and stays hidden until that section scrolls into view.

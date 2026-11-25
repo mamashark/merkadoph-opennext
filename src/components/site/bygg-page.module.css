@@ -62,7 +62,7 @@
 }
 @media (prefers-color-scheme: dark) {
 	.logoTile {
-		background: #f7f5ee;
+		background: #fafafa;
 	}
 }
 .logoTile img {
@@ -209,7 +209,7 @@
 }
 @media (prefers-color-scheme: dark) {
 	.signLogo {
-		background: #f7f5ee;
+		background: #fafafa;
 	}
 }
 .signLogo img {

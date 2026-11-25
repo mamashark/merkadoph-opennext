@@ -358,6 +358,8 @@
 	/* 1, not tighter: the line box must hold the g's descenders, or they reach the band's edge. */
 	line-height: 1;
 	letter-spacing: -0.03em;
+	/* Brand yellow by default, white on hover (Kay, 2026-11-25). */
+	color: var(--sun);
 	transition: color 0.2s;
 }
 .chapterSub {
@@ -383,7 +385,7 @@
 	}
 }
 .chapter:hover .chapterTitle {
-	color: var(--sun);
+	color: var(--ink);
 }
 .chapter:focus-visible {
 	outline: 2px solid var(--sun);

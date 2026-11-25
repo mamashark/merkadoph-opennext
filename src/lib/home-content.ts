@@ -54,20 +54,20 @@ export const HOME = {
 
 	/** The section for each Highlight further down the page: its heading and the line under it. */
 	sections: {
-		blogs: { heading: "Mga *Kuwento*", body: "Food, faith, fiestas and family — stories about Filipino life, at home and in Sweden." },
+		blogs: { heading: "Stories we *carry*", body: "The flavours, traditions and memories that connect us to home, wherever we may be." },
 		events: {
-			heading: "Pista & *pop-ups*",
-			body: "Community and cultural events, pop-ups and festivals with Merkado PH and friends.",
+			heading: "What’s up! Ano’ng *ganap*?",
+			body: "Discover markets, cultural gatherings and opportunities to meet our community.",
 			/** Shown instead when no events are coming up. */
 			bodyNoUpcoming: "No events coming up right now. These are our most recent ones; follow the Bulletin Board for news.",
 		},
-		impact: { heading: "Sama-*sama*", body: "Every year, the same community: the markets, Independence Day, our anniversaries and Tambayan Sessions, year by year." },
+		impact: { heading: "Beyond borders. Better *together*.", body: "Every year, the same community: the markets, Independence Day, our anniversaries and Tambayan Sessions, year by year." },
 		/** The Bygg and Digital lines under the heading come from bygg-content.ts (intro) and digital-content.ts (lede). */
 		bygg: { heading: "Merkado *Byggnadsavdelning*" },
 		digital: { heading: "Merkado PH *Digital*" },
 		/** The Taho line under the heading, the menu card and the booking steps come from tahooo-content.ts. */
 		tahooo: { heading: "Project *Taho*", bookCard: "Book the cart" },
-		bulletin: { heading: "Mga *Paalala*", body: "News from the Philippine Embassy in Sweden, community notices and offers from friends of Merkado PH." },
+		bulletin: { heading: "Ano’ng latest na *chismis*?", body: "The good kind of chismis. Embassy updates, community announcements, opportunities and special offers from friends of Merkado PH." },
 	},
 
 	/** Small labels used on cards and links. */
@@ -87,8 +87,8 @@ export const HOME = {
 	/** "Get in touch" section with the contact form. */
 	contact: {
 		eyebrow: "Kumusta?",
-		heading: "Get in *touch*.",
-		lede: "Submit an event, list your business, write for us or ask a question. We usually reply within 1–2 business days — in English, Filipino or Swedish.",
+		heading: "Let’s create something *good*.",
+		lede: "Have an idea, a project or a story worth sharing? Let’s collaborate! Contact us.",
 	},
 
 	/** The last strip of the page. */

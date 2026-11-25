@@ -17,6 +17,8 @@ export type Challenge = { area: string; title: string; problem: string; cause?: 
 
 export const caseStudy = {
 	/** ISO date of the last content update, shown on the page. */
+	/** ISO date the page was first published (structured data). */
+	published: "2026-11-25",
 	updated: "2026-11-25",
 	title: "How this site was built",
 	description:

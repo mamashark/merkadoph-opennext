@@ -46,7 +46,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 
 	return (
 		<main className="accent-bulletin mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-			<PageIntro eyebrow="Bulletin Board" title="Mga Paalala" description={description} />
+			<PageIntro eyebrow="Bulletin Board" title="Ano’ng latest na chismis?" description={description} />
 
 			{EMBASSY_LINKS.length > 0 && (
 				<aside aria-labelledby="embassy-title" className="mb-10 border border-site-line bg-site-surface p-5">

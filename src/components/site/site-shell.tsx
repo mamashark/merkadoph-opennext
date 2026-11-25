@@ -91,7 +91,8 @@ export async function SiteShell({
 				<div className="mx-auto grid max-w-6xl gap-8 px-4 py-10 text-sm text-site-ink-2 sm:grid-cols-3 sm:px-6">
 					<div>
 						<p className="font-display text-base font-bold text-site-ink">{seo.business_name}</p>
-						<address className="mt-2 space-y-0.5 not-italic">
+						<p className="mt-1 max-w-xs">Connecting ideas, people and possibilities. A Filipino-rooted creative and community platform in Sweden.</p>
+						<address className="mt-3 space-y-0.5 not-italic">
 							{addressLines.map((line) => (
 								<span key={line} className="block">
 									{line}

@@ -42,7 +42,7 @@ export default async function PromotionPage({ params }: PageProps<"/promotions/[
 	const terms = promo.terms?.split(/\r?\n/).map((t) => t.replace(/^[-•*]\s*/, "").trim()).filter(Boolean) ?? [];
 
 	return (
-		<main>
+		<main className="accent-promotions">
 			<JsonLd
 				data={[
 					{
@@ -66,7 +66,7 @@ export default async function PromotionPage({ params }: PageProps<"/promotions/[
 			<article>
 				<DetailHeader backHref="/promotions" backLabel="All promotions" tags={promo.tags} title={promo.title} excerpt={promo.excerpt}>
 					{validity !== "active" && (
-						<p className="mt-4 inline-flex rounded-full bg-stone-200 px-3 py-1 text-xs font-semibold text-stone-800 dark:bg-stone-800 dark:text-stone-200">
+						<p className="mt-4 inline-flex border border-site-line-2 px-2.5 py-1 font-label text-xs font-medium tracking-[0.1em] text-site-muted uppercase">
 							{validity === "ended" ? "This promotion has ended" : "This promotion hasn't started yet"}
 						</p>
 					)}
@@ -81,7 +81,7 @@ export default async function PromotionPage({ params }: PageProps<"/promotions/[
 							label: "Promo code",
 							value: promo.promo_code ? (
 								<span className="inline-flex items-center gap-2">
-									<code className="rounded-md bg-stone-100 px-2 py-1 font-mono text-base tracking-wider text-stone-900 dark:bg-stone-800 dark:text-white">{promo.promo_code}</code>
+									<code className="border border-dashed border-accent px-2 py-1 font-label text-base tracking-wider text-site-ink">{promo.promo_code}</code>
 									<CopyButton value={promo.promo_code} label="Copy promo code" icon="copy" />
 								</span>
 							) : null,
@@ -95,11 +95,11 @@ export default async function PromotionPage({ params }: PageProps<"/promotions/[
 				<Body content={promo.content} />
 
 				{terms.length > 0 && (
-					<section aria-labelledby="terms-heading" className="mx-auto max-w-3xl px-4 pb-10 sm:px-6">
-						<h2 id="terms-heading" className="text-lg font-semibold text-stone-900 dark:text-white">
+					<section aria-labelledby="terms-heading" className="mx-auto w-full max-w-[42rem] px-4 pb-10 sm:px-8">
+						<h2 id="terms-heading" className="kicker-mark font-label text-xs font-medium tracking-[0.14em] text-accent uppercase">
 							Terms &amp; conditions
 						</h2>
-						<ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-stone-700 dark:text-stone-300">
+						<ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-site-ink-2">
 							{terms.map((t, i) => (
 								<li key={i}>{t}</li>
 							))}

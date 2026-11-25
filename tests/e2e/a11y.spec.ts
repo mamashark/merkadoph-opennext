@@ -9,8 +9,6 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21aa", "wcag22aa"];
  * Never add an entry without a STATUS.md bug number. Format: { page matcher, rule id, bug }.
  */
 const KNOWN_OPEN: { page: RegExp; rule: string; bug: string }[] = [
-	// B35: /blogs cover-fallback text in cards without a photo, 1.98:1 (aria-hidden, but axe still counts it).
-	{ page: /^\/blogs$/, rule: "color-contrast", bug: "B35" },
 	// B36: blog post has an <h3> straight after the <h1>.
 	{ page: /^\/blogs\/[^/]+$/, rule: "heading-order", bug: "B36" },
 	// Arvid's follow-up (STATUS.md, B33 review): table scroll regions need unique names (landmark-unique). Not yet numbered.
@@ -26,6 +24,14 @@ async function firstPostPath(request: import("@playwright/test").APIRequestConte
 	return m[1];
 }
 
+/** The first Community Impact entry (its Facts list was B38; the suite didn't cover these pages before). */
+async function firstImpactPath(request: import("@playwright/test").APIRequestContext) {
+	const html = await (await request.get("/impact")).text();
+	const m = html.match(/href="(\/impact\/[a-z0-9][a-z0-9-]*)"/);
+	if (!m) throw new Error("No Community Impact entry link found on /impact");
+	return m[1];
+}
+
 const SIZES = [{ width: 390, height: 844 }, { width: 1280, height: 800 }];
 const SCHEMES = ["light", "dark"] as const;
 
@@ -33,9 +39,9 @@ for (const scheme of SCHEMES) {
 	for (const size of SIZES) {
 		test.describe(`axe ${scheme} ${size.width}`, () => {
 			test.use({ viewport: size, colorScheme: scheme });
-			for (const target of ["/", "/blogs", "post", "/privacy", "/cookies"]) {
+			for (const target of ["/", "/blogs", "post", "/events", "/impact", "impact entry", "/tahooo", "/digital", "/bygg", "/privacy", "/cookies"]) {
 				test(`${target}: no WCAG 2.2 AA violations (except known open bugs)`, async ({ page, request }) => {
-					const path = target === "post" ? await firstPostPath(request) : target;
+					const path = target === "post" ? await firstPostPath(request) : target === "impact entry" ? await firstImpactPath(request) : target;
 					await page.goto(path, { waitUntil: "load" });
 					await page.waitForTimeout(2000);
 					const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();

@@ -47,7 +47,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 	if (page > 1 && portfolios.length === 0) notFound();
 
 	return (
-		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-impact mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<JsonLd
 				data={[
 					{
@@ -73,7 +73,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 					tabs={[{ label: "All years", value: "", href: impactHref({ tag }) }, ...years.map((y) => ({ label: y, value: y, href: impactHref({ year: y, tag }) }))]}
 				/>
 			)}
-			{tags.length > 1 && <ChipFilter label="Events and themes" allLabel="Everything" items={tags} current={tag} href={(t) => impactHref({ year, tag: t })} />}
+			{tags.length > 1 && <ChipFilter label="Events and themes" allLabel="Everything" items={tags} current={tag} visible={10} href={(t) => impactHref({ year, tag: t })} />}
 
 			{portfolios.length === 0 ? (
 				<EmptyNotice
@@ -106,7 +106,7 @@ export default async function PortfolioPage({ searchParams }: PageProps<"/impact
 						})}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={PORTFOLIO_PER_PAGE} total={total} basePath="/impact" params={{ ...(year && { year }), ...(tag && { tag }) }} />
+						<Pagination tone="site" page={page} perPage={PORTFOLIO_PER_PAGE} total={total} basePath="/impact" params={{ ...(year && { year }), ...(tag && { tag }) }} />
 					</div>
 				</>
 			)}

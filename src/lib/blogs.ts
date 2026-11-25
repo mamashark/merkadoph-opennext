@@ -4,7 +4,7 @@ import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState, onlyLive } from "@/lib/content-server";
-import { PastEndError, pastEnd, searchTerm, type ContentStatus } from "@/lib/content";
+import { PastEndError, pastEnd, searchTerm, tagsByUse, type ContentStatus } from "@/lib/content";
 import type { BlogPhoto, PhotoLayout } from "@/lib/blog-layout";
 
 export { slugify, toPlainText, summarize, readingMinutes } from "@/lib/content";
@@ -76,10 +76,10 @@ export const getPublishedBlogs = cachedPaged(async (page: number = 1, perPage: n
 	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
 }, "blogs:getPublishedBlogs", ["blogs"], { blogs: [] as BlogSummary[], total: 0 });
 
-/** Distinct tags of live posts, for the tag filter. */
+/** Distinct tags of live posts, most used first, for the tag filter. */
 export const getBlogTags = cached(async (): Promise<string[]> => {
 	const { data } = await onlyLive(createPublicClient().from("blogs").select("tags")).limit(2000);
-	return Array.from(new Set((data ?? []).flatMap((r) => (r.tags as string[] | null) ?? []))).sort((a, b) => a.localeCompare(b));
+	return tagsByUse((data ?? []) as Array<{ tags: string[] | null }>);
 }, "blogs:getBlogTags", ["blogs"]);
 
 /** A live post by its exact title (case-insensitive), e.g. one pinned on the homepage. */

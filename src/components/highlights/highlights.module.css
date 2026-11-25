@@ -37,6 +37,7 @@
 	--on-c: #ffffff;
 	--shadow: rgba(51, 51, 30, 0.16);
 	--font-display: var(--font-bricolage), "Avenir Next", "Segoe UI", system-ui, sans-serif;
+	--font-body: var(--font-atkinson), "Segoe UI", system-ui, sans-serif;
 	--font-mono: var(--font-plex-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-io: cubic-bezier(0.7, 0, 0.2, 1);
@@ -46,7 +47,8 @@
 
 	background: var(--night);
 	color: var(--ink);
-	font: 400 16px/1.55 var(--font-display);
+	/* Body text in Atkinson Hyperlegible, as on every page (Kay, 2026-11-25); headings stay Bricolage (below). */
+	font: 400 16px/1.55 var(--font-body);
 	-webkit-font-smoothing: antialiased;
 	color-scheme: light;
 }
@@ -119,12 +121,15 @@
 	border-color: var(--sun);
 	color: var(--sun);
 }
-.btnSolid {
+/* `.root a.btnSolid`: beats `.root a { color: inherit }`, so a solid link button keeps its text colour (else ink on sun, 2.5:1). */
+.btnSolid,
+.root a.btnSolid {
 	background: var(--sun);
 	border-color: var(--sun);
 	color: var(--on-c);
 }
-.btnSolid:hover {
+.btnSolid:hover,
+.root a.btnSolid:hover {
 	background: transparent;
 	color: var(--sun);
 }
@@ -309,6 +314,8 @@
 }
 .lede {
 	margin: 0;
+	/* The hero intro is the homepage's largest paint (LCP): it stays in the preloaded display face. */
+	font-family: var(--font-display);
 	font-size: 1.05rem;
 	line-height: 1.5;
 	color: var(--muted);

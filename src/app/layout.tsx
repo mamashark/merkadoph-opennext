@@ -3,6 +3,7 @@ import { Atkinson_Hyperlegible, Bricolage_Grotesque, Geist_Mono } from "next/fon
 import "./globals.css";
 import { SITE_NAME, SITE_URL } from "@/lib/env";
 import { getSeoSettings } from "@/lib/site-settings";
+import { plexMono } from "@/components/constellation/fonts";
 
 /** Display text: logo text, headings, event date numbers, price tags. */
 const bricolage = Bricolage_Grotesque({
@@ -37,8 +38,8 @@ const geistMono = Geist_Mono({
 export const viewport: Viewport = {
 	colorScheme: "light dark",
 	themeColor: [
-		{ media: "(prefers-color-scheme: light)", color: "#faf9f6" },
-		{ media: "(prefers-color-scheme: dark)", color: "#0b0b06" },
+		{ media: "(prefers-color-scheme: light)", color: "#f7f5ee" },
+		{ media: "(prefers-color-scheme: dark)", color: "#03051a" },
 	],
 };
 
@@ -80,7 +81,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<html lang="en">
-			<body className={`${atkinson.variable} ${bricolage.variable} ${geistMono.variable} antialiased`}>{children}</body>
+			<body className={`${atkinson.variable} ${bricolage.variable} ${plexMono.variable} ${geistMono.variable} antialiased`}>{children}</body>
 		</html>
 	);
 }

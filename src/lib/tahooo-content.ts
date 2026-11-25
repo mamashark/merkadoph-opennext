@@ -1,7 +1,7 @@
 /**
  * Tahooo Corner (/tahooo), the taho cart from Merkado PH. Wording and photos come from Kay's Tahooo Corner slides
  * (19 Nov 2026), Swedish first and English second as on the slides; small typos in the English lines are fixed.
- * Photos are cropped from the slides into public/tahooo/. No prices yet.
+ * Photos are cropped from the slides into public/tahooo/. No prices yet. The page (2026-11-25) uses the homepage theme like /bygg and /digital.
  */
 export type Bilingual = { sv: string; en: string };
 export type TahoooImage = { src: string; alt: string; width: number; height: number };
@@ -33,26 +33,17 @@ export const TAHOOO = {
 			{ sv: "Arnibal", en: "Brown sugar syrup · caramel-sweet" },
 			{ sv: "Silkestofu", en: "Silken tofu · warm and silky" },
 		],
-		image: img("glass", "A glass of taho on a bamboo mat: silken tofu, dark arnibal syrup and sago pearls in layers", 1100, 767),
 	},
 
 	call: {
 		title: "Tahoooooo!",
 		line: { sv: "Ropet som fick varje barn att springa ut.", en: "The call that sent every kid running outside." },
 		now: { sv: "Nu kan det ropas på ditt kalas.", en: "Now it can ring at your party." },
-		image: img("vendor", "A street vendor scoops taho from a steel bucket into a paper cup held out by a customer", 1100, 1223),
 	},
 
+	/** Used in the homepage band's description. */
 	howItWorks: {
-		eyebrow: { sv: "Så funkar det", en: "How it works" },
-		title: "Taho Corner",
 		line: { sv: "Gatuförsäljarens taho, mitt på din fest.", en: "The street vendor’s taho, right at your party." },
-		points: [
-			{ sv: "En taho-station på plats", en: "A taho station at your event" },
-			{ sv: "Färsk, gjort på beställning", en: "Made fresh, served to order" },
-			{ sv: "En smak för varje gäst", en: "A flavour for every guest" },
-		],
-		image: img("cup-hand", "A gloved hand holds up a Tahooo cup of taho with arnibal and sago pearls", 1100, 1220),
 	},
 
 	flavoursIntro: {
@@ -122,7 +113,6 @@ export const TAHOOO = {
 			{ sv: "Välj 2–3 smaker.", en: "Pick your flavours, classic or the new ones." },
 			{ sv: "Vi serverar, ni firar.", en: "We serve fresh taho, cup by cup." },
 		],
-		image: img("cup-ube", "A Tahooo cup of ube taho topped with dark purple pearls", 1100, 1241),
 	},
 
 	book: {
@@ -134,11 +124,9 @@ export const TAHOOO = {
 	},
 
 	contact: {
-		title: "For inquiries:",
 		email: "hello@merkadoph.se",
 		social: "@merkadoph.se",
 		phone: { label: "+46 70 432 60 21", href: "tel:+46704326021" },
-		image: img("glass-stool", "A curvy glass of ube taho on an orange stool against a yellow wall", 1100, 1241),
 	},
 } as const;
 

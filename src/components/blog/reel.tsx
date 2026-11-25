@@ -7,8 +7,8 @@ export function Reel({ src, poster, transcript, title }: { src: string; poster?:
 	const type = src.toLowerCase().endsWith(".webm") ? "video/webm" : "video/mp4";
 	return (
 		<section aria-labelledby="reel-heading" className="mx-auto max-w-6xl px-4 pb-12 sm:px-6">
-			<div className="grid items-center gap-6 rounded-3xl bg-brand-olive p-4 text-stone-50 sm:p-6 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-10 md:p-8">
-				<div className="mx-auto w-full max-w-[22rem] overflow-hidden rounded-2xl bg-black">
+			<div className="grid items-center gap-6 bg-brand-olive p-4 text-stone-50 sm:p-6 md:grid-cols-[minmax(0,22rem)_1fr] md:gap-10 md:p-8">
+				<div className="mx-auto w-full max-w-[22rem] overflow-hidden bg-black">
 					<video
 						controls
 						playsInline
@@ -32,7 +32,7 @@ export function Reel({ src, poster, transcript, title }: { src: string; poster?:
 					</h2>
 					<p className="mt-3 max-w-prose text-base text-stone-300">{title}</p>
 					{transcript && (
-						<details className="mt-6 max-w-prose rounded-xl border border-white/15 p-4 open:bg-white/5">
+						<details className="mt-6 max-w-prose border border-white/15 p-4 open:bg-white/5">
 							<summary className="cursor-pointer font-medium text-brand-yellow focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-yellow">Read the transcript</summary>
 							<p id="reel-transcript" className="mt-3 whitespace-pre-line text-stone-300">
 								{transcript}

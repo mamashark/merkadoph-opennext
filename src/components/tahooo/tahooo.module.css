@@ -1,461 +1,266 @@
 /*
- * Tahooo Corner (/tahooo), after Kay's Tahooo Corner slides: Merkado PH brand yellow as the page,
- * orange and red-orange panels, red labels, teal bands, olive text. Split panels: words on one side, a photo on the other.
- *
- * Contrast (WCAG): olive on yellow 8.7:1. Red labels on yellow are 3.3:1, so they are large bold text (≥ 19px).
- * White display words on yellow get an olive outline, like the Tahooo! sticker, so their edges read.
- * Teal bands use a deeper teal for white text (5.6:1). Text on orange panels is olive.
+ * Tahooo Corner (/tahooo, the Project Taho Highlight) in the homepage's theme, like /bygg and /digital.
+ * Sits inside the homepage's .root (highlights.module.css), so it uses the same tokens: day sky in light mode,
+ * night sky in dark mode, brand palette, Bricolage + IBM Plex Mono. Accent: the Highlight's caramel (--c).
  */
-.root {
-	--yellow: #ffcc3f;
-	--orange: #f47e20;
-	--promo: #f05d22;
-	--red: #e10606;
-	--teal: #0f7a62;
-	--olive: #33331e;
-	--white: #ffffff;
 
-	--page: var(--yellow);
-	--ink: var(--olive);
-	--label: var(--red);
-	--display-fill: var(--white);
-	--display-edge: var(--olive);
-	--rule: rgba(255, 255, 255, 0.9);
-	--card: var(--white);
-
-	background: var(--page);
-	color: var(--ink);
-	font-family: var(--font-tahooo-display), "Segoe UI", system-ui, sans-serif;
-	font-size: 18px;
-	line-height: 1.5;
-}
-/* Dark mode: a deep olive page with the brand colours kept for panels, labels and the display words. */
-@media (prefers-color-scheme: dark) {
-	.root {
-		--page: #24220f;
-		--ink: #f8f3ea;
-		--label: #ff8f80;
-		--display-fill: var(--yellow);
-		--display-edge: #000000;
-		--rule: rgba(248, 243, 234, 0.35);
-		--card: #312e17;
-	}
-}
-.root h1,
-.root h2,
-.root h3 {
-	margin: 0;
-	font-weight: 700;
-	letter-spacing: -0.03em;
-	text-wrap: balance;
-}
-.root :focus-visible {
-	outline: 3px solid var(--olive);
-	outline-offset: 3px;
-}
-@media (prefers-color-scheme: dark) {
-	.root :focus-visible {
-		outline-color: var(--yellow);
-	}
-}
-.srOnly {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	overflow: hidden;
-	clip: rect(0 0 0 0);
-	white-space: nowrap;
-}
-
-/* Labels and big words */
-.label {
-	margin: 0;
-	font-size: 19px;
-	font-weight: 700;
-	letter-spacing: 0.06em;
-	text-transform: uppercase;
-	color: var(--label);
-}
-.display {
-	color: var(--display-fill);
-	-webkit-text-stroke: 0.045em var(--display-edge);
-	paint-order: stroke fill;
-	text-shadow: 0.04em 0.05em 0 color-mix(in srgb, var(--display-edge) 35%, transparent);
-	font-size: clamp(3rem, 8vw, 7rem);
-	line-height: 0.95;
-}
-.sub {
-	margin: 10px 0 0;
-	font-style: italic;
-	font-weight: 500;
-	font-size: clamp(22px, 2.6vw, 36px);
-	line-height: 1.2;
-}
-.svLine {
-	margin: 0;
-	font-size: clamp(22px, 2.4vw, 34px);
-	line-height: 1.2;
-	font-weight: 500;
-}
-.enLine {
-	margin: 8px 0 0;
-	font-size: clamp(17px, 1.5vw, 21px);
-}
-.rule {
-	width: 92px;
-	height: 5px;
-	margin: 0 0 24px;
-	border: 0;
-	background: var(--rule);
-}
-
-/* Split panels */
-.split {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	min-height: clamp(520px, 52vw, 860px);
-}
-/* Occasion sections are linked to (/tahooo#festivaler): clear the site header. */
-.split[id] {
-	scroll-margin-top: 64px;
-}
-.panel {
+/* Hero: title bottom-left, the cart on the right (above the title on phones) */
+.hero {
+	position: relative;
+	isolation: isolate;
+	min-height: clamp(520px, calc(100svh - 64px), 880px);
 	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-	gap: 32px;
-	padding: clamp(28px, 4vw, 64px);
-}
-.panelTop {
-	display: grid;
-	gap: 18px;
-}
-.photo {
-	position: relative;
-	min-height: 320px;
+	align-items: flex-end;
 	overflow: hidden;
+	background: radial-gradient(ellipse 60% 55% at 72% 40%, color-mix(in srgb, var(--c) 18%, transparent), transparent 70%);
 }
-.photo img {
-	object-fit: cover;
-}
-.flip .photo {
-	order: -1;
-}
-@media (max-width: 820px) {
-	.split {
-		grid-template-columns: 1fr;
-	}
-	.flip .photo {
-		order: 0;
-	}
-	.photo {
-		min-height: 0;
-		aspect-ratio: 4 / 3;
-	}
-}
-
-/* Hero: the cart as a sticker on an orange panel */
-.heroCart {
-	position: relative;
-	display: grid;
-	place-items: center;
-	padding: clamp(24px, 4vw, 56px);
-	background: var(--orange);
-}
-.heroCart img {
+.heroGrid {
 	width: 100%;
-	height: auto;
-	max-width: 640px;
-	filter: drop-shadow(0 0 0 #fff) drop-shadow(4px 0 0 #fff) drop-shadow(-4px 0 0 #fff) drop-shadow(0 4px 0 #fff) drop-shadow(0 -4px 0 #fff);
+	display: grid;
+	grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+	align-items: end;
+	gap: clamp(20px, 4vw, 56px);
+	padding-top: 32px;
+	padding-bottom: clamp(36px, 6vw, 72px);
 }
-.heroText .display {
-	font-size: clamp(3.4rem, 9vw, 8.5rem);
+.heroText h1 {
+	margin: 14px 0 0;
+	font-size: clamp(2.8rem, 9vw, 6.5rem);
+	font-weight: 700;
+	line-height: 0.92;
+	letter-spacing: -0.03em;
 }
-.ctas {
+.heroText h1 em {
+	font-style: normal;
+	color: var(--c);
+}
+.lede {
+	margin: 18px 0 0;
+	max-width: 46ch;
+	color: var(--ink-2);
+	font-size: clamp(16px, 1.4vw, 19px);
+}
+.heroActions {
 	display: flex;
 	flex-wrap: wrap;
 	gap: 12px;
+	margin-top: 26px;
 }
-.btn {
-	display: inline-flex;
-	align-items: center;
-	min-height: 52px;
-	padding: 0 26px;
-	border-radius: 999px;
-	font-weight: 700;
-	font-size: 17px;
-	text-decoration: none;
-	background: var(--olive);
-	color: var(--yellow);
-	border: 2px solid var(--olive);
+.cart img {
+	display: block;
+	width: 100%;
+	max-width: 560px;
+	height: auto;
+	margin-left: auto;
 }
-.btn:hover {
-	background: transparent;
-	color: var(--olive);
-}
-.btnGhost {
-	background: transparent;
-	color: var(--olive);
-}
-.btnGhost:hover {
-	background: var(--olive);
-	color: var(--yellow);
-}
-@media (prefers-color-scheme: dark) {
-	.btn {
-		background: var(--yellow);
-		color: var(--olive);
-		border-color: var(--yellow);
+@media (max-width: 860px) {
+	.heroGrid {
+		grid-template-columns: 1fr;
 	}
-	.btn:hover,
-	.btnGhost {
-		background: transparent;
-		color: var(--yellow);
+	.cart {
+		order: -1;
 	}
-	.btnGhost:hover {
-		background: var(--yellow);
-		color: var(--olive);
+	.cart img {
+		max-width: min(78vw, 380px);
+		margin: 0 auto;
 	}
 }
 
-/* What is taho: three layers */
+/* What is taho: the three layers */
 .layers {
 	list-style: none;
-	margin: 0;
+	margin: clamp(28px, 4vw, 44px) 0 0;
 	padding: 0;
-	border-top: 4px solid var(--rule);
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	border-top: 1px solid var(--line);
 }
 .layers li {
 	display: grid;
-	grid-template-columns: 72px 1fr;
-	gap: 16px;
-	align-items: center;
-	padding: 18px 0;
-	border-bottom: 4px solid var(--rule);
+	gap: 4px;
+	padding: 18px 18px 18px 0;
 }
-.layers b {
-	font-size: clamp(40px, 4.5vw, 64px);
-	font-weight: 400;
-	line-height: 1;
+.layers strong {
+	font-size: clamp(20px, 2vw, 26px);
+	font-weight: 700;
+	letter-spacing: -0.01em;
 }
-.layers i {
-	display: block;
-	font-size: clamp(24px, 2.4vw, 34px);
-	font-weight: 500;
+.layers li > span:last-child {
+	color: var(--ink-2);
+	font-size: 15px;
 }
-.meet {
-	display: flex;
-	flex-direction: column;
-	background: #000;
-	color: #fff;
-}
-.meet .photo {
-	flex: 1;
-}
-.meetText {
-	padding: clamp(28px, 4vw, 56px) clamp(24px, 4vw, 56px) 8px;
-	text-align: center;
-}
-.meetText p {
-	margin: 0;
-	font-size: clamp(30px, 3.4vw, 52px);
-	color: #3fd6b0;
-	font-weight: 500;
-}
-.meetText p + p {
-	margin-top: 8px;
-	font-size: clamp(18px, 1.8vw, 26px);
-	font-style: italic;
-	color: var(--yellow);
-}
-
-/* How it works: three numbered points */
-.points {
-	list-style: none;
-	margin: 0;
-	padding: 0;
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-}
-.points li {
-	padding: 0 18px;
-	border-left: 4px solid var(--rule);
-}
-.points li:first-child {
-	padding-left: 0;
-	border-left: 0;
-}
-.points b {
-	display: block;
-	font-size: clamp(48px, 5vw, 80px);
-	line-height: 1;
-	color: var(--promo);
-	-webkit-text-stroke: 0.02em var(--olive);
-	paint-order: stroke fill;
-}
-@media (prefers-color-scheme: dark) {
-	.points b {
-		color: var(--orange);
-		-webkit-text-stroke: 0;
-	}
-}
-.points strong {
-	display: block;
-	margin-top: 14px;
-	font-size: 19px;
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
-	line-height: 1.25;
-}
-.points span {
-	display: block;
-	margin-top: 10px;
-	font-size: clamp(17px, 1.6vw, 22px);
-	line-height: 1.25;
-}
-@media (max-width: 560px) {
-	.points {
+@media (max-width: 640px) {
+	.layers {
 		grid-template-columns: 1fr;
-		gap: 20px;
 	}
-	.points li,
-	.points li:first-child {
-		padding: 0 0 0 16px;
-		border-left: 4px solid var(--rule);
+	.layers li {
+		border-bottom: 1px solid var(--line);
 	}
 }
 
-/* Flavours */
+/* Flavours: the menu photos (name and ingredients are printed on each) */
 .flavours {
-	padding: clamp(56px, 7vw, 104px) clamp(20px, 3vw, 52px);
-	text-align: center;
-	scroll-margin-top: 72px;
-}
-.flavours .display {
-	margin-top: 12px;
-}
-.flavourGrid {
 	list-style: none;
-	margin: clamp(32px, 4vw, 56px) auto 0;
+	margin: 0;
 	padding: 0;
-	max-width: 1900px;
 	display: grid;
 	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: clamp(12px, 1.5vw, 28px);
+	gap: clamp(10px, 1.6vw, 20px);
 }
-.flavourGrid li {
+.flavour {
+	overflow: hidden;
 	scroll-margin-top: 90px;
 }
 .flavourImg {
 	position: relative;
-	aspect-ratio: 720 / 898;
-	overflow: hidden;
 }
 .flavourImg img {
 	object-fit: cover;
 }
-@media (max-width: 1000px) {
-	.flavourGrid {
+@media (max-width: 860px) {
+	.flavours {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
 
-/* Occasions: a teal band under each photo */
-.occPhoto {
+/* Perfect for: five occasion cards */
+.occasions {
+	list-style: none;
+	margin: 0;
+	padding: 0;
 	display: grid;
-	grid-template-rows: 1fr auto;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: clamp(14px, 1.8vw, 22px);
 }
-.occPhoto .photo {
-	min-height: 0;
+.occasion {
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+	scroll-margin-top: 90px;
 }
-.band {
+.occasionImg {
+	position: relative;
+	aspect-ratio: 4 / 3;
+}
+.occasionImg img {
+	object-fit: cover;
+}
+.occasionText {
 	display: grid;
-	place-items: center;
-	min-height: clamp(120px, 12vw, 230px);
-	padding: 24px;
-	background: var(--teal);
-	color: #fff;
-	text-align: center;
-	font-size: clamp(20px, 2vw, 30px);
-	line-height: 1.3;
+	align-content: start;
+	gap: 8px;
+	padding: clamp(20px, 2.4vw, 28px);
 }
-.band em {
-	font-style: italic;
+.tag {
+	font-size: 12px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--c);
+}
+.occasion h3 {
+	margin: 0;
+	font-size: clamp(24px, 2.4vw, 32px);
+	font-weight: 700;
+	letter-spacing: -0.02em;
+	line-height: 1.05;
+}
+.occasion p {
+	margin: 0;
+	color: var(--ink-2);
+}
+.examples {
+	padding-top: 10px;
+	border-top: 1px solid var(--line);
+	font-size: 15px;
+}
+@media (max-width: 1000px) {
+	.occasions {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+@media (max-width: 600px) {
+	.occasions {
+		grid-template-columns: 1fr;
+	}
 }
 
-/* How to book: steps */
+/* How to book: three steps */
 .steps {
 	list-style: none;
 	margin: 0;
 	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: clamp(14px, 1.6vw, 20px);
 }
-.steps li {
-	padding: 22px 0;
-	border-bottom: 4px solid var(--rule);
-	font-size: clamp(18px, 1.7vw, 24px);
-	line-height: 1.3;
+.step {
+	display: grid;
+	align-content: start;
+	gap: 10px;
+	padding: 24px;
 }
-.steps li:last-child {
-	border-bottom: 0;
-}
-.steps b {
-	display: block;
+.step h3 {
+	margin: 6px 0 0;
+	font-size: 22px;
 	font-weight: 700;
+	letter-spacing: -0.01em;
 }
-.steps b span {
-	color: var(--label);
+.step p {
+	margin: 0;
+	color: var(--ink-2);
+	font-size: 15px;
 }
-
-/* Booking form */
-.form {
-	max-width: 880px;
-	margin: 0 auto;
-	padding: clamp(20px, 3vw, 36px);
-	background: var(--card);
-	border-radius: 24px;
-	color: #1c1917;
-}
-@media (prefers-color-scheme: dark) {
-	.form {
-		color: #f5f5f4;
+@media (max-width: 760px) {
+	.steps {
+		grid-template-columns: 1fr;
 	}
 }
-.formWrap {
-	padding: clamp(40px, 6vw, 88px) clamp(20px, 3vw, 52px);
-	scroll-margin-top: 72px;
-}
-.formWrap h2 {
-	text-align: center;
-	margin-bottom: 24px;
-	font-size: clamp(28px, 3.2vw, 44px);
-}
 
-/* Inquiries */
-.inquiries {
-	background: var(--promo);
-	color: #fff;
-}
-.inquiries h2 {
-	font-size: clamp(40px, 5vw, 76px);
-	font-weight: 500;
-}
-.inquiries dl {
-	margin: 0;
+/* Book: phone, email, social and a photo beside the form */
+.reach {
+	list-style: none;
+	margin: 24px 0 0;
+	padding: 0;
 	display: grid;
-	gap: 34px;
+	gap: 10px;
 }
-.inquiries dt {
-	font-size: 19px;
-	font-weight: 700;
+.reach li {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 6px 14px;
+	color: var(--ink);
+	font-size: clamp(18px, 1.6vw, 22px);
+	font-weight: 600;
 }
-.inquiries dd {
-	margin: 4px 0 0;
-	font-size: clamp(26px, 2.6vw, 40px);
+.reach li > span:first-child {
+	min-width: 7em;
+	color: var(--c);
+	font-size: 12px;
+	font-weight: 400;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.reach a {
+	color: var(--ink);
+	text-decoration: underline;
+	text-decoration-color: var(--c);
+	text-underline-offset: 5px;
 	overflow-wrap: anywhere;
 }
-.inquiries a {
-	color: inherit;
-	text-decoration: underline;
-	text-decoration-thickness: 2px;
-	text-underline-offset: 6px;
+.photo {
+	position: relative;
+	margin-top: 28px;
+	aspect-ratio: 3 / 2;
+	max-width: 420px;
+	overflow: hidden;
+	border: 1px solid var(--line);
+}
+.photo img {
+	object-fit: cover;
+}
+.formTitle {
+	margin: 0 0 18px;
+	font-size: 20px;
+	font-weight: 700;
 }

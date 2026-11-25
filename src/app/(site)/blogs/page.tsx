@@ -40,10 +40,10 @@ export default async function BlogsPage({ searchParams }: PageProps<"/blogs">) {
 	const rest = lead && !showPinned ? blogs.slice(1) : blogs;
 
 	return (
-		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-blogs mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="The Merkado PH Blog" title="Kwento mula sa Merkado" description={description} />
 
-			{tags.length > 0 && <ChipFilter label="Filter posts by tag" allLabel="All posts" items={tags} current={tag} href={(t) => listHref(t)} />}
+			{tags.length > 0 && <ChipFilter label="Filter posts by tag" allLabel="All posts" items={tags} current={tag} visible={10} href={(t) => listHref(t)} />}
 
 			{!lead && rest.length === 0 ? (
 				<EmptyNotice
@@ -63,7 +63,7 @@ export default async function BlogsPage({ searchParams }: PageProps<"/blogs">) {
 						))}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={BLOGS_PER_PAGE} total={total} basePath="/blogs" params={tag ? { tag } : {}} />
+						<Pagination tone="site" page={page} perPage={BLOGS_PER_PAGE} total={total} basePath="/blogs" params={tag ? { tag } : {}} />
 					</div>
 				</>
 			)}

@@ -89,7 +89,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 	const total = groups.reduce((n, g) => n + g.hits.length, 0);
 
 	return (
-		<main className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-blogs mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="Search" title="Find on Merkado PH" description="Stories, events, projects, services and notices." />
 
 			{/* A plain GET form: works without JavaScript, and the URL (/search?q=…) can be shared. */}
@@ -106,9 +106,9 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 					maxLength={MAX}
 					autoFocus={!q}
 					placeholder="e.g. Independence Day, takläggning, pop-up"
-					className="min-h-12 w-full rounded-xl border border-stone-300 bg-white px-4 text-base text-stone-900 placeholder:text-stone-500 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/20 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:[color-scheme:dark]"
+					className="min-h-12 w-full border border-site-line-2 bg-site-surface px-4 text-base text-site-ink placeholder:text-site-muted focus:border-accent focus:outline-2 focus:outline-offset-0 focus:outline-accent dark:[color-scheme:dark]"
 				/>
-				<button type="submit" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-stone-900 px-5 text-sm font-semibold text-white hover:bg-stone-800 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200">
+				<button type="submit" className="inline-flex min-h-12 items-center gap-2 border border-site-ink bg-site-ink px-5 font-label text-xs font-medium tracking-[0.1em] text-site-bg uppercase transition-colors hover:bg-transparent hover:text-site-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
 					<Search className="h-4 w-4" aria-hidden />
 					Search
 				</button>
@@ -116,27 +116,27 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 
 			<div className="mt-10" aria-live="polite">
 				{!q ? null : !ready ? (
-					<p className="text-stone-700 dark:text-stone-300">Type at least {MIN} letters.</p>
+					<p className="text-site-ink-2">Type at least {MIN} letters.</p>
 				) : total === 0 ? (
 					<EmptyNotice title={`Nothing found for “${q}”.`} description="Try another word, or browse the Highlights from the menu." />
 				) : (
 					<>
-						<p className="text-sm text-stone-700 dark:text-stone-300">
+						<p className="text-sm text-site-ink-2">
 							{total} {total === 1 ? "result" : "results"} for <strong>“{q}”</strong>
 						</p>
 						{groups.map((g) => (
 							<section key={g.id} aria-labelledby={`r-${g.id}`} className="mt-8">
-								<h2 id={`r-${g.id}`} className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-stone-700 dark:text-stone-300">
+								<h2 id={`r-${g.id}`} className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-site-ink-2">
 									<span className={`h-3 w-3 ${g.swatch}`} aria-hidden />
 									{g.label}
 								</h2>
-								<ul className="mt-3 divide-y divide-stone-900/10 border-y border-stone-900/10 dark:divide-white/10 dark:border-white/10">
+								<ul className="mt-3 divide-y divide-site-line border-y border-site-line">
 									{g.hits.map((h) => (
 										<li key={h.href} lang={h.lang}>
-											<Link href={h.href} className="block py-4 hover:bg-stone-900/[0.03] focus-visible:bg-stone-900/[0.05] dark:hover:bg-white/5">
-												<span className="block font-semibold text-stone-950 dark:text-white">{h.title}</span>
-												{h.meta && <span className="mt-0.5 block text-xs text-stone-600 dark:text-stone-400">{h.meta}</span>}
-												{h.text && <span className="mt-1 block text-sm text-stone-700 dark:text-stone-300">{h.text}</span>}
+											<Link href={h.href} className="block py-4 hover:bg-site-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+												<span className="block font-semibold text-site-ink">{h.title}</span>
+												{h.meta && <span className="mt-0.5 block text-xs text-site-muted">{h.meta}</span>}
+												{h.text && <span className="mt-1 block text-sm text-site-ink-2">{h.text}</span>}
 											</Link>
 										</li>
 									))}

@@ -60,7 +60,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 	const ldImages = [...new Set([cover?.url, ...layoutPhotos.map((p) => p.url), ...slideshow.map((p) => p.url)].filter((u): u is string => !!u))].slice(0, 10);
 
 	return (
-		<main>
+		<main className="accent-blogs">
 			<JsonLd
 				data={[
 					{
@@ -88,7 +88,7 @@ export default async function BlogPostPage({ params }: PageProps<"/blogs/[slug]"
 					<p className="flex flex-wrap items-center gap-x-2 gap-y-1">
 						{blog.author_name && (
 							<>
-								<span className="font-medium text-stone-800 dark:text-stone-200">{blog.author_name}</span>
+								<span className="font-medium text-site-ink">{blog.author_name}</span>
 								<span aria-hidden>·</span>
 							</>
 						)}

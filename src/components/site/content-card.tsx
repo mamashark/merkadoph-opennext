@@ -2,6 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/ui";
 
+/*
+ * Public listing building blocks, in the site design system (globals.css `--site-*`, Kay 2026-11-25): the homepage's
+ * look on every page. Square corners, thin lines, Plex Mono labels, and the section colour (`--accent`, set by an
+ * `accent-*` class on the page) for kickers, active filters and hover lines.
+ */
+
 type Props = {
 	href: string;
 	title: string;
@@ -23,50 +29,48 @@ export function ContentCard({ href, title, excerpt, image, imageAlt, eyebrow, me
 	return (
 		<article
 			className={cn(
-				"group relative flex flex-col overflow-hidden rounded-2xl border border-amber-900/10 bg-white shadow-sm transition hover:shadow-md dark:border-white/10 dark:bg-stone-900",
+				"group relative flex flex-col overflow-hidden border border-site-line bg-site-surface transition-colors hover:border-accent/60",
+				"has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-3 has-[a:focus-visible]:outline-accent",
 				featured && "md:flex-row",
 			)}
 		>
-			<div className={cn("relative aspect-[16/9] overflow-hidden bg-[#f4ebd9] dark:bg-stone-800", featured && "md:aspect-auto md:min-h-80 md:w-3/5")}>
-				{image ? (
+			<div className={cn("relative aspect-[4/3] overflow-hidden", !image && "weave", featured && "md:aspect-auto md:min-h-80 md:w-3/5")}>
+				{image && (
 					<Image
 						src={image}
 						alt={imageAlt ?? ""}
 						fill
 						sizes={featured ? "(min-width: 768px) 60vw, 100vw" : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"}
-						className="object-cover transition duration-500 group-hover:scale-[1.03]"
+						className="object-cover transition duration-700 group-hover:scale-[1.04] motion-reduce:transition-none"
 						loading={priority ? "eager" : "lazy"}
 						fetchPriority={priority ? "high" : undefined}
 					/>
-				) : (
-					<div className="flex h-full items-center justify-center text-sm font-semibold tracking-widest text-amber-900/40 dark:text-stone-600" aria-hidden>
-						MERKADO PH
-					</div>
 				)}
-				{badge && <div className="absolute left-3 top-3">{badge}</div>}
+				{badge && <div className="absolute top-3 left-3">{badge}</div>}
 			</div>
-			<div className={cn("flex flex-1 flex-col p-5", featured && "md:justify-center md:p-8")}>
-				{eyebrow && <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-teal-800 dark:text-teal-300">{eyebrow}</p>}
-				<Heading className={cn("font-semibold leading-snug text-stone-900 dark:text-white", featured ? "text-2xl md:text-3xl" : "text-lg")}>
-					<Link href={href} className="after:absolute after:inset-0 focus:outline-none focus-visible:underline">
+			<div className={cn("flex flex-1 flex-col gap-2.5 px-5 pt-4 pb-5", featured && "md:justify-center md:p-8")}>
+				{eyebrow && <p className="font-label text-xs font-medium tracking-[0.14em] text-accent uppercase">{eyebrow}</p>}
+				<Heading className={cn("font-display leading-[1.15] font-bold tracking-tight text-site-ink", featured ? "text-2xl md:text-4xl" : "text-xl")}>
+					<Link href={href} className="after:absolute after:inset-0 focus:outline-none">
 						{title}
 					</Link>
 				</Heading>
-				{excerpt && <p className={cn("mt-2 text-stone-700 dark:text-stone-300", featured ? "line-clamp-4" : "line-clamp-3 text-sm")}>{excerpt}</p>}
-				{meta && <div className="mt-auto pt-4 text-xs text-stone-600 dark:text-stone-400">{meta}</div>}
+				{excerpt && <p className={cn("text-site-ink-2", featured ? "line-clamp-4" : "line-clamp-3 text-sm")}>{excerpt}</p>}
+				{meta && <div className="mt-auto pt-3 font-label text-xs tracking-wide text-site-muted">{meta}</div>}
 			</div>
 		</article>
 	);
 }
 
+/** A small label on a card photo (Pinned, a date…). */
 export function Pill({ children, tone = "light" }: { children: React.ReactNode; tone?: "light" | "accent" | "muted" }) {
 	return (
 		<span
 			className={cn(
-				"inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold shadow-sm",
-				tone === "accent" && "bg-orange-700 text-white",
-				tone === "light" && "bg-white/95 text-stone-900",
-				tone === "muted" && "bg-stone-800/90 text-white",
+				"inline-flex items-center px-2 py-1 font-label text-xs font-medium tracking-[0.08em] uppercase",
+				tone === "accent" && "bg-accent text-on-accent",
+				tone === "light" && "bg-site-surface text-site-ink",
+				tone === "muted" && "bg-site-ink text-site-bg",
 			)}
 		>
 			{children}
@@ -74,30 +78,31 @@ export function Pill({ children, tone = "light" }: { children: React.ReactNode; 
 	);
 }
 
+/** Page heading: a section-coloured kicker with its square mark, a big display title and a short intro. */
 export function PageIntro({ eyebrow, title, description, children }: { eyebrow: string; title: string; description: string; children?: React.ReactNode }) {
 	return (
-		<header className="mb-10 max-w-2xl">
-			<p className="text-sm font-semibold uppercase tracking-widest text-teal-800 dark:text-teal-300">{eyebrow}</p>
-			<h1 className="mt-2 text-4xl font-semibold tracking-tight text-stone-900 dark:text-white sm:text-5xl">{title}</h1>
-			<p className="mt-3 text-lg text-stone-700 dark:text-stone-300">{description}</p>
+		<header className="mb-10 max-w-3xl">
+			<p className="kicker-mark font-label text-xs font-medium tracking-[0.14em] text-accent uppercase">{eyebrow}</p>
+			<h1 className="mt-4 font-display text-[clamp(2.5rem,7vw,4.75rem)] leading-[0.95] font-bold tracking-tight text-balance text-site-ink">{title}</h1>
+			<p className="mt-5 max-w-2xl text-lg text-site-ink-2">{description}</p>
 			{children}
 		</header>
 	);
 }
 
-/** URL-based tabs (e.g. Upcoming / Past). */
+/** URL-based tabs (e.g. Upcoming / Past): mono labels with a section-coloured underline on the current one. */
 export function LinkTabs({ tabs, current, label }: { tabs: Array<{ label: string; href: string; value: string }>; current: string; label: string }) {
 	return (
-		<nav aria-label={label} className="mb-8">
-			<ul className="inline-flex gap-1 rounded-full bg-stone-900/5 p-1 text-sm font-medium dark:bg-white/10">
+		<nav aria-label={label} className="mb-8 border-b border-site-line">
+			<ul className="-mb-px flex flex-wrap gap-x-6">
 				{tabs.map((t) => (
 					<li key={t.value}>
 						<Link
 							href={t.href}
 							aria-current={t.value === current ? "page" : undefined}
 							className={cn(
-								"block rounded-full px-4 py-1.5",
-								t.value === current ? "bg-white text-stone-900 shadow-sm dark:bg-stone-800 dark:text-white" : "text-stone-700 hover:text-stone-950 dark:text-stone-300 dark:hover:text-white",
+								"inline-flex min-h-11 items-center border-b-2 font-label text-xs font-medium tracking-[0.12em] uppercase focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+								t.value === current ? "border-accent text-site-ink" : "border-transparent text-site-muted hover:text-site-ink",
 							)}
 						>
 							{t.label}
@@ -109,37 +114,64 @@ export function LinkTabs({ tabs, current, label }: { tabs: Array<{ label: string
 	);
 }
 
-/** URL-based chip filter (e.g. /events?tag=…): the first chip ("" value) clears it. */
-export function ChipFilter({ label, allLabel, items, current, href }: { label: string; allLabel: string; items: string[]; current: string; href: (value: string) => string }) {
+const CHIP = "inline-flex min-h-10 items-center border px-3.5 font-label text-xs font-medium tracking-[0.1em] uppercase transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
+
+/**
+ * URL-based chip filter (e.g. /events?tag=…): the first chip ("" value) clears it. Square mono chips, as on the homepage.
+ * With `visible`, only that many are shown (pass them most-used first); the rest open from "More tags" (a <details>,
+ * so it works without JavaScript). A selected tag is always shown.
+ */
+export function ChipFilter({
+	label,
+	allLabel,
+	items,
+	current,
+	href,
+	visible,
+}: {
+	label: string;
+	allLabel: string;
+	items: string[];
+	current: string;
+	href: (value: string) => string;
+	visible?: number;
+}) {
+	const limit = visible && items.length > visible + 2 ? visible : items.length;
+	const shown = items.slice(0, limit);
+	if (current && !shown.includes(current) && items.includes(current)) shown.push(current);
+	const rest = items.filter((v) => !shown.includes(v));
+	const chip = (v: string) => (
+		<li key={v || "all"}>
+			<Link
+				href={href(v)}
+				aria-current={v === current ? "page" : undefined}
+				className={cn(CHIP, v === current ? "border-accent bg-accent text-on-accent" : "border-site-line-2 text-site-ink-2 hover:border-accent hover:text-accent")}
+			>
+				{v || allLabel}
+			</Link>
+		</li>
+	);
 	return (
 		<nav aria-label={label} className="mb-8">
-			<ul className="flex flex-wrap gap-2 text-sm font-medium">
-				{["", ...items].map((v) => (
-					<li key={v || "all"}>
-						<Link
-							href={href(v)}
-							aria-current={v === current ? "page" : undefined}
-							className={cn(
-								"inline-flex min-h-11 items-center rounded-full border px-4",
-								v === current
-									? "border-stone-900 bg-stone-900 text-white dark:border-white dark:bg-white dark:text-stone-900"
-									: "border-amber-900/15 text-stone-700 hover:bg-white hover:text-stone-950 dark:border-white/15 dark:text-stone-300 dark:hover:bg-stone-900 dark:hover:text-white",
-							)}
-						>
-							{v || allLabel}
-						</Link>
-					</li>
-				))}
-			</ul>
+			<ul className="flex flex-wrap gap-2">{["", ...shown].map(chip)}</ul>
+			{rest.length > 0 && (
+				<details className="group mt-2">
+					<summary className={cn(CHIP, "cursor-pointer list-none border-dashed border-site-line-2 text-site-muted hover:border-accent hover:text-accent [&::-webkit-details-marker]:hidden")}>
+						<span className="group-open:hidden">More tags ({rest.length})</span>
+						<span className="hidden group-open:inline">Fewer tags</span>
+					</summary>
+					<ul className="flex flex-wrap gap-2 pt-2">{rest.map(chip)}</ul>
+				</details>
+			)}
 		</nav>
 	);
 }
 
 export function EmptyNotice({ title, description }: { title: string; description: string }) {
 	return (
-		<div className="rounded-2xl border border-dashed border-amber-900/20 bg-white/60 px-6 py-20 text-center dark:border-white/15 dark:bg-stone-900/60">
-			<p className="text-lg font-medium text-stone-800 dark:text-stone-200">{title}</p>
-			<p className="mt-1 text-stone-600 dark:text-stone-400">{description}</p>
+		<div className="border border-dashed border-site-line-2 px-6 py-20 text-center">
+			<p className="font-display text-xl font-bold text-site-ink">{title}</p>
+			<p className="mt-2 text-site-muted">{description}</p>
 		</div>
 	);
 }

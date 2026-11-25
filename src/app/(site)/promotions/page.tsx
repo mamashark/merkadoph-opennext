@@ -42,7 +42,7 @@ export default async function PromotionsPage({ searchParams }: PageProps<"/promo
 	if (page > 1 && promotions.length === 0) notFound();
 
 	return (
-		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-promotions mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="Promotions" title="Sulit offers" description={description} />
 
 			<LinkTabs
@@ -100,7 +100,7 @@ export default async function PromotionsPage({ searchParams }: PageProps<"/promo
 						})}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={PROMOTIONS_PER_PAGE} total={total} basePath="/promotions" params={{ ...(show === "ended" ? { show } : {}), ...(tag ? { tag } : {}) }} />
+						<Pagination tone="site" page={page} perPage={PROMOTIONS_PER_PAGE} total={total} basePath="/promotions" params={{ ...(show === "ended" ? { show } : {}), ...(tag ? { tag } : {}) }} />
 					</div>
 				</>
 			)}

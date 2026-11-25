@@ -58,7 +58,7 @@ export function PortfolioImageGrid({
 									onClick={() => setOpen(i)}
 									aria-haspopup="dialog"
 									aria-label={`Open photo ${i + 1} full screen: ${label}`}
-									className="group relative block h-full w-full cursor-zoom-in overflow-hidden rounded-2xl bg-[#f4ebd9] ring-teal-600 ring-offset-2 focus-visible:outline-none focus-visible:ring-2 dark:bg-stone-800 dark:ring-offset-stone-950"
+									className="group relative block h-full w-full cursor-zoom-in overflow-hidden bg-site-sunken focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 								>
 									<Image
 										src={img.url}

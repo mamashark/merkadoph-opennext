@@ -43,7 +43,7 @@ export default async function ServicesPage({ searchParams }: PageProps<"/service
 	if (page > 1 && services.length === 0) notFound();
 
 	return (
-		<main className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
+		<main className="accent-services mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
 			<PageIntro eyebrow="Services" title="What we build and fix" description={description} />
 
 			{categories.length > 1 && (
@@ -76,12 +76,12 @@ export default async function ServicesPage({ searchParams }: PageProps<"/service
 								priority={i === 0}
 								badge={s.is_featured ? <Pill tone="accent">Featured</Pill> : undefined}
 								eyebrow={s.category ?? undefined}
-								meta={s.price_label ? <p className="text-sm font-semibold text-stone-800 dark:text-stone-200">{s.price_label}</p> : undefined}
+								meta={s.price_label ? <p className="text-sm font-semibold text-site-ink">{s.price_label}</p> : undefined}
 							/>
 						))}
 					</div>
 					<div className="mt-12">
-						<Pagination page={page} perPage={SERVICES_PER_PAGE} total={total} basePath="/services" params={{ ...(category ? { category } : {}), ...(tag ? { tag } : {}) }} />
+						<Pagination tone="site" page={page} perPage={SERVICES_PER_PAGE} total={total} basePath="/services" params={{ ...(category ? { category } : {}), ...(tag ? { tag } : {}) }} />
 					</div>
 				</>
 			)}

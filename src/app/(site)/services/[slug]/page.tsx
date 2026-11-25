@@ -35,7 +35,7 @@ export default async function ServicePage({ params }: PageProps<"/services/[slug
 	const path = `/services/${service.slug}`;
 
 	return (
-		<main>
+		<main className="accent-services">
 			<JsonLd
 				data={[
 					{

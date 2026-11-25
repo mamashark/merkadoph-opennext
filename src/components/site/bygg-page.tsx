@@ -28,7 +28,7 @@ export async function byggMetadata(): Promise<Metadata> {
  */
 export function ByggPage() {
 	return (
-		<SiteShell contactHref="#kontakt" tone="night">
+		<SiteShell contactHref="#kontakt">
 			<JsonLd
 				data={[
 					{

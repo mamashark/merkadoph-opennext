@@ -17,9 +17,8 @@ export function NotFoundContent() {
 					Error 404
 				</p>
 
-				<p aria-hidden className="mt-6 font-display text-[7rem] leading-none font-bold tracking-tighter text-site-ink/[0.07] select-none sm:text-[10rem]">
-					404
-				</p>
+				{/* Decorative: drawn by CSS (::before), so it isn't page text and axe doesn't flag its 7% contrast (Ally B-A). */}
+				<div aria-hidden className="mt-6 font-display text-[7rem] leading-none font-bold tracking-tighter text-site-ink/[0.07] select-none before:content-['404'] sm:text-[10rem]" />
 				<h1 className="-mt-10 font-display text-4xl font-bold tracking-tight text-site-ink sm:-mt-14 sm:text-6xl">Naligaw ka yata.</h1>
 				<p className="mt-3 text-lg text-site-ink-2">
 					Looks like you took a wrong turn. The page you&apos;re looking for doesn&apos;t exist, has moved, or is no longer available.

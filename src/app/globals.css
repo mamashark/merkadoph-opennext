@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-	/* Brand cream and olive. */
-	--background: #faf9f6;
+	/* Brand cream and olive: the same cream as the site pages (--site-bg). */
+	--background: #f7f5ee;
 	--foreground: #33331e;
 }
 

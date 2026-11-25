@@ -11,7 +11,7 @@ An automated suite that GitHub Actions runs on every push to `main` and every pu
 | `smoke.spec.ts` | Every public route is 200 at 390 and 1280 (one `<h1>`, no console errors, no sideways scroll); an unknown route is 404; RSS is served; internal links on the homepage resolve |
 | `constellation.spec.ts` | Each Highlight opens the right `?world=` and Escape closes it (390 portrait touch, 667x375 landscape touch, 1280 mouse); no label overlaps and no covered squares over 3 landscape loads each at 667x375 and 844x390 (B5/B18); `#` tiles cause no console error (B30) |
 | `jumps-and-restore.spec.ts` | B28: every About index `[data-dive]` link and the header `#contact` land at the 64px scroll margin (±2px) at 390 and 1280. B29: Back from a card and reload at a band restore the position (±2px) |
-| `a11y.spec.ts` | axe (wcag2a, wcag2aa, wcag21aa, wcag22aa) on `/`, `/blogs`, one blog post, `/events`, `/impact`, one Community Impact entry, `/privacy`, `/cookies` at 390 and 1280, light and dark. B33: the `/cookies` table wrapper takes Tab focus and scrolls with ArrowRight at 320 |
+| `a11y.spec.ts` | axe (wcag2a, wcag2aa, wcag21aa, wcag22aa) on `/`, `/blogs`, one blog post, `/events`, `/impact`, one Community Impact entry, `/tahooo`, `/digital`, `/bygg`, `/privacy`, `/cookies` at 390 and 1280, light and dark. B33: the `/cookies` table wrapper takes Tab focus and scrolls with ArrowRight at 320 |
 | `content.spec.ts` | Homepage blog card summaries clamp to 3 lines at 320, 390, 768, 1280 |
 
 The constellation lays itself out at random on every load, so nothing asserts exact positions. Tests use thresholds and the config allows one retry locally (two in CI). A test that passes only on a retry is shown as "flaky" in the report: look at it.

@@ -22,6 +22,8 @@ const DEAL_MS = 320;
 const reduced = () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 function Print({ img, i, label, onOpen, priority, buttonRef, tabIndex }: { img: PortfolioImage; i: number; label: string; onOpen: () => void; priority?: boolean; buttonRef?: (el: HTMLButtonElement | null) => void; tabIndex?: number }) {
+	// The print is always light paper, so its focus ring is always dark olive (11.7:1), never the section colour
+	// (yellow on the paper is 1.37:1 in dark mode; Arvid R1).
 	return (
 		<figure className="relative bg-white p-2.5 pb-3 shadow-[0_10px_24px_-12px_rgba(51,51,30,0.55),0_2px_6px_rgba(51,51,30,0.18)] dark:bg-stone-100">
 			<span aria-hidden className={cn("absolute -top-3 left-1/2 h-6 w-16 -translate-x-1/2 -rotate-3 opacity-90 mix-blend-multiply", TAPE[i % TAPE.length])} />
@@ -32,7 +34,7 @@ function Print({ img, i, label, onOpen, priority, buttonRef, tabIndex }: { img: 
 				onClick={onOpen}
 				aria-haspopup="dialog"
 				aria-label={`Open photo ${i + 1} full screen: ${label}`}
-				className="relative block aspect-square w-full cursor-zoom-in overflow-hidden bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+				className="relative block aspect-square w-full cursor-zoom-in overflow-hidden bg-stone-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-olive"
 			>
 				<Image src={img.url} alt={label} fill sizes="(max-width: 640px) 45vw, 256px" loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} className="object-cover" />
 			</button>

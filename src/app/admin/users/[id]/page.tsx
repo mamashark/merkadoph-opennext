@@ -16,15 +16,13 @@ export const metadata: Metadata = { title: "Edit user" };
 
 const notices: Record<string, string> = {
 	created: "User created. They can sign in now.",
-	saved: "Changes saved.",
-	password: "Changes saved and password updated.",
 };
 
 
 export default async function EditUserPage({ params, searchParams }: PageProps<"/admin/users/[id]">) {
 	const me = await requireAdmin();
 	const { id } = await params;
-	const { notice, error } = await searchParams;
+	const { notice } = await searchParams;
 	if (!UUID.test(id)) notFound();
 
 	const user = await getUser(id);
@@ -44,8 +42,9 @@ export default async function EditUserPage({ params, searchParams }: PageProps<"
 			/>
 
 			<div className="max-w-2xl space-y-4">
-				<FlashMessage notice={typeof notice === "string" ? notices[notice] : undefined} error={typeof error === "string" ? error : undefined} />
-				<UserForm key={`${user.email}-${user.name}-${user.hasAccess}`} user={user} isSelf={isSelf} />
+				<FlashMessage notice={typeof notice === "string" ? notices[notice] : undefined} />
+				{/* No key here: the form remounts itself after each save (UserFormState.savedAt) and keeps its message. */}
+				<UserForm user={user} isSelf={isSelf} />
 
 				{!isSelf && (
 					<section className={`${cardClass} flex flex-col gap-4 border-red-200 dark:border-red-900 p-5 sm:flex-row sm:items-center sm:justify-between`}>

@@ -19,6 +19,11 @@ export const metadata: Metadata = { title: "Users" };
 
 const PER_PAGE = 20;
 const notices: Record<string, string> = { deleted: "User deleted." };
+/** Error codes set by deleteUser (never free text from the URL). */
+const DELETE_ERRORS: Record<string, string> = {
+	"delete-self": "You can't delete your own account.",
+	"delete-failed": "Couldn't delete the user. Please try again.",
+};
 
 export default async function UsersPage({ searchParams }: PageProps<"/admin/users">) {
 	const me = await requireAdmin();
@@ -55,7 +60,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
 			/>
 
 			<div className="space-y-4">
-				<FlashMessage notice={notices[param(params, "notice")]} error={param(params, "error")} />
+				<FlashMessage notice={notices[param(params, "notice")]} error={DELETE_ERRORS[param(params, "error")]} />
 
 				<div className={`${cardClass} overflow-hidden`}>
 					<ListToolbar

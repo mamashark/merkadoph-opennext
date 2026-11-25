@@ -50,8 +50,8 @@ export const checkoutSchema = z.object({
  * (GoTrue splits required_characters on ":"), so "\" alone may not count there. Leaving it out keeps this rule
  * never looser than Supabase's (Arvid review, 2026-11-25).
  */
-export const PASSWORD_MIN = 12;
-export const PASSWORD_MAX = 72;
+import { PASSWORD_MAX, PASSWORD_MIN } from "@/lib/password-rules";
+export { PASSWORD_MAX, PASSWORD_MIN };
 const SYMBOL = /[!@#$%^&*()_+\-=[\]{};':"|<>?,./`~]/;
 export const passwordSchema = z
 	.string()

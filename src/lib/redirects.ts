@@ -11,6 +11,8 @@ export const PUBLIC_BASE: Partial<Record<ContentTable, string>> = {
 	portfolios: "/impact",
 	products: "/product",
 	product_categories: "/shop",
+	// Phase 1: every published item lives at /bulletin (press types are held until /press exists, Kay 2026-11-25).
+	bulletin_items: "/bulletin",
 };
 
 /**

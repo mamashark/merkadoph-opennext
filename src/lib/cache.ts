@@ -14,7 +14,7 @@ import { revalidatePath, unstable_cache, updateTag } from "next/cache";
  *  number as a literal (`export const revalidate = 86400`): Next needs it written out. */
 export const CACHE_TTL = 86400;
 
-export const CONTENT_TAGS = ["blogs", "events", "promotions", "services", "portfolio"] as const;
+export const CONTENT_TAGS = ["blogs", "events", "promotions", "services", "portfolio", "bulletin"] as const;
 export type ContentTag = (typeof CONTENT_TAGS)[number];
 
 /** Shop data: "products" (products, categories, tags), "shop" (settings, incl. the on/off switch) and "product-feed" (the XML feed). */
@@ -39,9 +39,9 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	},
 	blogs: {
 		label: "Blogs",
-		description: "Blog data, the blog list, every post page, the RSS feed, the Bulletin Board (notices are posts) and Community Impact pages linked to a post.",
+		description: "Blog data, the blog list, every post page, the RSS feed and Community Impact pages linked to a post.",
 		tags: ["blogs"],
-		paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }, { path: "/blogs/rss.xml" }, { path: "/bulletin" }],
+		paths: [{ path: "/blogs" }, { path: "/blogs/[slug]", type: "page" }, { path: "/blogs/rss.xml" }],
 	},
 	events: { label: "Events", description: "Event data, the events list and every event page.", tags: ["events"], paths: [{ path: "/events" }, { path: "/events/[slug]", type: "page" }] },
 	promotions: {
@@ -61,6 +61,12 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 		description: "Project data, the /impact list, every project page, the homepage and blog posts that show a linked entry.",
 		tags: ["portfolio"],
 		paths: [{ path: "/impact" }, { path: "/impact/[slug]", type: "page" }, { path: "/" }],
+	},
+	bulletin: {
+		label: "Bulletin Board",
+		description: "Notices, embassy updates, opportunities and press items: /bulletin, every notice page, its categories and publishers.",
+		tags: ["bulletin"],
+		paths: [{ path: "/bulletin" }, { path: "/bulletin/[slug]", type: "page" }],
 	},
 	shop: {
 		label: "Shop",

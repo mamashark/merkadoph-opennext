@@ -3,7 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { pastEnd, searchTerm } from "@/lib/content";
 
 /**
- * Shared tags for blogs, events, promotions, services and portfolios (public.tags).
+ * Shared tags for blogs, events, promotions, services, portfolios and bulletin items (public.tags).
  * Content rows keep their own `tags text[]`; a database trigger maps every saved tag to the shared
  * spelling and adds new names to this list (supabase/migrations/20261114000000_shared_tags.sql).
  * Product tags are separate (src/lib/shop-admin.ts).
@@ -19,6 +19,7 @@ export type TagUsage = {
 	promotions: number;
 	services: number;
 	portfolios: number;
+	bulletin: number;
 	total: number;
 };
 
@@ -28,6 +29,7 @@ export const TAG_USAGE_TYPES = [
 	{ key: "promotions", label: "Promotions", singular: "promotion", plural: "promotions", adminPath: "/admin/promotions" },
 	{ key: "services", label: "Services", singular: "service", plural: "services", adminPath: "/admin/services" },
 	{ key: "portfolios", label: "Portfolio", singular: "project", plural: "projects", adminPath: "/admin/portfolio" },
+	{ key: "bulletin", label: "Bulletin", singular: "notice", plural: "notices", adminPath: "/admin/bulletin" },
 ] as const;
 export type TagUsageType = (typeof TAG_USAGE_TYPES)[number]["key"];
 

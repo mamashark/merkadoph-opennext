@@ -36,7 +36,18 @@ export function tagsByUse(rows: Array<{ tags?: string[] | null }>): string[] {
 	return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([t]) => t);
 }
 
-export type ContentTable = "blogs" | "events" | "promotions" | "services" | "portfolios" | "products" | "product_categories" | "product_tags";
+export type ContentTable =
+	| "blogs"
+	| "events"
+	| "promotions"
+	| "services"
+	| "portfolios"
+	| "products"
+	| "product_categories"
+	| "product_tags"
+	| "bulletin_items"
+	| "bulletin_categories"
+	| "bulletin_publishers";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {
 	if (row.status !== "published") return "draft";

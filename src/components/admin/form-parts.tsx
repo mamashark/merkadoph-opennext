@@ -64,7 +64,7 @@ export function ContentForm({ action, id, main, aside }: { action: (fd: FormData
 	);
 }
 
-export function BasicsSection({ row, publicPath, titlePlaceholder, children }: { row?: Base; publicPath: string; titlePlaceholder: string; children?: React.ReactNode }) {
+export function BasicsSection({ row, publicPath, titlePlaceholder, children }: { row?: Pick<Base, "title" | "slug" | "excerpt">; publicPath: string; titlePlaceholder: string; children?: React.ReactNode }) {
 	return (
 		<section className={`${cardClass} space-y-5 p-5`}>
 			<Field id="title" label="Title">
@@ -167,13 +167,14 @@ export function PublishCard({ row, noun }: { row?: Base; noun: string }) {
 	);
 }
 
-export function CoverCard({ row, title = "Cover image" }: { row?: Base; title?: string }) {
+export function CoverCard({ row, title = "Cover image", children }: { row?: Pick<Base, "cover_image_url" | "cover_image_alt">; title?: string; children?: React.ReactNode }) {
 	return (
 		<FormCard title={title}>
 			<MediaField name="cover_image_url" defaultValue={row?.cover_image_url} label={title} />
 			<Field id="cover_image_alt" label="Alt text" hint="Describe the image. Also used for social sharing previews.">
 				<input id="cover_image_alt" name="cover_image_alt" maxLength={200} defaultValue={row?.cover_image_alt ?? ""} className={inputClass} />
 			</Field>
+			{children}
 		</FormCard>
 	);
 }

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ANNOUNCEMENT_TAG, BLOGS_PER_PAGE, getPublishedBlogs, type BlogSummary } from "@/lib/blogs";
+import { Search } from "lucide-react";
+import { BULLETIN_PER_PAGE, getBulletinCategories, getFeaturedBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
+import { OFFERS_SLUG, TYPE_LABEL } from "@/lib/bulletin-shared";
 import { getPublicPromotions, PROMOTIONS_PER_PAGE, type PromotionSummary } from "@/lib/promotions";
 import { EMBASSY_LINKS } from "@/lib/businesses";
 import { pageParam, param } from "@/lib/content";
@@ -9,44 +11,96 @@ import { pageMetadata } from "@/lib/seo";
 import { ContentCard, EmptyNotice, LinkTabs, PageIntro } from "@/components/site/content-card";
 import { Pagination } from "@/components/admin/pagination";
 
-// Renders per request (it reads the tab/page from the URL); the data itself comes from the cache.
+// Renders per request (it reads the filters from the URL); the data itself comes from the cache.
 
-const description = "News and updates for Filipinos in Sweden: notices from the Philippine Embassy, community announcements and offers from friends of Merkado PH.";
+const TITLE = "Ano’ng latest na chismis?";
+const description =
+	"The good kind of chismis. Embassy updates, community announcements, media features, opportunities and special offers from friends of Merkado PH.";
 
-/** "" = both lists (first page of each); "notices" / "offers" = one list, paginated. Unknown values show both. */
-const SHOWS = ["notices", "offers"] as const;
-type Show = (typeof SHOWS)[number] | "";
+type Filters = { category: string; q: string; page: number };
 
-async function readFilters(searchParams: PageProps<"/bulletin">["searchParams"]) {
+async function readFilters(searchParams: PageProps<"/bulletin">["searchParams"]): Promise<Filters & { categoryName: string | null }> {
 	const params = await searchParams;
-	const raw = param(params, "show");
-	const show: Show = (SHOWS as readonly string[]).includes(raw) ? (raw as Show) : "";
-	return { show, page: show ? pageParam(params) : 1 };
+	const categories = await getBulletinCategories().catch(() => []);
+	const raw = param(params, "category");
+	// Only known values are accepted (guidelines §0.5); anything else shows everything.
+	const known = raw === OFFERS_SLUG ? "Community Offers" : (categories.find((c) => c.slug === raw)?.name ?? null);
+	const category = known ? raw : "";
+	const q = param(params, "q").trim().slice(0, 80);
+	return { category, q: category === OFFERS_SLUG ? "" : q, page: pageParam(params), categoryName: known };
 }
 
-const listHref = (show: Show, page = 1) => {
-	const qs = new URLSearchParams({ ...(show ? { show } : {}), ...(page > 1 ? { page: String(page) } : {}) }).toString();
+const listHref = ({ category, q, page }: Partial<Filters>) => {
+	const qs = new URLSearchParams({ ...(category ? { category } : {}), ...(q ? { q } : {}), ...(page && page > 1 ? { page: String(page) } : {}) }).toString();
 	return qs ? `/bulletin?${qs}` : "/bulletin";
 };
 
 export async function generateMetadata({ searchParams }: PageProps<"/bulletin">): Promise<Metadata> {
-	const { show, page } = await readFilters(searchParams);
-	const label = show === "notices" ? ": Notices" : show === "offers" ? ": Offers" : "";
-	return pageMetadata({ title: `Bulletin Board${label}${page > 1 ? ` — Page ${page}` : ""}`, description, path: listHref(show, page) });
+	const { category, q, page, categoryName } = await readFilters(searchParams);
+	const label = categoryName ? `: ${categoryName}` : "";
+	const meta = pageMetadata({ title: `Bulletin Board${label}${page > 1 ? ` — Page ${page}` : ""}`, description, path: listHref({ category, page }) });
+	// Search results aren't indexed (thin, endless variations).
+	return q ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
+const card = (n: BulletinCard, featured = false) => (
+	<ContentCard
+		key={n.id}
+		href={`/bulletin/${n.slug}`}
+		title={n.title}
+		excerpt={n.excerpt}
+		image={n.cover_image_url}
+		imageAlt={n.cover_image_alt}
+		eyebrow={[n.is_pinned ? "Pinned" : null, n.category.name].filter(Boolean).join(" · ")}
+		meta={
+			<>
+				{n.publisher ? `${n.publisher.name} · ` : ""}
+				<time dateTime={n.published_at ?? undefined}>{formatDate(n.published_at, { dateStyle: "long" })}</time>
+				{n.expires_at && <> · until {formatDate(n.expires_at, { dateStyle: "medium" })}</>}
+			</>
+		}
+		badge={n.content_type === "embassy_update" ? TYPE_LABEL.embassy_update : undefined}
+		featured={featured}
+		headingLevel="h3"
+	/>
+);
+
+const offerCard = (p: PromotionSummary) => (
+	<ContentCard
+		key={p.id}
+		href={`/promotions/${p.slug}`}
+		title={p.title}
+		excerpt={p.excerpt}
+		image={p.cover_image_url}
+		imageAlt={p.cover_image_alt}
+		eyebrow={["Community Offer", p.discount_label].filter(Boolean).join(" · ")}
+		meta={p.ends_at ? <>Until {formatDate(p.ends_at, { dateStyle: "long" })}</> : undefined}
+		headingLevel="h3"
+	/>
+);
+
 export default async function BulletinPage({ searchParams }: PageProps<"/bulletin">) {
-	const { show, page } = await readFilters(searchParams);
-	const [notices, offers] = await Promise.all([
-		show === "offers" ? null : getPublishedBlogs(page, BLOGS_PER_PAGE, { tag: ANNOUNCEMENT_TAG }).catch(() => ({ blogs: [] as BlogSummary[], total: 0 })),
-		show === "notices" ? null : getPublicPromotions("current", page, PROMOTIONS_PER_PAGE).catch(() => ({ promotions: [] as PromotionSummary[], total: 0 })),
+	const { category, q, page, categoryName } = await readFilters(searchParams);
+	const offersOnly = category === OFFERS_SLUG;
+	const overview = !category && !q && page === 1;
+
+	const [categories, list, featured, offers] = await Promise.all([
+		getBulletinCategories().catch(() => []),
+		offersOnly ? null : getPublicBulletin(category, q, page, BULLETIN_PER_PAGE).catch(() => ({ items: [] as BulletinCard[], total: 0 })),
+		overview ? getFeaturedBulletin(3).catch(() => [] as BulletinCard[]) : Promise.resolve([] as BulletinCard[]),
+		offersOnly || overview ? getPublicPromotions("current", offersOnly ? page : 1, offersOnly ? PROMOTIONS_PER_PAGE : 3).catch(() => ({ promotions: [] as PromotionSummary[], total: 0 })) : null,
 	]);
-	const shown = show === "notices" ? notices!.blogs.length : show === "offers" ? offers!.promotions.length : 1;
+	const shown = offersOnly ? offers!.promotions.length : list!.items.length;
 	if (page > 1 && shown === 0) notFound();
+
+	const featuredIds = new Set(featured.map((f) => f.id));
+	const items = (list?.items ?? []).filter((n) => !featuredIds.has(n.id));
+	const total = offersOnly ? offers!.total : list!.total;
+	const resultText = q ? `${total} ${total === 1 ? "result" : "results"} for “${q}”` : categoryName ? `${total} in ${categoryName}` : "";
 
 	return (
 		<main className="accent-bulletin mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
-			<PageIntro eyebrow="Bulletin Board" title="Ano’ng latest na chismis?" description={description} />
+			<PageIntro eyebrow="Bulletin Board" title={TITLE} description={description} />
 
 			{EMBASSY_LINKS.length > 0 && (
 				<aside aria-labelledby="embassy-title" className="mb-10 border border-site-line bg-site-surface p-5">
@@ -67,53 +121,68 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 			)}
 
 			<LinkTabs
-				label="Show"
-				current={show}
+				label="Category"
+				current={category}
 				tabs={[
-					{ label: "Everything", value: "", href: listHref("") },
-					{ label: "Notices", value: "notices", href: listHref("notices") },
-					{ label: "Offers", value: "offers", href: listHref("offers") },
+					{ label: "All updates", value: "", href: listHref({ q }) },
+					...categories.map((c) => ({ label: c.name, value: c.slug, href: listHref({ category: c.slug, q }) })),
+					{ label: "Community Offers", value: OFFERS_SLUG, href: listHref({ category: OFFERS_SLUG }) },
 				]}
 			/>
 
-			{notices && (
-				<section aria-labelledby="notices-title" className="mt-8">
-					<h2 id="notices-title" className="text-2xl font-semibold tracking-tight text-site-ink">
-						Notices
+			{!offersOnly && (
+				<form action="/bulletin" method="get" role="search" className="mt-6 flex max-w-xl gap-2">
+					{category && <input type="hidden" name="category" value={category} />}
+					<label htmlFor="bulletin-q" className="sr-only">
+						Search the Bulletin Board
+					</label>
+					<input
+						id="bulletin-q"
+						name="q"
+						type="search"
+						defaultValue={q}
+						maxLength={80}
+						placeholder="Search notices…"
+						className="min-h-11 w-full border border-site-line-2 bg-site-surface px-3 text-site-ink placeholder:text-site-muted focus-visible:outline-2 focus-visible:outline-accent"
+					/>
+					<button type="submit" className="inline-flex min-h-11 items-center gap-2 border border-site-ink bg-site-ink px-4 font-label text-xs font-medium tracking-[0.1em] text-site-bg uppercase hover:bg-accent hover:border-accent">
+						<Search className="h-4 w-4" aria-hidden /> Search
+					</button>
+				</form>
+			)}
+
+			{/* Announced when the filters change (spec §14). */}
+			<p className="sr-only" aria-live="polite">
+				{resultText}
+			</p>
+			{resultText && <p className="mt-4 text-sm text-site-muted">{resultText}</p>}
+
+			{featured.length > 0 && (
+				<section aria-labelledby="featured-title" className="mt-10">
+					<h2 id="featured-title" className="sr-only">
+						Featured
 					</h2>
-					{notices.blogs.length === 0 ? (
-						<EmptyNotice title="No notices right now." description="Embassy updates and community announcements will appear here." />
+					<div className="grid gap-6 lg:grid-cols-2">{featured.map((n) => card(n, true))}</div>
+				</section>
+			)}
+
+			{!offersOnly && (
+				<section aria-labelledby="updates-title" className="mt-10">
+					<h2 id="updates-title" className="text-2xl font-semibold tracking-tight text-site-ink">
+						{categoryName ?? "Latest updates"}
+					</h2>
+					{items.length === 0 && featured.length === 0 ? (
+						<EmptyNotice
+							title={q ? "Nothing matches that search." : "Nothing here right now."}
+							description={q ? "Try another word, or browse all updates." : "Embassy updates, community notices and opportunities will appear here."}
+						/>
 					) : (
-						<>
-							<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-								{notices.blogs.map((b) => (
-									<ContentCard
-										key={b.id}
-										href={`/blogs/${b.slug}`}
-										title={b.title}
-										excerpt={b.excerpt}
-										image={b.cover_image_url}
-										imageAlt={b.cover_image_alt}
-										eyebrow={b.tags.filter((t) => t !== ANNOUNCEMENT_TAG).slice(0, 2).join(" · ") || undefined}
-										meta={<time dateTime={b.published_at ?? undefined}>{formatDate(b.published_at, { dateStyle: "long" })}</time>}
-										headingLevel="h3"
-									/>
-								))}
-							</div>
-							{show === "notices" ? (
-								<div className="mt-12">
-									<Pagination tone="site" page={page} perPage={BLOGS_PER_PAGE} total={notices.total} basePath="/bulletin" params={{ show }} />
-								</div>
-							) : (
-								notices.total > notices.blogs.length && (
-									<p className="mt-6">
-										<a href={listHref("notices")} className="font-semibold text-accent hover:underline">
-											All {notices.total} notices →
-										</a>
-									</p>
-								)
-							)}
-						</>
+						<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{items.map((n) => card(n))}</div>
+					)}
+					{list!.total > BULLETIN_PER_PAGE && (
+						<div className="mt-12">
+							<Pagination tone="site" page={page} perPage={BULLETIN_PER_PAGE} total={list!.total} basePath="/bulletin" params={{ ...(category ? { category } : {}), ...(q ? { q } : {}) }} />
+						</div>
 					)}
 				</section>
 			)}
@@ -127,29 +196,15 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 						<EmptyNotice title="No offers right now." description="Partner offers will appear here when there are any." />
 					) : (
 						<>
-							<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-								{offers.promotions.map((p) => (
-									<ContentCard
-										key={p.id}
-										href={`/promotions/${p.slug}`}
-										title={p.title}
-										excerpt={p.excerpt}
-										image={p.cover_image_url}
-										imageAlt={p.cover_image_alt}
-										eyebrow={p.discount_label ?? undefined}
-										meta={p.ends_at ? <>Until {formatDate(p.ends_at, { dateStyle: "long" })}</> : undefined}
-										headingLevel="h3"
-									/>
-								))}
-							</div>
-							{show === "offers" ? (
+							<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{offers.promotions.map(offerCard)}</div>
+							{offersOnly ? (
 								<div className="mt-12">
-									<Pagination tone="site" page={page} perPage={PROMOTIONS_PER_PAGE} total={offers.total} basePath="/bulletin" params={{ show }} />
+									<Pagination tone="site" page={page} perPage={PROMOTIONS_PER_PAGE} total={offers.total} basePath="/bulletin" params={{ category: OFFERS_SLUG }} />
 								</div>
 							) : (
 								offers.total > offers.promotions.length && (
 									<p className="mt-6">
-										<a href={listHref("offers")} className="font-semibold text-accent hover:underline">
+										<a href={listHref({ category: OFFERS_SLUG })} className="font-semibold text-accent hover:underline">
 											All {offers.total} offers →
 										</a>
 									</p>

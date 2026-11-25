@@ -10,11 +10,8 @@
  * - The Bygg, Digital and Tahooo texts come from their own files (bygg-content.ts, digital-content.ts, tahooo-content.ts).
  */
 export const HOME = {
-	/** The constellation hero at the top. */
+	/** The constellation hero at the top: the sky and the chapter mark only (the welcome text is in `about`, Kay 2026-11-25). */
 	hero: {
-		eyebrow: "Est. 2023 · Gothenburg",
-		title: "Merkado PH",
-		lede: "The store has a new home. This is what comes next: Filipino culture, festivals and pop-ups, and three years of stories from our community.",
 		/** The big vertical word down the hero's left edge (upright phones: across the top), linking to the Bagong Yugto post. */
 		chapter: { title: "Ang Bagong Yugto", sub: "The Next Chapter", cta: "Read the blog", href: "/blogs/bagong-yugto-next-chapter-for-merkado-ph" },
 	},
@@ -43,14 +40,11 @@ export const HOME = {
 
 	/** "Mabuhay" section under the hero. */
 	about: {
-		eyebrow: "Mabuhay · Välkommen",
-		heading: "Everything *Filipino*, from Gothenburg.",
-		/** The sentence with the PH Asian Market link: before + link + after. */
-		lede: {
-			before: "Merkado PH started as a Filipino grocery in 2023. The shop now lives on at",
-			link: "PH Asian Market",
-			after: "— this is where the community, the stories and the celebrations continue.",
-		},
+		/** The small line above the heading (Kay, 2026-11-25). Split so "Mabuhay!" is read as Tagalog and "Välkommen" as Swedish. */
+		greeting: { tl: "Mabuhay!", sv: "Välkommen", rest: "to Merkado PH." },
+		/** The big heading, the page's h1; *word* is highlighted. */
+		tagline: "Everything *Filipino*, from Gothenburg and beyond.",
+		body: "What began as a Filipino grocery store in 2023 has evolved into something more. A space where our culture lives on, stories are shared, connections are strengthened, and the Filipino spirit continues to be celebrated. A new chapter, the same heart.",
 		stats: {
 			founded: { label: "Merkado PH founded in Gothenburg", value: "2023" },
 			stories: "Stories about Filipino culture",

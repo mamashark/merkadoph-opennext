@@ -272,19 +272,6 @@
 	position: absolute;
 	inset: 0;
 }
-.intro {
-	position: absolute;
-	z-index: 2;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	padding: 0 max(24px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 0px) + 12px) var(--gutter);
-	pointer-events: none;
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	max-width: 36rem;
-}
 .eyebrow {
 	margin: 0;
 	font-family: var(--font-mono);
@@ -301,26 +288,6 @@
 	width: 8px;
 	height: 8px;
 	background: currentColor;
-}
-.intro h1 {
-	margin: 0;
-	font-family: var(--font-display);
-	font-size: clamp(2.6rem, 7vw, 4.8rem);
-	font-weight: 700;
-	line-height: 0.95;
-	letter-spacing: -0.02em;
-	text-wrap: balance;
-	text-shadow: 0 2px 24px var(--night);
-}
-.lede {
-	margin: 0;
-	/* The hero intro is the homepage's largest paint (LCP): it stays in the preloaded display face. */
-	font-family: var(--font-display);
-	font-size: 1.05rem;
-	line-height: 1.5;
-	color: var(--muted);
-	max-width: 30rem;
-	text-shadow: 0 1px 12px var(--night);
 }
 .hint {
 	position: absolute;
@@ -412,19 +379,7 @@
 .stage:has(.chapter) .panel {
 	left: var(--chapter-w);
 }
-/* With the chapter mark on the left, the title sits bottom right (Kay, 2026-11-25). The graph's keep-out box is
-   measured from the title wherever it is, so stars stay clear of it here too. */
-.stage:has(.chapter) .intro {
-	left: auto;
-	right: 0;
-	align-items: flex-end;
-	text-align: right;
-	max-width: min(36rem, calc(100% - var(--chapter-w)));
-}
 @media (max-width: 560px) {
-	.lede {
-		font-size: 0.95rem;
-	}
 	.hintText {
 		display: none;
 	}
@@ -602,7 +557,7 @@
 	border-bottom: 1px solid var(--line);
 	scroll-margin-top: 64px;
 }
-.about h2 {
+.aboutTitle {
 	margin: 14px 0 0;
 	font-size: clamp(40px, 7vw, 96px);
 	font-weight: 700;
@@ -611,7 +566,7 @@
 	max-width: 13ch;
 }
 /* Highlighted words: a brand-colour highlighter stripe in light mode, coloured text in dark mode. */
-.about h2 em,
+.aboutTitle em,
 .worldHead h2 em,
 .contact h2 em {
 	font-style: normal;
@@ -624,7 +579,7 @@
 	box-decoration-break: clone;
 }
 @media (prefers-color-scheme: dark) {
-	.about h2 em,
+	.aboutTitle em,
 	.worldHead h2 em,
 	.contact h2 em {
 		color: var(--c, var(--sun));
@@ -1415,11 +1370,9 @@
 .stage[data-world="open"] .graph {
 	visibility: hidden;
 }
-.intro,
 .hint {
 	transition: opacity 0.4s;
 }
-.stage[data-world] .intro,
 .stage[data-world] .chapter,
 .stage[data-world] .hint,
 .stage[data-world] .peek,
@@ -1998,17 +1951,6 @@
 	.wLabel {
 		display: none;
 	}
-	.intro {
-		gap: 6px;
-		padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
-	}
-	.intro h1 {
-		font-size: 2rem;
-	}
-	.lede {
-		font-size: 0.85rem;
-		max-width: 26rem;
-	}
 	/* The hint is mouse wording and would sit on top of the stars here. */
 	.hintText {
 		display: none;
@@ -2016,14 +1958,6 @@
 }
 /* Very short (phones held sideways, ≤ 420px tall): just the title, so the sky has room.
    The same words are in the About section right below. */
-@media (max-height: 420px) and (orientation: landscape) {
-	.intro h1 {
-		font-size: 1.6rem;
-	}
-	.lede {
-		display: none;
-	}
-}
 
 /* One long word in a section title (e.g. "Byggnadsavdelning"): break it on narrow screens instead of overflowing. */
 .long {
@@ -2044,20 +1978,6 @@
 		display: flex;
 		flex-direction: column;
 		padding-top: max(28px, env(safe-area-inset-top, 0px));
-	}
-	.intro {
-		position: static;
-		padding: 0 var(--side);
-		max-width: none;
-		pointer-events: auto;
-	}
-	.intro h1 {
-		font-size: clamp(2.5rem, 13vw, 3.6rem);
-		white-space: nowrap;
-		text-shadow: none;
-	}
-	.lede {
-		text-shadow: none;
 	}
 	/* "Open" / "Fold again" in its own row, so it never sits on a Highlight. */
 	.hint {
@@ -2165,11 +2085,5 @@
 	}
 	.stage:has(.chapter) .panel {
 		left: auto;
-	}
-	.stage:has(.chapter) .intro {
-		padding-left: var(--side);
-		max-width: none;
-		align-items: stretch;
-		text-align: left;
 	}
 }

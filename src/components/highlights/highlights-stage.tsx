@@ -15,9 +15,6 @@ export const UNFOLDED_HINT = "Hover a category · click to zoom in · drag to re
 type Props = {
 	hubs: ConstellationHub[];
 	items: ConstellationItem[];
-	eyebrow: string;
-	title: string;
-	lede: string;
 	/** Big vertical word down the left edge, linking to a page (Kay, 2026-11-25). */
 	chapter?: { title: string; sub: string; cta: string; href: string };
 	label: string;
@@ -96,7 +93,7 @@ const phone = () => window.matchMedia(PHONE_QUERY).matches;
  * its entries; clicking it "dives" into that section below, and "Back to highlights" climbs back out.
  * Also runs the page-wide bits: reveal-on-scroll, [data-dive] / [data-back] links, deep links (#blogs).
  */
-export function HighlightsStage({ hubs, items, eyebrow, title, lede, chapter, label, worlds }: Props) {
+export function HighlightsStage({ hubs, items, chapter, label, worlds }: Props) {
 	const router = useRouter();
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -543,21 +540,6 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, chapter, la
 				unfoldedHint: UNFOLDED_HINT,
 				// The Open/Fold button's corner (button + its top/right padding).
 				keepClear: { width: 150, height: 66 },
-				// The hero title (eyebrow, h1, lede) sits over the sky on wider screens: keep the graph out of it.
-				// Phones held upright show the title above the sky panel, so there is nothing to avoid there.
-				avoid: () => {
-					const intro = stageRef.current?.querySelector<HTMLElement>(`.${styles.intro}`);
-					const box = panelRef.current?.getBoundingClientRect();
-					if (!intro || !box || phone()) return null;
-					const parts = [...intro.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width && r.height);
-					if (!parts.length) return null;
-					return {
-						left: Math.min(...parts.map((r) => r.left)) - box.left,
-						top: Math.min(...parts.map((r) => r.top)) - box.top,
-						right: Math.max(...parts.map((r) => r.right)) - box.left,
-						bottom: Math.max(...parts.map((r) => r.bottom)) - box.top,
-					};
-				},
 				onHint: setHint,
 				onFolded: (f) => {
 					foldedRef.current = f;
@@ -739,12 +721,6 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, chapter, la
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
 			// Folded, a click on the sun in the centre opens the graph; keyboard users have the Open button.
 		>
-			{/* Title first: on phones it sits above the sky panel, in reading order (it's absolutely placed on wider screens). */}
-			<div className={styles.intro}>
-				<p className={styles.eyebrow}>{eyebrow}</p>
-				<h1 id="hero-title">{title}</h1>
-				<p className={styles.lede}>{lede}</p>
-			</div>
 			{/* The chapter mark: a big vertical word down the left edge (across the top on upright phones). The sky starts to its right. */}
 			{chapter && (
 				<Link href={chapter.href} className={styles.chapter}>

@@ -367,30 +367,27 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 					knowsAbout: [BUSINESSES.bygg.name, BUSINESSES.digital.name, ...offerings.map((s) => s.title)],
 				}}
 			/>
-			<main className={`${styles.root} ${plexMono.variable}`} aria-labelledby="hero-title">
+			<main className={`${styles.root} ${plexMono.variable}`} aria-labelledby="home-title">
 				<HighlightsStage
 					hubs={hubs}
 					items={items}
-					eyebrow={HOME.hero.eyebrow}
-					title={HOME.hero.title}
-					lede={HOME.hero.lede}
 					chapter={HOME.hero.chapter}
 					label={label}
 					worlds={worldInfo}
 				/>
 
 				{/* About + index */}
-				<section className={styles.about} id="index" aria-labelledby="about-title">
+				<section className={styles.about} id="index" aria-labelledby="home-title">
 					<div className={styles.wrap}>
-						<p className={styles.eyebrow}>{HOME.about.eyebrow}</p>
-						<h2 id="about-title">{emph(HOME.about.heading)}</h2>
-						<p className={styles.aboutLede}>
-							{HOME.about.lede.before}{" "}
-							<a href={GROCERY_URL} rel="noopener">
-								{HOME.about.lede.link}
-							</a>{" "}
-							{HOME.about.lede.after}
+						{/* The welcome moved here from the hero, which is now the sky and the chapter mark (Kay, 2026-11-25).
+						    Same look as before: mono eyebrow, big heading (the page's h1) with a highlighted word, lede. */}
+						<p className={styles.eyebrow}>
+							<span lang="tl">{HOME.about.greeting.tl}</span> <span lang="sv">{HOME.about.greeting.sv}</span> {HOME.about.greeting.rest}
 						</p>
+						<h1 id="home-title" className={styles.aboutTitle}>
+							{emph(HOME.about.tagline)}
+						</h1>
+						<p className={styles.aboutLede}>{HOME.about.body}</p>
 						<dl className={styles.stats}>
 							<div>
 								<dt>{HOME.about.stats.founded.label}</dt>

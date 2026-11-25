@@ -121,12 +121,15 @@
 	border-color: var(--sun);
 	color: var(--sun);
 }
-.btnSolid {
+/* `.root a.btnSolid`: beats `.root a { color: inherit }`, so a solid link button keeps its text colour (else ink on sun, 2.5:1). */
+.btnSolid,
+.root a.btnSolid {
 	background: var(--sun);
 	border-color: var(--sun);
 	color: var(--on-c);
 }
-.btnSolid:hover {
+.btnSolid:hover,
+.root a.btnSolid:hover {
 	background: transparent;
 	color: var(--sun);
 }

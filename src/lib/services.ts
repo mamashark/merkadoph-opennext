@@ -1,10 +1,10 @@
 import "server-only";
 import { cache } from "react";
-import { cached } from "@/lib/cache";
+import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import { pastEnd, type ContentStatus } from "@/lib/content";
+import { PastEndError, pastEnd, type ContentStatus } from "@/lib/content";
 
 export type Service = {
 	id: string;
@@ -50,7 +50,7 @@ export type ServiceSummary = Pick<
 const SUMMARY = "id,title,slug,excerpt,cover_image_url,cover_image_alt,tags,category,price_label,is_featured,sort_order,status,published_at,updated_at";
 export const SERVICES_PER_PAGE = 12;
 
-export const getPublicServices = cached(async (category: string | undefined, page: number = 1, perPage: number = SERVICES_PER_PAGE, tag?: string) => {
+export const getPublicServices = cachedPaged(async (category: string | undefined, page: number = 1, perPage: number = SERVICES_PER_PAGE, tag?: string) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("services").select(SUMMARY, { count: "exact" }));
 	if (category) query = query.eq("category", category);
@@ -60,9 +60,12 @@ export const getPublicServices = cached(async (category: string | undefined, pag
 		.order("sort_order", { ascending: true })
 		.order("title", { ascending: true })
 		.range(from, from + perPage - 1);
-	if (error && !pastEnd(error)) throw new Error(`Failed to load services: ${error.message}`);
-	return { services: (error ? [] : (data ?? [])) as ServiceSummary[], total: count ?? 0 };
-}, "services:getPublicServices", ["services"]);
+	if (error) {
+		if (pastEnd(error)) throw new PastEndError();
+		throw new Error(`Failed to load services: ${error.message}`);
+	}
+	return { services: (data ?? []) as ServiceSummary[], total: count ?? 0 };
+}, "services:getPublicServices", ["services"], { services: [] as ServiceSummary[], total: 0 });
 
 /** Distinct categories of live services (public) or of all services (admin). */
 export const getServiceCategories = cached(async (scope: "public" | "admin" = "public"): Promise<string[]> => {

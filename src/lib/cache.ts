@@ -1,3 +1,4 @@
+import { isPastEnd } from "@/lib/content";
 import "server-only";
 import { revalidatePath, unstable_cache, updateTag } from "next/cache";
 
@@ -81,6 +82,22 @@ export const CACHE_GROUP_IDS = Object.keys(CACHE_GROUPS) as CacheGroupId[];
 /** Wraps a public data loader in Next's data cache, tagged so it can be purged. */
 export function cached<A extends unknown[], R>(fn: (...args: A) => Promise<R>, key: string, tags: CacheTag[]) {
 	return unstable_cache(fn, [key], { revalidate: CACHE_TTL, tags: [...tags] });
+}
+
+/**
+ * `cached()` for paged lists. A page past the end throws PastEndError inside (so nothing is stored) and is answered
+ * with `empty` here, outside the cache; the page then shows its 404 (B32). Any other error still throws.
+ */
+export function cachedPaged<A extends unknown[], R>(fn: (...args: A) => Promise<R>, key: string, tags: CacheTag[], empty: R) {
+	const inner = cached(fn, key, tags);
+	return async (...args: A): Promise<R> => {
+		try {
+			return await inner(...args);
+		} catch (e) {
+			if (isPastEnd(e)) return empty;
+			throw e;
+		}
+	};
 }
 
 /**

@@ -1,10 +1,10 @@
 import "server-only";
 import { cache } from "react";
-import { cached } from "@/lib/cache";
+import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { filterByState, onlyLive } from "@/lib/content-server";
-import { pastEnd, searchTerm, type ContentStatus } from "@/lib/content";
+import { PastEndError, pastEnd, searchTerm, type ContentStatus } from "@/lib/content";
 import type { BlogPhoto, PhotoLayout } from "@/lib/blog-layout";
 
 export { slugify, toPlainText, summarize, readingMinutes } from "@/lib/content";
@@ -58,7 +58,7 @@ export const ANNOUNCEMENT_TAG = "Announcement";
 export const PINNED_BLOG_TITLE = "Bagong yugto: the next chapter for Merkado PH";
 
 /** `tag` filters (the /blogs?tag= filter); `excludeId` leaves out a post shown separately (the pinned one). */
-export const getPublishedBlogs = cached(async (page: number = 1, perPage: number = BLOGS_PER_PAGE, opts: { tag?: string; excludeId?: string } = {}) => {
+export const getPublishedBlogs = cachedPaged(async (page: number = 1, perPage: number = BLOGS_PER_PAGE, opts: { tag?: string; excludeId?: string } = {}) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("blogs").select(SUMMARY_COLUMNS, { count: "exact" }));
 	if (opts.tag) query = query.contains("tags", [opts.tag]);
@@ -67,9 +67,12 @@ export const getPublishedBlogs = cached(async (page: number = 1, perPage: number
 		.order("published_at", { ascending: false })
 		.range(from, from + perPage - 1);
 
-	if (error && !pastEnd(error)) throw new Error(`Failed to load blogs: ${error.message}`);
-	return { blogs: (error ? [] : (data ?? [])) as BlogSummary[], total: count ?? 0 };
-}, "blogs:getPublishedBlogs", ["blogs"]);
+	if (error) {
+		if (pastEnd(error)) throw new PastEndError();
+		throw new Error(`Failed to load blogs: ${error.message}`);
+	}
+	return { blogs: (data ?? []) as BlogSummary[], total: count ?? 0 };
+}, "blogs:getPublishedBlogs", ["blogs"], { blogs: [] as BlogSummary[], total: 0 });
 
 /** Distinct tags of live posts, for the tag filter. */
 export const getBlogTags = cached(async (): Promise<string[]> => {

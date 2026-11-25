@@ -1,10 +1,10 @@
 import "server-only";
 import { cache } from "react";
-import { cached } from "@/lib/cache";
+import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import { pastEnd, type ContentStatus, type GalleryImage } from "@/lib/content";
+import { PastEndError, pastEnd, type ContentStatus, type GalleryImage } from "@/lib/content";
 
 /** One project image from the media library, with its own description (shown on hover). */
 export type PortfolioImage = GalleryImage;
@@ -52,7 +52,7 @@ export function portfolioCover(p: Pick<Portfolio, "cover_image_url" | "cover_ima
 export const entryYear = (p: Pick<Portfolio, "completed_on">) => p.completed_on?.slice(0, 4) ?? null;
 
 /** Newest first (by the date it took place, then publish date). Optional tag and year filters. */
-export const getPublicPortfolios = cached(async (tag: string | undefined, page: number = 1, perPage: number = PORTFOLIO_PER_PAGE, year?: string) => {
+export const getPublicPortfolios = cachedPaged(async (tag: string | undefined, page: number = 1, perPage: number = PORTFOLIO_PER_PAGE, year?: string) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("portfolios").select(SUMMARY, { count: "exact" }));
 	if (tag) query = query.contains("tags", [tag]);
@@ -61,9 +61,12 @@ export const getPublicPortfolios = cached(async (tag: string | undefined, page: 
 		.order("completed_on", { ascending: false, nullsFirst: false })
 		.order("published_at", { ascending: false })
 		.range(from, from + perPage - 1);
-	if (error && !pastEnd(error)) throw new Error(`Failed to load portfolio: ${error.message}`);
-	return { portfolios: (error ? [] : (data ?? [])) as PortfolioSummary[], total: count ?? 0 };
-}, "portfolio:getPublicPortfolios", ["portfolio"]);
+	if (error) {
+		if (pastEnd(error)) throw new PastEndError();
+		throw new Error(`Failed to load portfolio: ${error.message}`);
+	}
+	return { portfolios: (data ?? []) as PortfolioSummary[], total: count ?? 0 };
+}, "portfolio:getPublicPortfolios", ["portfolio"], { portfolios: [] as PortfolioSummary[], total: 0 });
 
 /** Every live entry with a date, newest first: the Community Impact years on the homepage (one cached read). */
 export const getImpactTimeline = cached(async (): Promise<PortfolioSummary[]> => {

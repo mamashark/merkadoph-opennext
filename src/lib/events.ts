@@ -1,9 +1,9 @@
 import "server-only";
 import { cache } from "react";
-import { cached } from "@/lib/cache";
+import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { adminGet, adminList, onlyLive } from "@/lib/content-server";
-import { pastEnd, type ContentStatus } from "@/lib/content";
+import { PastEndError, pastEnd, type ContentStatus } from "@/lib/content";
 
 export type EventItem = {
 	id: string;
@@ -45,16 +45,19 @@ function timeFilter(when: "upcoming" | "past") {
 }
 
 /** `tag` narrows the list to events carrying that tag (the /events?tag= filter). */
-export const getPublicEvents = cached(async (when: "upcoming" | "past", page: number = 1, perPage: number = EVENTS_PER_PAGE, tag?: string) => {
+export const getPublicEvents = cachedPaged(async (when: "upcoming" | "past", page: number = 1, perPage: number = EVENTS_PER_PAGE, tag?: string) => {
 	const from = (page - 1) * perPage;
 	let query = onlyLive(createPublicClient().from("events").select(SUMMARY, { count: "exact" })).or(timeFilter(when));
 	if (tag) query = query.contains("tags", [tag]);
 	const { data, count, error } = await query
 		.order("starts_at", { ascending: when === "upcoming" })
 		.range(from, from + perPage - 1);
-	if (error && !pastEnd(error)) throw new Error(`Failed to load events: ${error.message}`);
-	return { events: (error ? [] : (data ?? [])) as EventSummary[], total: count ?? 0 };
-}, "events:getPublicEvents", ["events"]);
+	if (error) {
+		if (pastEnd(error)) throw new PastEndError();
+		throw new Error(`Failed to load events: ${error.message}`);
+	}
+	return { events: (data ?? []) as EventSummary[], total: count ?? 0 };
+}, "events:getPublicEvents", ["events"], { events: [] as EventSummary[], total: 0 });
 
 /** Distinct tags of live upcoming or past events, for the tag filter. */
 export const getEventTags = cached(async (when: "upcoming" | "past"): Promise<string[]> => {

@@ -13,6 +13,22 @@ export type GalleryImage = { url: string; alt: string; description: string };
  */
 export const pastEnd = (error: { code?: string } | null) => error?.code === "PGRST103";
 
+/**
+ * Sig F1 (2026-11-25): a cached loader must not STORE that empty page, or every ?page=N becomes a KV write. It throws
+ * this instead (errors are never cached) and `cachedPaged()` (lib/cache.ts) turns it into the empty result outside
+ * the cache.
+ */
+export class PastEndError extends Error {
+	constructor() {
+		super("Page past the end");
+		this.name = "PastEndError";
+	}
+}
+export const isPastEnd = (e: unknown) => e instanceof Error && e.name === "PastEndError";
+
+/** Highest ?page= we look up; anything above is past the end of every list (defence in depth with F1). */
+export const MAX_PAGE = 1000;
+
 export type ContentTable = "blogs" | "events" | "promotions" | "services" | "portfolios" | "products" | "product_categories" | "product_tags";
 
 export function contentState(row: { status: ContentStatus; published_at: string | null }): ContentState {
@@ -70,5 +86,5 @@ export function param(params: Record<string, string | string[] | undefined>, key
 }
 
 export function pageParam(params: Record<string, string | string[] | undefined>): number {
-	return Math.max(1, Math.floor(Number(param(params, "page"))) || 1);
+	return Math.min(MAX_PAGE + 1, Math.max(1, Math.floor(Number(param(params, "page"))) || 1));
 }

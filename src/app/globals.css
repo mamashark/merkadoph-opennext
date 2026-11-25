@@ -91,6 +91,9 @@
 	--home-tint-teal: #e0f7ef;
 	--home-tint-orange: #fde9da;
 	--home-highlight: #ffcc3f;
+	/* Homepage hero sky, one source for the sky (highlights.module.css) and the scroll-lock gutter below. */
+	--hero-sky-day: #141b4a;
+	--hero-sky-night: #03051a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -353,11 +356,11 @@ html[data-hero-lock] {
 	overflow: hidden;
 	overscroll-behavior: none;
 	scrollbar-gutter: stable;
-	/* The gutter shows the root background: match the sky (dusk / night sky, highlights.module.css). */
-	background: #141b4a;
+	/* The gutter shows the root background: match the sky (the hero tokens on :root, used by highlights.module.css). */
+	background: var(--hero-sky-day);
 }
 @media (prefers-color-scheme: dark) {
 	html[data-hero-lock] {
-		background: #03051a;
+		background: var(--hero-sky-night);
 	}
 }

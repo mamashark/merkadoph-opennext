@@ -35,6 +35,51 @@ test.describe("1280px", () => {
 		expect(errors.list).toEqual([]);
 	});
 
+	test("the Open button opens it too", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load" });
+		await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+		await expect.poll(() => locked(page)).toBe(true);
+		await page.getByRole("button", { name: "Open", exact: true }).click();
+		await expect.poll(() => locked(page), { timeout: 10_000 }).toBe(false);
+	});
+
+	test("Tab past the sky releases it (keyboard users are never stuck)", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load" });
+		await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+		await expect.poll(() => locked(page)).toBe(true);
+		// Real Tab presses: the first stops are outside the sky (skip link, site header), which releases the lock.
+		for (let i = 0; i < 8 && (await locked(page)); i++) await page.keyboard.press("Tab");
+		await expect.poll(() => locked(page), { timeout: 5000 }).toBe(false);
+	});
+
+	test("a scroll the visitor didn't make (link, find-in-page) releases it", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load" });
+		await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+		await expect.poll(() => locked(page)).toBe(true);
+		await page.evaluate(() => document.getElementById("contact")!.scrollIntoView());
+		await expect.poll(() => locked(page), { timeout: 5000 }).toBe(false);
+		// And the visitor can scroll back up.
+		const y = await page.evaluate(() => window.scrollY);
+		await page.mouse.move(640, 400);
+		await page.mouse.wheel(0, -1500);
+		await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(y);
+	});
+
+	test("a reload is never locked", async ({ page }) => {
+		await page.goto("/", { waitUntil: "load" });
+		await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+		await page.reload({ waitUntil: "load" });
+		await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+		await page.waitForTimeout(1000);
+		expect(await locked(page)).toBe(false);
+	});
+
+	test("a ?world= link is never locked", async ({ page }) => {
+		await page.goto("/?world=events", { waitUntil: "load" });
+		await page.waitForTimeout(3000);
+		expect(await locked(page)).toBe(false);
+	});
+
 	test("a deep link is never locked", async ({ page }) => {
 		await page.goto("/#events", { waitUntil: "load" });
 		await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
@@ -50,5 +95,16 @@ test("upright phone (390x844) is never locked", async ({ browser }) => {
 	await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
 	await page.waitForTimeout(1000);
 	expect(await locked(page)).toBe(false);
+	await ctx.close();
+});
+
+test("turning a phone upright releases it", async ({ browser }) => {
+	const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+	const page = await ctx.newPage();
+	await page.goto("/", { waitUntil: "load" });
+	await page.getByRole("button", { name: "Open", exact: true }).waitFor({ timeout: 60_000 });
+	await expect.poll(() => locked(page)).toBe(true);
+	await page.setViewportSize({ width: 390, height: 844 });
+	await expect.poll(() => locked(page), { timeout: 5000 }).toBe(false);
 	await ctx.close();
 });

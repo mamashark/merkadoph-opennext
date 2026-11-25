@@ -602,8 +602,9 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 	 * clicking the sun in the centre (or the Open button, which is also the keyboard way in). Scrolling, swiping and scroll keys do
 	 * nothing while it's folded (Kay, 2026-11-24: click only). Not applied on a deep link (#blogs, ?world=), a reload
 	 * or Back (the browser restores a scroll offset), phones held upright (their sky panel is taller than the screen),
-	 * or when the script failed (it only starts once the engine is ready). Focus moving below the sky (Tab, a screen
-	 * reader) releases it, so keyboard and assistive-tech users are never stuck.
+	 * or when the script failed (it only starts once the engine is ready). Never stuck (Arvid, 2026-11-25): focus moving
+	 * below the sky (Tab, a screen reader) releases it; so does any scroll at all while locked (the visitor can't scroll a
+	 * locked page, so it was a link, find-in-page, a screen reader or scrollIntoView), and turning a phone upright.
 	 */
 	const lockedRef = useRef(false);
 	const unlockRef = useRef<() => void>(() => {});
@@ -619,14 +620,25 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		const onFocus = (e: FocusEvent) => {
 			if (!stage.contains(e.target as Node)) unlockRef.current();
 		};
+		const onScroll = () => {
+			if (window.scrollY > 4) unlockRef.current();
+		};
+		const phoneMq = window.matchMedia(PHONE_QUERY);
+		const onPhone = () => {
+			if (phoneMq.matches) unlockRef.current();
+		};
 		const unlock = () => {
 			if (!lockedRef.current) return;
 			lockedRef.current = false;
 			delete html.dataset.heroLock;
 			document.removeEventListener("focusin", onFocus);
+			window.removeEventListener("scroll", onScroll);
+			phoneMq.removeEventListener("change", onPhone);
 		};
 		unlockRef.current = unlock;
 		document.addEventListener("focusin", onFocus);
+		window.addEventListener("scroll", onScroll, { passive: true });
+		phoneMq.addEventListener("change", onPhone);
 		return unlock;
 	}, [ready]);
 	// Opened: the page scrolls again.

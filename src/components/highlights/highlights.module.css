@@ -52,7 +52,7 @@
 }
 @media (prefers-color-scheme: dark) {
 	.root {
-		--night: #03051a;
+		--night: var(--hero-sky-night);
 		--night-2: #080c2a;
 		--night-3: #0b1030;
 		--ink: #f7f5ee;
@@ -152,19 +152,21 @@
 }
 /* Light mode: the hero is a "dusk" sky, a lighter navy than dark mode's night (#03051A), with the night-sky colours
    (Kay, 2026-11-24). The page below stays light. Contrast on #141B4A: text 15:1, muted 6.5:1, accents ≥ 4.8:1
-   (red brightened to #F2555A for that). Everything inside the stage, a Highlight's view included, uses these. */
+   (blue, red and coral brightened for the hover panel). Everything inside the stage, a Highlight's view included, uses these. */
 @media (prefers-color-scheme: light) {
 	.stage {
-		--night: #141b4a;
+		--night: var(--hero-sky-day);
 		--night-2: #1a2256;
 		--night-3: #202a63;
 		--ink: #f7f5ee;
 		--ink-2: #d9d5c7;
 		--muted: #a8a391;
-		--blue: #5b84ff;
+		/* Blue, red and coral are a little brighter than the night sky's, so text on the hover panel (#1A2155) and
+		   tiles (#202A63) passes 4.5:1 (Arvid, 2026-11-25): ≥ 4.59:1 on both. */
+		--blue: #7598ff;
 		--sun: #ffcc3f;
-		--red: #f2555a;
-		--coral: #f05d22;
+		--red: #f76a6e;
+		--coral: #f4703a;
 		--caramel: #c9935f;
 		--leaf: #19b796;
 		--orange: #f47e20;

@@ -43,7 +43,9 @@ for (const vp of [{ width: 667, height: 375 }, { width: 844, height: 390 }]) {
 			const r = await page.evaluate(() => {
 				const hubs = [...document.querySelectorAll("svg g.hub")].map((g) => {
 					const sq = [...g.querySelectorAll("rect")].find((x) => x.getAttribute("width") === "10")!.getBoundingClientRect();
-					const t = g.querySelector("text")!.getBoundingClientRect();
+					// Labels are drawn in their own layer above the photo tiles, paired by data-hub (engine.ts).
+					const id = (g as unknown as { __data__: { hub: string } }).__data__.hub;
+					const t = document.querySelector(`svg g[data-hub="${id}"] text`)!.getBoundingClientRect();
 					return { g, cx: sq.x + sq.width / 2, cy: sq.y + sq.height / 2, t: { l: t.left, r: t.right, top: t.top, b: t.bottom } };
 				});
 				const area = (a: (typeof hubs)[0]["t"], b: (typeof hubs)[0]["t"]) =>

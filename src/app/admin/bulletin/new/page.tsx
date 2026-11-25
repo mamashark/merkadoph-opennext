@@ -3,7 +3,7 @@ import { BulletinForm } from "../bulletin-form";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinCategories, adminBulletinPublishers, adminRelationChoices } from "@/lib/bulletin";
 import { BULLETIN_TYPES, type BulletinType } from "@/lib/bulletin-shared";
-import { param } from "@/lib/content";
+import { messageFor, param } from "@/lib/content";
 import { PageHeader } from "@/components/admin/page-header";
 import { FlashMessage } from "@/components/ui/alert";
 import { BULLETIN_ERRORS } from "../notices";
@@ -28,7 +28,7 @@ export default async function NewBulletinPage({ searchParams }: PageProps<"/admi
 				]}
 			/>
 			<div className="mb-6">
-				<FlashMessage error={BULLETIN_ERRORS[param(params, "error")]} />
+				<FlashMessage error={messageFor(BULLETIN_ERRORS, param(params, "error"))} />
 			</div>
 			<BulletinForm choices={{ categories, publishers, ...relations }} initialType={initialType} />
 		</>

@@ -4,7 +4,7 @@ import { deleteBulletinPublisher, saveBulletinPublisher } from "../actions";
 import { BULLETIN_ERRORS } from "../notices";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinPublishers } from "@/lib/bulletin";
-import { param } from "@/lib/content";
+import { messageFor, param } from "@/lib/content";
 import { PageHeader } from "@/components/admin/page-header";
 import { FormCard, Field } from "@/components/admin/form-parts";
 import { MediaField } from "@/components/media/media-field";
@@ -35,7 +35,7 @@ export default async function BulletinPublishersPage({ searchParams }: PageProps
 				]}
 			/>
 			<div className="max-w-3xl space-y-6">
-				<FlashMessage notice={NOTICES[param(sp, "notice")]} error={BULLETIN_ERRORS[param(sp, "error")]} />
+				<FlashMessage notice={messageFor(NOTICES, param(sp, "notice"))} error={messageFor(BULLETIN_ERRORS, param(sp, "error"))} />
 
 				{publishers.length > 0 && (
 					<ul className="space-y-3">

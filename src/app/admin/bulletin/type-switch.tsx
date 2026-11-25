@@ -3,8 +3,9 @@
 import { createContext, useContext, useState } from "react";
 
 /**
- * Shows only the editor sections that matter for the chosen content type (spec §6.2). Sections stay in the DOM
- * (hidden), so switching back and forth never loses what was typed; the server ignores fields a type doesn't use.
+ * Shows only the editor sections that matter for the chosen content type (spec §6.2). Hidden sections stay in the
+ * DOM, so switching back and forth keeps what was typed, but they're disabled: not submitted and not validated by
+ * the browser. The server also clears fields a type doesn't use (saveBulletinItem, TYPE_FIELDS).
  */
 const TypeContext = createContext<string>("");
 
@@ -27,5 +28,10 @@ export function TypeScope({ initial, children }: { initial: string; children: Re
 export function ForTypes({ types, not = false, children }: { types: readonly string[]; not?: boolean; children: React.ReactNode }) {
 	const type = useContext(TypeContext);
 	const match = types.includes(type);
-	return <div hidden={not ? match : !match}>{children}</div>;
+	const off = not ? match : !match;
+	return (
+		<fieldset hidden={off} disabled={off} className="m-0 min-w-0 border-0 p-0">
+			{children}
+		</fieldset>
+	);
 }

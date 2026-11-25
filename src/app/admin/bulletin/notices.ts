@@ -7,6 +7,7 @@ export const BULLETIN_NOTICES: Record<string, string> = {
 	unpublished: "Reverted to draft and hidden from the site.",
 	archived: "Archived and hidden from the site. You can restore it later.",
 	restored: "Restored as a draft.",
+	held: "Your changes are saved, but it wasn't published yet: see the message above.",
 };
 
 /** ?error=<code> from the bulletin actions → fixed text. Unknown codes show nothing. */
@@ -25,9 +26,10 @@ export const BULLETIN_ERRORS: Record<string, string> = {
 	"press-phase": "Press items can be published once the Press & Media page exists (Phase 2). Save it as a draft or send it for review for now.",
 	"media-source": "Media coverage needs a publisher, the original link, the original date and the media type before it can be published.",
 	"press-date": "A press release needs its release date before it can be published.",
-	"embassy-source": "An embassy update needs a link to the official Philippine Embassy source (a dfa.gov.ph page) before it can be published.",
+	"embassy-source": "An embassy update needs a link to the official Philippine Embassy source before it can be published: a dfa.gov.ph page or a post on facebook.com/PHLinSE.",
 	alt: "Add alt text for the image before publishing.",
 	expiry: "The expiry date must be after the publish date.",
+	"expiry-past": "The expiry date has already passed, so it would be hidden straight away. Change or clear the expiry date to publish.",
 	save: "Couldn't save. Check the fields and try again.",
 	"cat-name": "Category names need 1 to 60 characters.",
 	"cat-reserved": "Choose another name (that one is reserved).",

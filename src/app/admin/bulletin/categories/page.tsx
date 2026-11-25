@@ -3,7 +3,7 @@ import { deleteBulletinCategory, saveBulletinCategory } from "../actions";
 import { BULLETIN_ERRORS } from "../notices";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinCategories } from "@/lib/bulletin";
-import { param } from "@/lib/content";
+import { messageFor, param } from "@/lib/content";
 import { PageHeader } from "@/components/admin/page-header";
 import { FormCard, Field } from "@/components/admin/form-parts";
 import { Badge } from "@/components/admin/status-badge";
@@ -34,7 +34,7 @@ export default async function BulletinCategoriesPage({ searchParams }: PageProps
 				]}
 			/>
 			<div className="max-w-3xl space-y-6">
-				<FlashMessage notice={NOTICES[param(sp, "notice")]} error={BULLETIN_ERRORS[param(sp, "error")]} />
+				<FlashMessage notice={messageFor(NOTICES, param(sp, "notice"))} error={messageFor(BULLETIN_ERRORS, param(sp, "error"))} />
 
 				<ul className="space-y-3">
 					{categories.map((c) => (

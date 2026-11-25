@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Search } from "lucide-react";
 import { BULLETIN_PER_PAGE, getBulletinCategories, getFeaturedBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
-import { OFFERS_SLUG, TYPE_LABEL } from "@/lib/bulletin-shared";
+import { OFFERS_SLUG, TYPE_LABEL, issuedBy } from "@/lib/bulletin-shared";
 import { getPublicPromotions, PROMOTIONS_PER_PAGE, type PromotionSummary } from "@/lib/promotions";
 import { EMBASSY_LINKS } from "@/lib/businesses";
 import { pageParam, param } from "@/lib/content";
@@ -19,7 +19,7 @@ const description =
 
 type Filters = { category: string; q: string; page: number };
 
-async function readFilters(searchParams: PageProps<"/bulletin">["searchParams"]): Promise<Filters & { categoryName: string | null }> {
+async function readFilters(searchParams: PageProps<"/bulletin">["searchParams"]): Promise<Filters & { categoryName: string | null; categoryDescription: string | null }> {
 	const params = await searchParams;
 	const categories = await getBulletinCategories().catch(() => []);
 	const raw = param(params, "category");
@@ -27,7 +27,8 @@ async function readFilters(searchParams: PageProps<"/bulletin">["searchParams"])
 	const known = raw === OFFERS_SLUG ? "Community Offers" : (categories.find((c) => c.slug === raw)?.name ?? null);
 	const category = known ? raw : "";
 	const q = param(params, "q").trim().slice(0, 80);
-	return { category, q: category === OFFERS_SLUG ? "" : q, page: pageParam(params), categoryName: known };
+	const categoryDescription = categories.find((c) => c.slug === category)?.description ?? null;
+	return { category, q: category === OFFERS_SLUG ? "" : q, page: pageParam(params), categoryName: known, categoryDescription };
 }
 
 const listHref = ({ category, q, page }: Partial<Filters>) => {
@@ -36,9 +37,9 @@ const listHref = ({ category, q, page }: Partial<Filters>) => {
 };
 
 export async function generateMetadata({ searchParams }: PageProps<"/bulletin">): Promise<Metadata> {
-	const { category, q, page, categoryName } = await readFilters(searchParams);
+	const { category, q, page, categoryName, categoryDescription } = await readFilters(searchParams);
 	const label = categoryName ? `: ${categoryName}` : "";
-	const meta = pageMetadata({ title: `Bulletin Board${label}${page > 1 ? ` — Page ${page}` : ""}`, description, path: listHref({ category, page }) });
+	const meta = pageMetadata({ title: `Bulletin Board${label}${page > 1 ? ` — Page ${page}` : ""}`, description: categoryDescription || description, path: listHref({ category, page }) });
 	// Search results aren't indexed (thin, endless variations).
 	return q ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
@@ -54,7 +55,7 @@ const card = (n: BulletinCard, featured = false) => (
 		eyebrow={[n.is_pinned ? "Pinned" : null, n.category.name].filter(Boolean).join(" · ")}
 		meta={
 			<>
-				{n.publisher ? `${n.publisher.name} · ` : ""}
+				{issuedBy(n)} · 
 				<time dateTime={n.published_at ?? undefined}>{formatDate(n.published_at, { dateStyle: "long" })}</time>
 				{n.expires_at && <> · until {formatDate(n.expires_at, { dateStyle: "medium" })}</>}
 			</>
@@ -152,10 +153,9 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 			)}
 
 			{/* Announced when the filters change (spec §14). */}
-			<p className="sr-only" aria-live="polite">
+			<p className="mt-4 text-sm text-site-muted empty:hidden" aria-live="polite">
 				{resultText}
 			</p>
-			{resultText && <p className="mt-4 text-sm text-site-muted">{resultText}</p>}
 
 			{featured.length > 0 && (
 				<section aria-labelledby="featured-title" className="mt-10">

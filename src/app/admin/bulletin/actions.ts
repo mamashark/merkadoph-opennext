@@ -19,6 +19,7 @@ import {
 	PRESS_PUBLISHING_OPEN,
 	isOfficialEmbassyUrl,
 	isPressType,
+	TYPE_FIELDS,
 	type BulletinStatus,
 	type BulletinType,
 } from "@/lib/bulletin-shared";
@@ -81,23 +82,39 @@ export async function saveBulletinItem(formData: FormData) {
 	// Media library only for images (Sig m1); the form's MediaField sends Storage URLs.
 	const cover_image_url = mediaUrl(formData, "cover_image_url");
 
-	const source_url = optionalUrl(formData, "source_url");
-	const publisher_id = uuidOrNull(formData.get("publisher_id"));
-	const original_published_on = dateOnly(formData.get("original_published_on"));
+	// Each type keeps only its own fields; the rest are cleared (Arvid M1), so a field typed before switching
+	// type never shows up publicly. Validation runs only for the fields the type uses.
+	const uses = (group: keyof typeof TYPE_FIELDS) => TYPE_FIELDS[group].includes(type);
+	const sourceRaw = optionalUrl(formData, "source_url");
+	const source_url = sourceRaw ? new URL(sourceRaw).href : null; // stored in parsed form (Sig)
+	const publisher_id = uses("mediaSource") ? uuidOrNull(formData.get("publisher_id")) : null;
 	const mediaTypeRaw = String(formData.get("media_type") ?? "");
-	const media_type = (MEDIA_TYPES as readonly string[]).includes(mediaTypeRaw) ? mediaTypeRaw : null;
-	const source_language = languageSchema.safeParse(String(formData.get("source_language") ?? "")).data ?? null;
+	const media_type = uses("mediaSource") && (MEDIA_TYPES as readonly string[]).includes(mediaTypeRaw) ? mediaTypeRaw : null;
+	const original_title = uses("mediaSource") ? optional(text(formData, "original_title", 300)) : null;
+	const original_published_on = uses("pressDates") ? dateOnly(formData.get("original_published_on")) : null;
+	const source_language = uses("pressDates") ? (languageSchema.safeParse(String(formData.get("source_language") ?? "")).data ?? null) : null;
+	const source_verified_on = uses("pressDates") ? dateOnly(formData.get("source_verified_on")) : null;
 
-	const contactRaw = text(formData, "media_contact", 254).toLowerCase();
-	if (contactRaw && !z.email().safeParse(contactRaw).success) fail("contact-email");
-	if (contactRaw && !contactRaw.endsWith(`@${MEDIA_CONTACT_DOMAIN}`)) fail("contact-domain");
+	let media_contact: string | null = null;
+	let attachments: Attachment[] = [];
+	if (uses("pressRelease")) {
+		const contactRaw = text(formData, "media_contact", 254).toLowerCase();
+		if (contactRaw && !z.email().safeParse(contactRaw).success) fail("contact-email");
+		if (contactRaw && !contactRaw.endsWith(`@${MEDIA_CONTACT_DOMAIN}`)) fail("contact-domain");
+		media_contact = contactRaw || null;
+		const read = readAttachments(formData.get("attachments"));
+		if (typeof read === "string") fail(read);
+		attachments = read as Attachment[];
+	}
 
-	const attachments = readAttachments(formData.get("attachments"));
-	if (typeof attachments === "string") fail(attachments);
-
-	const ctaRaw = text(formData, "cta_url", 1000);
-	const cta_url = optionalLink(formData, "cta_url");
-	if (ctaRaw && !cta_url) fail("cta");
+	let cta_label: string | null = null;
+	let cta_url: string | null = null;
+	if (uses("cta")) {
+		const ctaRaw = text(formData, "cta_url", 1000);
+		cta_url = optionalLink(formData, "cta_url");
+		if (ctaRaw && !cta_url) fail("cta");
+		cta_label = optional(text(formData, "cta_label", 40));
+	}
 
 	// Dates. Press items never expire (spec §4.7).
 	const chosenPublish = fromDateTimeInput(formData.get("published_at"));
@@ -107,29 +124,36 @@ export async function saveBulletinItem(formData: FormData) {
 	const { data: existing } = id ? await db.from("bulletin_items").select("slug,status,published_at,archived_at").eq("id", id).maybeSingle() : { data: null };
 	if (id && !existing) fail("gone");
 	const prev = (existing?.status as BulletinStatus | undefined) ?? "draft";
-	const status: BulletinStatus =
+	let status: BulletinStatus =
 		intent === "publish" ? "published"
 		: intent === "review" ? "in_review"
 		: intent === "unpublish" || intent === "restore" || intent === "draft" ? (intent === "draft" && prev === "in_review" ? "in_review" : "draft")
 		: intent === "archive" ? "archived"
 		: prev;
-	const published_at = status === "published" ? (chosenPublish ?? existing?.published_at ?? new Date().toISOString()) : (chosenPublish ?? existing?.published_at ?? null);
-	const archived_at = status === "archived" ? (existing?.archived_at ?? new Date().toISOString()) : null;
+	const at = (iso: string | null | undefined) => (iso ? new Date(iso).getTime() : NaN);
+	let published_at = status === "published" ? (chosenPublish ?? existing?.published_at ?? new Date().toISOString()) : (chosenPublish ?? existing?.published_at ?? null);
+	if (expires_at && published_at && at(expires_at) <= at(published_at)) fail("expiry");
 
+	// Publishing rules. When one fails, the edits are still saved (as the previous, unpublished status) so nothing
+	// typed is lost (Arvid M2); a live item that would break a rule is left untouched instead.
+	let publishError: string | null = null;
 	if (status === "published") {
-		if (press && !PRESS_PUBLISHING_OPEN) fail("press-phase");
-		if (type === "media_coverage" && !(publisher_id && source_url && original_published_on && media_type))
-			fail("media-source");
-		if (type === "press_release" && !original_published_on) fail("press-date");
-		if (type === "embassy_update" && !(source_url && isOfficialEmbassyUrl(source_url)))
-			fail("embassy-source");
-		if (cover_image_url && !fields.cover_image_alt) fail("alt");
+		if (press && !PRESS_PUBLISHING_OPEN) publishError = "press-phase";
+		else if (type === "media_coverage" && !(publisher_id && source_url && original_published_on && media_type)) publishError = "media-source";
+		else if (type === "press_release" && !original_published_on) publishError = "press-date";
+		else if (type === "embassy_update" && !(source_url && isOfficialEmbassyUrl(source_url))) publishError = "embassy-source";
+		else if (cover_image_url && !fields.cover_image_alt) publishError = "alt";
+		else if (expires_at && at(expires_at) <= Date.now()) publishError = "expiry-past";
 	}
-	if (expires_at && published_at && expires_at <= published_at) fail("expiry");
+	if (publishError) {
+		if (prev === "published") fail(publishError);
+		status = prev === "archived" ? "draft" : prev;
+		published_at = chosenPublish ?? existing?.published_at ?? null;
+	}
+	const archived_at = status === "archived" ? (existing?.archived_at ?? new Date().toISOString()) : null;
 
 	const slug = await uniqueSlug("bulletin_items", text(formData, "slug", 80) || fields.title, id);
 
-	const showInPress = press && formData.get("show_in_press") === "on";
 	const values = {
 		title: fields.title,
 		slug,
@@ -150,21 +174,21 @@ export async function saveBulletinItem(formData: FormData) {
 		expires_at,
 		archived_at,
 		publisher_id,
-		original_title: optional(text(formData, "original_title", 300)),
+		original_title,
 		source_url,
 		original_published_on,
 		media_type,
 		source_language,
-		source_verified_on: dateOnly(formData.get("source_verified_on")),
-		media_contact: contactRaw || null,
+		source_verified_on,
+		media_contact,
 		attachments,
-		cta_label: optional(text(formData, "cta_label", 40)),
+		cta_label,
 		cta_url,
 		is_featured: formData.get("is_featured") === "on",
 		is_pinned: formData.get("is_pinned") === "on",
 		show_on_homepage: formData.get("show_on_homepage") === "on",
 		show_in_bulletin: formData.get("show_in_bulletin") === "on",
-		show_in_press: showInPress,
+		show_in_press: press && formData.get("show_in_press") === "on",
 		display_priority: Math.max(-100, Math.min(100, Math.trunc(Number(formData.get("display_priority")) || 0))),
 		event_id: uuidOrNull(formData.get("event_id")),
 		portfolio_id: uuidOrNull(formData.get("portfolio_id")),
@@ -179,8 +203,13 @@ export async function saveBulletinItem(formData: FormData) {
 		console.error("[admin/bulletin] save", e instanceof Error ? e.message : e);
 		return fail("save");
 	}
+	// Status changes get their own audit line, so publish / archive / restore can be told apart (Sig).
+	if (status !== prev || !existing) {
+		await audit({ kind: "admin", action: `bulletin_items.${status}`, entity: "bulletin_items", entityId: savedId, summary: `${fields.title} (${existing ? prev : "new"} → ${status})` });
+	}
 
 	revalidateContent("/bulletin", "/admin/bulletin", [slug, existing?.slug as string | undefined]);
+	if (publishError) redirect(`/admin/bulletin/${savedId}/edit?error=${publishError}&notice=held`);
 	const notice = { publish: "published", review: "review", unpublish: "unpublished", archive: "archived", restore: "restored", draft: existing ? "saved" : "created", save: "saved" }[intent];
 	redirect(`/admin/bulletin/${savedId}/edit?notice=${notice}`);
 }
@@ -260,7 +289,8 @@ export async function saveBulletinPublisher(formData: FormData) {
 	const name = parsed.data!.name;
 	const logo_url = mediaUrl(formData, "logo_url"); // a logo we may use, uploaded to the media library
 	const websiteRaw = text(formData, "website_url", 1000);
-	const website_url = optionalUrl(formData, "website_url");
+	const websiteParsed = optionalUrl(formData, "website_url");
+	const website_url = websiteParsed ? new URL(websiteParsed).href : null;
 	if (websiteRaw && !website_url) fail("pub-website");
 	const db = createAdminClient();
 

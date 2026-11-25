@@ -6,7 +6,8 @@ import { BULLETIN_ERRORS } from "./notices";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinCategories, adminListBulletin } from "@/lib/bulletin";
 import { BULLETIN_TYPES, STATE_LABEL, TYPE_LABEL, bulletinState, type BulletinState } from "@/lib/bulletin-shared";
-import { pageParam, param } from "@/lib/content";
+import { messageFor, pageParam, param } from "@/lib/content";
+import { UUID } from "@/lib/validation";
 import { formatDate } from "@/lib/datetime";
 import { PageHeader } from "@/components/admin/page-header";
 import { Pagination } from "@/components/admin/pagination";
@@ -31,7 +32,15 @@ const tone: Record<BulletinState, "draft" | "warning" | "scheduled" | "published
 export default async function BulletinAdminPage({ searchParams }: PageProps<"/admin/bulletin">) {
 	await requireAdmin();
 	const params = await searchParams;
-	const values = { q: param(params, "q").trim(), state: param(params, "state"), type: param(params, "type"), category: param(params, "category"), sort: param(params, "sort") };
+	// Only known values are used (guidelines §0.5); a bad ?category= would otherwise be a database error (Sig, Arvid).
+	const raw = { state: param(params, "state"), type: param(params, "type"), category: param(params, "category") };
+	const values = {
+		q: param(params, "q").trim(),
+		state: Object.hasOwn(STATE_LABEL, raw.state) ? raw.state : "",
+		type: (BULLETIN_TYPES as readonly string[]).includes(raw.type) ? raw.type : "",
+		category: UUID.test(raw.category) ? raw.category : "",
+		sort: param(params, "sort"),
+	};
 	const page = pageParam(params);
 
 	const [{ rows, total }, categories] = await Promise.all([adminListBulletin({ ...values, page, perPage: PER_PAGE }), adminBulletinCategories()]);
@@ -59,7 +68,7 @@ export default async function BulletinAdminPage({ searchParams }: PageProps<"/ad
 			/>
 
 			<div className="space-y-4">
-				<FlashMessage notice={param(params, "notice") === "deleted" ? "Item deleted." : undefined} error={BULLETIN_ERRORS[param(params, "error")]} />
+				<FlashMessage notice={param(params, "notice") === "deleted" ? "Item deleted." : undefined} error={messageFor(BULLETIN_ERRORS, param(params, "error"))} />
 
 				<div className={cardClass}>
 					<ListToolbar

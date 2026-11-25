@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, CalendarClock, CalendarDays, Download, Languages, Newspaper, Landmark } from "lucide-react";
 import { getPublicBulletinBySlug } from "@/lib/bulletin";
-import { MEDIA_TYPE_LABEL, TYPE_LABEL, languageLabel } from "@/lib/bulletin-shared";
+import { MEDIA_TYPE_LABEL, issuedBy, languageLabel } from "@/lib/bulletin-shared";
 import { summarize } from "@/lib/content";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
@@ -80,7 +80,7 @@ export default async function BulletinItemPage({ params }: PageProps<"/bulletin/
 
 				<Facts
 					facts={[
-						{ icon: official ? Landmark : Newspaper, label: n.publisher ? "Published by" : "Issued by", value: n.publisher?.name ?? n.author_name ?? (official ? "Philippine Embassy" : TYPE_LABEL[n.content_type]) },
+						{ icon: official ? Landmark : Newspaper, label: n.publisher ? "Published by" : "Issued by", value: issuedBy(n) },
 						{ icon: CalendarDays, label: "Date", value: formatDate(n.original_published_on ?? n.published_at, { dateStyle: "long" }) },
 						{ icon: CalendarClock, label: "Until", value: n.expires_at ? formatDate(n.expires_at, { dateStyle: "long" }) : null },
 						{ icon: Newspaper, label: "Media", value: n.media_type ? MEDIA_TYPE_LABEL[n.media_type] : null },

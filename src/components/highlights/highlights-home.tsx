@@ -4,7 +4,8 @@ import { ANNOUNCEMENT_TAG, getPublishedBlogs, PINNED_BLOG_TITLE, getPublishedBlo
 import { getPublicEvents, type EventSummary } from "@/lib/events";
 import { entryYear, getImpactTimeline, portfolioCover, type PortfolioSummary } from "@/lib/portfolio";
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
-import { getHomeBulletin, type BulletinCard } from "@/lib/bulletin";
+import { getHomeBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
+import { issuedBy } from "@/lib/bulletin-shared";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
 import { DIGITAL } from "@/lib/digital-content";
@@ -63,10 +64,11 @@ type Offering = { id: string; slug: string; title: string; excerpt: string; imag
 type Biz = { b: Business; excerpt: string; cover?: string; coverAlt: string; offerings: Offering[] };
 
 export async function HighlightsHome() {
-	const [blogsRes, pinned, notices, upcoming, past, impact, promotions, seo] = await Promise.all([
+	const [blogsRes, pinned, notices, noticeCount, upcoming, past, impact, promotions, seo] = await Promise.all([
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
 		safe(getHomeBulletin(6), [] as BulletinCard[]),
+		safe(getPublicBulletin("", "", 1, 1).then((r) => r.total), 0),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicEvents("past", 1, RECENT_EVENTS), { events: [] as EventSummary[], total: 0 }),
 		safe(getImpactTimeline(), [] as PortfolioSummary[]),
@@ -123,7 +125,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 			{ id: "bygg", allLabel: `${H.bygg.allLabelPrefix} ${BUSINESSES.bygg.name}`, cta: H.bygg.cta, label: BUSINESSES.bygg.name, sub: H.bygg.sub, color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
 			{ id: "digital", allLabel: `${H.digital.allLabelPrefix} ${BUSINESSES.digital.name}`, cta: H.digital.cta, label: BUSINESSES.digital.name, sub: H.digital.sub, color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
 			{ id: "tahooo", allLabel: H.tahooo.allLabel, cta: H.tahooo.cta, label: TAHOOO.highlight, sub: H.tahooo.sub, color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
-			{ id: "bulletin", allLabel: H.bulletin.allLabel, cta: H.bulletin.cta, label: H.bulletin.label, sub: H.bulletin.sub, color: "coral", count: notices.length + promotions.total, list: "/bulletin", dots: 6, has: notices.length + promotions.promotions.length },
+			{ id: "bulletin", allLabel: H.bulletin.allLabel, cta: H.bulletin.cta, label: H.bulletin.label, sub: H.bulletin.sub, color: "coral", count: noticeCount + promotions.total, list: "/bulletin", dots: 6, has: notices.length + promotions.promotions.length },
 		] as (World & { has: number })[]
 	)
 		.filter((w) => w.has > 0)
@@ -650,7 +652,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 									{notices.slice(0, 3).map((b, i) => (
 										<article key={b.id} className={`${styles.notice} ${styles.card}`} style={{ "--i": i } as React.CSSProperties} data-reveal="" data-key={`notice-${b.slug}`}>
 											<div className={`${styles.src} ${styles.mono}`}>
-												<span>{b.publisher?.name ?? L.defaultAuthor}</span>
+												<span>{issuedBy(b)}</span>
 												{b.published_at && <time dateTime={b.published_at}>{formatDate(b.published_at, { month: "short", year: "numeric" })}</time>}
 											</div>
 											<h3>

@@ -7,7 +7,7 @@ import { BULLETIN_ERRORS, BULLETIN_NOTICES } from "../../notices";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinCategories, adminBulletinPublishers, adminGetBulletin, adminRelationChoices } from "@/lib/bulletin";
 import { bulletinState } from "@/lib/bulletin-shared";
-import { param } from "@/lib/content";
+import { messageFor, param } from "@/lib/content";
 import { PageHeader } from "@/components/admin/page-header";
 import { DangerZone, UUID } from "@/components/admin/form-parts";
 import { FlashMessage } from "@/components/ui/alert";
@@ -41,8 +41,9 @@ export default async function EditBulletinPage({ params, searchParams }: PagePro
 					)
 				}
 			/>
-			<div className="mb-6">
-				<FlashMessage notice={BULLETIN_NOTICES[param(sp, "notice")]} error={BULLETIN_ERRORS[param(sp, "error")]} />
+			<div className="mb-6 space-y-3">
+				<FlashMessage error={messageFor(BULLETIN_ERRORS, param(sp, "error"))} />
+				<FlashMessage notice={messageFor(BULLETIN_NOTICES, param(sp, "notice"))} />
 			</div>
 			<BulletinForm key={item.updated_at} item={item} choices={{ categories, publishers, ...relations }} />
 			<DangerZone

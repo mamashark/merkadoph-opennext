@@ -106,3 +106,11 @@ export function param(params: Record<string, string | string[] | undefined>, key
 export function pageParam(params: Record<string, string | string[] | undefined>): number {
 	return Math.min(MAX_PAGE + 1, Math.max(1, Math.floor(Number(param(params, "page"))) || 1));
 }
+
+/**
+ * Looks up `key` in a fixed message map (e.g. ?error=<code> → text) without picking up Object built-ins
+ * like "__proto__" or "constructor", which would crash the page (Sig, 2026-11-25).
+ */
+export function messageFor(map: Record<string, string>, key: string): string | undefined {
+	return Object.hasOwn(map, key) ? map[key] : undefined;
+}

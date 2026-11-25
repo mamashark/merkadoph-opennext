@@ -79,7 +79,10 @@ export function BulletinForm({ item, choices, initialType = "community_notice" }
 							</Field>
 						</div>
 						<ForTypes types={["embassy_update"]}>
-							<p className={hintClass}>Official information: keep the wording factual (no playful tone), and link to the Embassy&rsquo;s own page. It can&rsquo;t be published without that link.</p>
+							<p className={hintClass}>
+								Official information: keep the wording factual (no playful tone), and link to the Embassy&rsquo;s own page (dfa.gov.ph or facebook.com/PHLinSE). It
+								can&rsquo;t be published without that link.
+							</p>
 						</ForTypes>
 						<ForTypes types={PRESS_TYPES}>
 							<p className={hintClass}>
@@ -127,7 +130,7 @@ export function BulletinForm({ item, choices, initialType = "community_notice" }
 							<Field
 								id="source_url"
 								label="Original source link"
-								hint="Media coverage: the original article (required). Embassy updates: the official dfa.gov.ph page (required). Others: optional."
+								hint="Media coverage: the original article (required). Embassy updates: a dfa.gov.ph page or a post on facebook.com/PHLinSE (required). Others: optional."
 							>
 								<input id="source_url" name="source_url" inputMode="url" maxLength={1000} defaultValue={i?.source_url ?? ""} placeholder="https://…" className={inputClass} />
 							</Field>
@@ -249,6 +252,11 @@ export function BulletinForm({ item, choices, initialType = "community_notice" }
 						<ForTypes types={PRESS_TYPES}>
 							<p className={hintClass}>Press items never expire: they stay in the archive.</p>
 						</ForTypes>
+						<ForTypes types={["embassy_update"]}>
+							<p className="rounded-md bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+								Before publishing: check every date and time against the Embassy&rsquo;s original post. Never add a date the Embassy hasn&rsquo;t published.
+							</p>
+						</ForTypes>
 						<div className="flex flex-col gap-2 pt-1">
 							{state === "archived" ? (
 								<SubmitButton name="intent" value="restore" pendingLabel="Restoring…" variant="secondary">
@@ -290,10 +298,10 @@ export function BulletinForm({ item, choices, initialType = "community_notice" }
 					</FormCard>
 
 					<FormCard title="Where it shows">
-						<Check name="show_in_bulletin" label="On the Bulletin Board" defaultChecked={i ? i.show_in_bulletin : true} />
+						<Check name="show_in_bulletin" label="On the Bulletin Board" hint="Unticked: not listed, but its page still works by direct link." defaultChecked={i ? i.show_in_bulletin : true} />
 						<Check name="is_pinned" label="Pinned" hint="Stays at the top of the list." defaultChecked={!!i?.is_pinned} />
 						<Check name="is_featured" label="Featured" hint="A large card at the top of /bulletin." defaultChecked={!!i?.is_featured} />
-						<Check name="show_on_homepage" label="On the homepage" hint="In the homepage Bulletin Board preview." defaultChecked={!!i?.show_on_homepage} />
+						<Check name="show_on_homepage" label="On the homepage" hint="Shown first in the homepage preview; the newest items fill any free places." defaultChecked={!!i?.show_on_homepage} />
 						<ForTypes types={PRESS_TYPES}>
 							<Check name="show_in_press" label="In the Press & Media archive" hint="From Phase 2." defaultChecked={i ? i.show_in_press : true} />
 						</ForTypes>

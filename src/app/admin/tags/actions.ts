@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { audit } from "@/lib/audit";
-import { purgeGroups } from "@/lib/cache";
+import { CONTENT_TAGS, purgeGroups } from "@/lib/cache";
 import { text } from "@/lib/content-server";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -14,8 +14,8 @@ const cleanName = (formData: FormData) => text(formData, "name", 60).replace(/\s
 
 /** Tags show on every content type, so a change refreshes all of them, the listings and the homepage. */
 function refreshTagged() {
-	purgeGroups(["blogs", "events", "promotions", "services", "portfolio", "listings", "home"]);
-	for (const p of ["/admin/tags", "/admin/blogs", "/admin/events", "/admin/promotions", "/admin/services", "/admin/portfolio"]) revalidatePath(p);
+	purgeGroups([...CONTENT_TAGS, "listings", "home"]);
+	for (const p of ["/admin/tags", "/admin/blogs", "/admin/events", "/admin/promotions", "/admin/services", "/admin/portfolio", "/admin/bulletin"]) revalidatePath(p);
 }
 
 /** Add a new tag, or rename one (?edit=<id>). Renaming to an existing name merges the two. */

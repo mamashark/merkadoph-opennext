@@ -4,7 +4,7 @@ import { Pencil, Plus, Trash2, Users } from "lucide-react";
 import { deleteUser } from "./actions";
 import { requireAdmin } from "@/lib/auth";
 import { formatDate } from "@/lib/datetime";
-import { pageParam, param } from "@/lib/content";
+import { pageParam, param, messageFor } from "@/lib/content";
 import { listUsers } from "@/lib/users";
 import { PageHeader } from "@/components/admin/page-header";
 import { Pagination } from "@/components/admin/pagination";
@@ -60,7 +60,7 @@ export default async function UsersPage({ searchParams }: PageProps<"/admin/user
 			/>
 
 			<div className="space-y-4">
-				<FlashMessage notice={notices[param(params, "notice")]} error={DELETE_ERRORS[param(params, "error")]} />
+				<FlashMessage notice={messageFor(notices, param(params, "notice"))} error={messageFor(DELETE_ERRORS, param(params, "error"))} />
 
 				<div className={`${cardClass} overflow-hidden`}>
 					<ListToolbar

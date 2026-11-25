@@ -78,18 +78,44 @@ export function bulletinState(row: { status: BulletinStatus; published_at: strin
 export const OFFERS_SLUG = "community-offers";
 
 /**
- * Official Philippine Embassy sources for embassy updates (project Strict rule 15). The DFA hosts every
- * Philippine foreign-service site (e.g. the Stockholm embassy) under dfa.gov.ph. Kay confirms or extends this list.
+ * Official Philippine Embassy sources for embassy updates (project Strict rule 15), confirmed by Kay 2026-11-25:
+ * - any page on dfa.gov.ph (the DFA hosts every Philippine foreign-service site, incl. the Stockholm embassy);
+ * - posts on the Embassy's own Facebook page, facebook.com/PHLinSE (the path must start with that page name,
+ *   so other pages and anonymous share links like facebook.com/share/… are refused).
  */
 export const EMBASSY_HOSTS = ["dfa.gov.ph"];
+export const EMBASSY_FACEBOOK_PAGE = "PHLinSE";
+const FACEBOOK_HOSTS = new Set(["facebook.com", "www.facebook.com", "m.facebook.com", "web.facebook.com"]);
+
 export function isOfficialEmbassyUrl(url: string): boolean {
+	let u: URL;
 	try {
-		const host = new URL(url).hostname.toLowerCase();
-		return EMBASSY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+		u = new URL(url);
 	} catch {
 		return false;
 	}
+	if (u.protocol !== "https:" || u.username || u.password) return false;
+	const host = u.hostname.toLowerCase();
+	if (EMBASSY_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) return true;
+	const first = u.pathname.split("/")[1] ?? "";
+	return FACEBOOK_HOSTS.has(host) && first.toLowerCase() === EMBASSY_FACEBOOK_PAGE.toLowerCase();
 }
 
 /** Press release media contact: a role address on our own domain only, never a named person (Kay, 2026-11-25). */
 export const MEDIA_CONTACT_DOMAIN = "merkadoph.se";
+
+/**
+ * Who issued an item, the same everywhere (homepage, /bulletin, its page): the publisher, else the byline,
+ * else the Embassy for embassy updates, so official information is never credited to Merkado PH (Arvid).
+ */
+export function issuedBy(item: { publisher?: { name: string } | null; author_name?: string | null; content_type: string }): string {
+	return item.publisher?.name || item.author_name || (item.content_type === "embassy_update" ? "Philippine Embassy" : "Merkado PH");
+}
+
+/** Fields each type uses; the server clears the others on save (Arvid M1). */
+export const TYPE_FIELDS = {
+	mediaSource: ["media_coverage"] as readonly string[], // publisher_id, media_type, original_title
+	pressDates: ["media_coverage", "press_release"] as readonly string[], // original_published_on, source_language, source_verified_on
+	pressRelease: ["press_release"] as readonly string[], // media_contact, attachments
+	cta: ["opportunity", "community_notice", "embassy_update"] as readonly string[], // cta_label, cta_url
+};

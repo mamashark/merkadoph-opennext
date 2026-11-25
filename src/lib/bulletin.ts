@@ -4,7 +4,7 @@ import { cached, cachedPaged } from "@/lib/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList } from "@/lib/content-server";
-import { PastEndError, pastEnd, searchTerm } from "@/lib/content";
+import { PastEndError, isPastEnd, pastEnd, searchTerm } from "@/lib/content";
 import type { BulletinStatus, BulletinType, MediaType } from "@/lib/bulletin-shared";
 
 /**
@@ -85,6 +85,7 @@ export type BulletinCard = Pick<
 	| "media_type"
 	| "cta_label"
 	| "cta_url"
+	| "author_name"
 > & { category: { name: string; slug: string }; publisher: { name: string; slug: string; logo_url: string | null } | null };
 
 /** A public page: everything public, plus its relations. Internal columns are never selected. */
@@ -95,7 +96,6 @@ export type BulletinPage = BulletinCard &
 		| "image_caption"
 		| "image_credit"
 		| "language"
-		| "author_name"
 		| "original_title"
 		| "source_language"
 		| "media_contact"
@@ -106,8 +106,8 @@ export type BulletinPage = BulletinCard &
 	> & { event: { title: string; slug: string } | null; project: { title: string; slug: string } | null };
 
 const CARD =
-	"id,title,slug,excerpt,content_type,tags,cover_image_url,cover_image_alt,published_at,expires_at,is_featured,is_pinned,source_url,original_published_on,media_type,cta_label,cta_url,category:bulletin_categories!inner(name,slug),publisher:bulletin_publishers(name,slug,logo_url)";
-const PAGE = `${CARD},content,image_caption,image_credit,language,author_name,original_title,source_language,media_contact,attachments,meta_title,meta_description,updated_at,event:events(title,slug),project:portfolios(title,slug)`;
+	"id,title,slug,excerpt,content_type,tags,cover_image_url,cover_image_alt,published_at,expires_at,is_featured,is_pinned,source_url,original_published_on,media_type,cta_label,cta_url,author_name,category:bulletin_categories!inner(name,slug),publisher:bulletin_publishers(name,slug,logo_url)";
+const PAGE = `${CARD},content,image_caption,image_credit,language,original_title,source_language,media_contact,attachments,meta_title,meta_description,updated_at,event:events(title,slug),project:portfolios(title,slug)`;
 
 export const BULLETIN_PER_PAGE = 12;
 
@@ -128,8 +128,7 @@ export const getBulletinCategories = cached(async (): Promise<BulletinCategory[]
 }, "bulletin:categories", ["bulletin"]);
 
 /** The Bulletin Board list: pinned first, then priority, then newest. `category` is a category slug ("" = all). */
-export const getPublicBulletin = cachedPaged(
-	async (category: string, q: string, page: number = 1, perPage: number = BULLETIN_PER_PAGE) => {
+async function queryBulletin(category: string, q: string, page: number = 1, perPage: number = BULLETIN_PER_PAGE) {
 		const from = (page - 1) * perPage;
 		let query = liveOnly(createPublicClient().from("bulletin_items").select(CARD, { count: "exact" })).eq("show_in_bulletin", true);
 		if (category) query = query.eq("category.slug", category);
@@ -145,11 +144,22 @@ export const getPublicBulletin = cachedPaged(
 			throw new Error(`Failed to load the Bulletin Board: ${error.message}`);
 		}
 		return { items: (data ?? []) as unknown as BulletinCard[], total: count ?? 0 };
-	},
-	"bulletin:list",
-	["bulletin"],
-	{ items: [] as BulletinCard[], total: 0 },
-);
+}
+const EMPTY_LIST = { items: [] as BulletinCard[], total: 0 };
+const cachedBulletin = cachedPaged(queryBulletin, "bulletin:list", ["bulletin"], EMPTY_LIST);
+
+/**
+ * Filtered lists are cached; searches are not, so endless different search words can't fill the cache (Sig).
+ */
+export async function getPublicBulletin(category: string, q: string, page: number = 1, perPage: number = BULLETIN_PER_PAGE) {
+	if (!searchTerm(q)) return cachedBulletin(category, "", page, perPage);
+	try {
+		return await queryBulletin(category, q, page, perPage);
+	} catch (e) {
+		if (isPastEnd(e)) return EMPTY_LIST;
+		throw e;
+	}
+}
 
 /** Featured items: the large cards at the top of /bulletin. */
 export const getFeaturedBulletin = cached(async (limit: number = 3): Promise<BulletinCard[]> => {
@@ -177,11 +187,13 @@ export const getHomeBulletin = cached(async (limit: number = 4): Promise<Bulleti
 	if (chosen.error) throw new Error(`Failed to load homepage notices: ${chosen.error.message}`);
 	const picked = (chosen.data ?? []) as unknown as BulletinCard[];
 	if (picked.length >= limit) return picked;
+	// "On the homepage" items come first; the newest live items fill any free places (Kay, 2026-11-25).
 	const recent = await liveOnly(db.from("bulletin_items").select(CARD))
 		.eq("show_in_bulletin", true)
 		.order("is_pinned", { ascending: false })
 		.order("published_at", { ascending: false })
 		.limit(limit + picked.length);
+	if (recent.error) throw new Error(`Failed to load homepage notices: ${recent.error.message}`);
 	const seen = new Set(picked.map((p) => p.id));
 	const fill = ((recent.data ?? []) as unknown as BulletinCard[]).filter((r) => !seen.has(r.id));
 	return [...picked, ...fill].slice(0, limit);
@@ -195,11 +207,21 @@ export const getPublicBulletinBySlug = cache(
 	}, "bulletin:bySlug", ["bulletin"]),
 );
 
-/** Live items with a /bulletin page, for the sitemap. */
+/** Every live item has a /bulletin page (also ones not listed on the board, Kay 2026-11-25): for the sitemap. */
 export const getBulletinSlugs = cached(async () => {
-	const { data } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,updated_at,category:bulletin_categories!inner(slug)")).eq("show_in_bulletin", true).limit(5000);
+	const { data } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,updated_at,category:bulletin_categories!inner(slug)")).limit(5000);
 	return ((data ?? []) as unknown as { slug: string; updated_at: string }[]).map(({ slug, updated_at }) => ({ slug, updated_at }));
 }, "bulletin:slugs", ["bulletin"]);
+
+/** Site search (/search): live items whose title or summary contains `term` (already cleaned with searchTerm()). */
+export async function searchPublicBulletin(term: string, limit: number = 8) {
+	const { data, error } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,title,excerpt,published_at,category:bulletin_categories!inner(name)"))
+		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
+		.order("published_at", { ascending: false })
+		.limit(limit);
+	if (error) throw new Error(`Failed to search the Bulletin Board: ${error.message}`);
+	return (data ?? []) as unknown as { slug: string; title: string; excerpt: string | null; published_at: string | null; category: { name: string } }[];
+}
 
 /* ------------------------------ Admin ------------------------------ */
 

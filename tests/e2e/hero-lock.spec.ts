@@ -19,8 +19,12 @@ test.describe("1280px", () => {
 		await page.keyboard.press("PageDown");
 		await page.waitForTimeout(600);
 		expect(await page.evaluate(() => window.scrollY)).toBe(0);
-		// Off-centre click: still folded and locked.
-		await page.mouse.click(160, 160);
+		// Off-centre click on the sky itself (not the "Bagong Yugto" link down the left edge): still folded and locked.
+		const sky = await page.evaluate(() => {
+			const r = document.querySelector("#top svg[role='group']")!.getBoundingClientRect();
+			return { x: r.left + 120, y: r.top + 160 };
+		});
+		await page.mouse.click(sky.x, sky.y);
 		await page.waitForTimeout(600);
 		expect(await locked(page)).toBe(true);
 		// The sun (and its cue text) opens the sky and frees the page.

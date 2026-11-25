@@ -272,19 +272,6 @@
 	position: absolute;
 	inset: 0;
 }
-.intro {
-	position: absolute;
-	z-index: 2;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	padding: 0 max(24px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 0px) + 12px) var(--gutter);
-	pointer-events: none;
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	max-width: 36rem;
-}
 .eyebrow {
 	margin: 0;
 	font-family: var(--font-mono);
@@ -301,26 +288,6 @@
 	width: 8px;
 	height: 8px;
 	background: currentColor;
-}
-.intro h1 {
-	margin: 0;
-	font-family: var(--font-display);
-	font-size: clamp(2.6rem, 7vw, 4.8rem);
-	font-weight: 700;
-	line-height: 0.95;
-	letter-spacing: -0.02em;
-	text-wrap: balance;
-	text-shadow: 0 2px 24px var(--night);
-}
-.lede {
-	margin: 0;
-	/* The hero intro is the homepage's largest paint (LCP): it stays in the preloaded display face. */
-	font-family: var(--font-display);
-	font-size: 1.05rem;
-	line-height: 1.5;
-	color: var(--muted);
-	max-width: 30rem;
-	text-shadow: 0 1px 12px var(--night);
 }
 .hint {
 	position: absolute;
@@ -345,10 +312,87 @@
 	pointer-events: none;
 	text-align: right;
 }
-@media (max-width: 560px) {
-	.lede {
-		font-size: 0.95rem;
+/* The chapter mark (Kay, 2026-11-25): "Ang Bagong Yugto" in big display type running up the hero's left edge, with a small
+   mono "The Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel starts to its
+   right, so the graph never runs underneath it. The word is sized from the screen height so it always fits. */
+.stage {
+	/* The word starts below the site header (65px) when that slides in on focus (Ally B-A2); short screens keep 24px. */
+	--chapter-top: 80px;
+	--chapter-size: clamp(1.6rem, calc((100vh - var(--chapter-top) - 32px) / 8.6), 8rem);
+	--chapter-w: calc(var(--chapter-size) + 58px + env(safe-area-inset-left, 0px));
+}
+/* The visible height (svh, as the stage uses) where supported; 100vh above is the fallback. */
+@supports (height: 100svh) {
+	.stage {
+		--chapter-size: clamp(1.6rem, calc((100svh - var(--chapter-top) - 32px) / 8.6), 8rem);
 	}
+}
+.chapter {
+	position: absolute;
+	z-index: 3;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	width: var(--chapter-w);
+	display: flex;
+	align-items: flex-end;
+	justify-content: flex-end;
+	gap: 10px;
+	padding: var(--chapter-top) 16px max(24px, env(safe-area-inset-bottom, 0px) + 12px) max(12px, env(safe-area-inset-left, 0px));
+	border-right: 1px solid var(--line);
+	color: var(--ink);
+	text-decoration: none;
+	transition: opacity 0.4s;
+}
+.chapterTitle,
+.chapterSub {
+	/* Read bottom to top. */
+	writing-mode: vertical-rl;
+	transform: rotate(180deg);
+	white-space: nowrap;
+}
+.chapterTitle {
+	font-family: var(--font-display);
+	font-size: var(--chapter-size);
+	font-weight: 700;
+	/* 1, not tighter: the line box must hold the g's descenders, or they reach the band's edge. */
+	line-height: 1;
+	letter-spacing: -0.03em;
+	transition: color 0.2s;
+}
+.chapterSub {
+	font-family: var(--font-mono);
+	font-size: 12px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--muted);
+}
+/* "Read the blog →": says the mark is a link to a post. */
+.chapterCta {
+	color: var(--sun);
+}
+/* Very short screens (small phones held sideways): only "Read the blog →" fits beside the word. */
+@media (max-height: 500px) and (orientation: landscape) {
+	.stage {
+		--chapter-top: 24px;
+	}
+}
+@media (max-height: 420px) and (orientation: landscape) {
+	.chapterLead {
+		display: none;
+	}
+}
+.chapter:hover .chapterTitle {
+	color: var(--sun);
+}
+.chapter:focus-visible {
+	outline: 2px solid var(--sun);
+	outline-offset: -6px;
+}
+.stage[data-chapter] .panel {
+	left: var(--chapter-w);
+}
+@media (max-width: 560px) {
 	.hintText {
 		display: none;
 	}
@@ -526,7 +570,7 @@
 	border-bottom: 1px solid var(--line);
 	scroll-margin-top: 64px;
 }
-.about h2 {
+.aboutTitle {
 	margin: 14px 0 0;
 	font-size: clamp(40px, 7vw, 96px);
 	font-weight: 700;
@@ -535,7 +579,7 @@
 	max-width: 13ch;
 }
 /* Highlighted words: a brand-colour highlighter stripe in light mode, coloured text in dark mode. */
-.about h2 em,
+.aboutTitle em,
 .worldHead h2 em,
 .contact h2 em {
 	font-style: normal;
@@ -548,7 +592,7 @@
 	box-decoration-break: clone;
 }
 @media (prefers-color-scheme: dark) {
-	.about h2 em,
+	.aboutTitle em,
 	.worldHead h2 em,
 	.contact h2 em {
 		color: var(--c, var(--sun));
@@ -1339,11 +1383,10 @@
 .stage[data-world="open"] .graph {
 	visibility: hidden;
 }
-.intro,
 .hint {
 	transition: opacity 0.4s;
 }
-.stage[data-world] .intro,
+.stage[data-world] .chapter,
 .stage[data-world] .hint,
 .stage[data-world] .peek,
 .stage[data-world] .tip {
@@ -1921,33 +1964,11 @@
 	.wLabel {
 		display: none;
 	}
-	.intro {
-		gap: 6px;
-		padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
-	}
-	.intro h1 {
-		font-size: 2rem;
-	}
-	.lede {
-		font-size: 0.85rem;
-		max-width: 26rem;
-	}
 	/* The hint is mouse wording and would sit on top of the stars here. */
 	.hintText {
 		display: none;
 	}
 }
-/* Very short (phones held sideways, ≤ 420px tall): just the title, so the sky has room.
-   The same words are in the About section right below. */
-@media (max-height: 420px) and (orientation: landscape) {
-	.intro h1 {
-		font-size: 1.6rem;
-	}
-	.lede {
-		display: none;
-	}
-}
-
 /* One long word in a section title (e.g. "Byggnadsavdelning"): break it on narrow screens instead of overflowing. */
 .long {
 	hyphens: auto;
@@ -1967,20 +1988,6 @@
 		display: flex;
 		flex-direction: column;
 		padding-top: max(28px, env(safe-area-inset-top, 0px));
-	}
-	.intro {
-		position: static;
-		padding: 0 var(--side);
-		max-width: none;
-		pointer-events: auto;
-	}
-	.intro h1 {
-		font-size: clamp(2.5rem, 13vw, 3.6rem);
-		white-space: nowrap;
-		text-shadow: none;
-	}
-	.lede {
-		text-shadow: none;
 	}
 	/* "Open" / "Fold again" in its own row, so it never sits on a Highlight. */
 	.hint {
@@ -2059,5 +2066,41 @@
 	.world,
 	.contact {
 		content-visibility: visible;
+	}
+}
+
+/* Upright phones: the chapter mark runs across, under the title and above the sky panel, so the panel keeps its width. */
+@media (max-width: 767px) and (orientation: portrait) {
+	.chapter {
+		position: static;
+		width: auto;
+		flex-direction: column-reverse;
+		align-items: flex-start;
+		gap: 6px;
+		margin-top: 18px;
+		padding: 0 var(--side);
+		border-right: 0;
+	}
+	.chapterTitle,
+	.chapterSub {
+		writing-mode: horizontal-tb;
+		transform: none;
+	}
+	/* The narrowest phones (320px): the line may wrap after "·", but "Read the blog →" stays together (Quinn B-Q1). */
+	.chapterSub {
+		white-space: normal;
+	}
+	.chapterCta {
+		white-space: nowrap;
+	}
+	.chapterTitle {
+		font-size: clamp(1.75rem, 9vw, 2.75rem);
+		line-height: 1;
+	}
+	.chapter:focus-visible {
+		outline-offset: 4px;
+	}
+	.stage[data-chapter] .panel {
+		left: auto;
 	}
 }

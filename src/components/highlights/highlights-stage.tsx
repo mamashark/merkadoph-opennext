@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DEFAULT_LINES } from "@/components/constellation/constellation";
 import type { ConstellationEngine } from "@/components/constellation/engine";
@@ -14,9 +15,8 @@ export const UNFOLDED_HINT = "Hover a category · click to zoom in · drag to re
 type Props = {
 	hubs: ConstellationHub[];
 	items: ConstellationItem[];
-	eyebrow: string;
-	title: string;
-	lede: string;
+	/** Big vertical word down the left edge, linking to a page (Kay, 2026-11-25). */
+	chapter?: { title: string; sub: string; cta: string; href: string };
 	label: string;
 	worlds: WorldInfo[];
 };
@@ -93,7 +93,7 @@ const phone = () => window.matchMedia(PHONE_QUERY).matches;
  * its entries; clicking it "dives" into that section below, and "Back to highlights" climbs back out.
  * Also runs the page-wide bits: reveal-on-scroll, [data-dive] / [data-back] links, deep links (#blogs).
  */
-export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worlds }: Props) {
+export function HighlightsStage({ hubs, items, chapter, label, worlds }: Props) {
 	const router = useRouter();
 	const stageRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
@@ -183,9 +183,12 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 		},
 		[place],
 	);
+	/** The camera's centre (the sky panel's, which starts right of the chapter mark) in stage coordinates. */
 	const stageCentre = () => {
-		const r = stageRef.current?.getBoundingClientRect();
-		return { x: (r?.width ?? 0) / 2, y: (r?.height ?? 0) / 2 };
+		const s = stageRef.current?.getBoundingClientRect();
+		const p = (panelRef.current ?? stageRef.current)?.getBoundingClientRect();
+		if (!s || !p) return { x: 0, y: 0 };
+		return { x: p.left - s.left + p.width / 2, y: p.top - s.top + p.height / 2 };
 	};
 	/** The camera's transition style ("dive", "none", or the default), on the graph and the star layers alike. */
 	const setCam = (v?: "dive" | "none") => {
@@ -540,21 +543,6 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 				unfoldedHint: UNFOLDED_HINT,
 				// The Open/Fold button's corner (button + its top/right padding).
 				keepClear: { width: 150, height: 66 },
-				// The hero title (eyebrow, h1, lede) sits over the sky on wider screens: keep the graph out of it.
-				// Phones held upright show the title above the sky panel, so there is nothing to avoid there.
-				avoid: () => {
-					const intro = stageRef.current?.querySelector<HTMLElement>(`.${styles.intro}`);
-					const box = panelRef.current?.getBoundingClientRect();
-					if (!intro || !box || phone()) return null;
-					const parts = [...intro.children].map((c) => c.getBoundingClientRect()).filter((r) => r.width && r.height);
-					if (!parts.length) return null;
-					return {
-						left: Math.min(...parts.map((r) => r.left)) - box.left,
-						top: Math.min(...parts.map((r) => r.top)) - box.top,
-						right: Math.max(...parts.map((r) => r.right)) - box.left,
-						bottom: Math.max(...parts.map((r) => r.bottom)) - box.top,
-					};
-				},
 				onHint: setHint,
 				onFolded: (f) => {
 					foldedRef.current = f;
@@ -734,14 +722,21 @@ export function HighlightsStage({ hubs, items, eyebrow, title, lede, label, worl
 			ref={stageRef}
 			id="top"
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
+			data-chapter={chapter ? "" : undefined}
 			// Folded, a click on the sun in the centre opens the graph; keyboard users have the Open button.
 		>
-			{/* Title first: on phones it sits above the sky panel, in reading order (it's absolutely placed on wider screens). */}
-			<div className={styles.intro}>
-				<p className={styles.eyebrow}>{eyebrow}</p>
-				<h1 id="hero-title">{title}</h1>
-				<p className={styles.lede}>{lede}</p>
-			</div>
+			{/* The chapter mark: a big vertical word down the left edge (across the top on upright phones). The sky starts to its right. */}
+			{chapter && (
+				<Link href={chapter.href} className={styles.chapter}>
+					<span className={styles.chapterSub}>
+						<span className={styles.chapterLead}>{chapter.sub} · </span>
+						<span className={styles.chapterCta}>{chapter.cta} →</span>
+					</span>{" "}
+					<span className={styles.chapterTitle} lang="tl">
+						{chapter.title}
+					</span>
+				</Link>
+			)}
 			<div className={styles.hint}>
 				<span className={styles.hintText} aria-live="polite">
 					{hint}

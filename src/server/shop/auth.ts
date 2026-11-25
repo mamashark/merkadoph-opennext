@@ -180,6 +180,7 @@ export async function resetPassword(input: { password: string }): Promise<Result
 	if (!userData.user || !stampedAt || nowS - stampedAt > RECOVERY_WINDOW_S || !viaLink) return fail("RECOVERY_REQUIRED");
 
 	const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+	if (error?.code === "weak_password") return fail("VALIDATION", undefined, { password: "Choose a stronger password: at least 12 characters with lowercase and uppercase letters, a number and a symbol." });
 	if (error) return error.code === "same_password" ? fail("VALIDATION", undefined, { password: "Choose a password you haven't used here before." }) : internal("resetPassword", error);
 	await createAdminClient().auth.admin.updateUserById(userData.user.id, { app_metadata: { ...userData.user.app_metadata, recovery_at: null } });
 	await supabase.auth.signOut({ scope: "others" });
@@ -200,6 +201,7 @@ export async function changePassword(input: { current_password: string; password
 	}
 	const supabase = await createClient();
 	const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+	if (error?.code === "weak_password") return fail("VALIDATION", undefined, { password: "Choose a stronger password: at least 12 characters with lowercase and uppercase letters, a number and a symbol." });
 	if (error) return error.code === "same_password" ? fail("VALIDATION", undefined, { password: "Choose a different password from your current one." }) : internal("changePassword", error);
 	await supabase.auth.signOut({ scope: "others" });
 	await audit({ kind: "security", action: "auth.password_changed", summary: "Password changed", actor: { id: customer.id, email: customer.email } });

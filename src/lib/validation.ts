@@ -42,13 +42,27 @@ export const checkoutSchema = z.object({
 
 /* ---------------------------- Shopper accounts ---------------------------- */
 
-/** Shopper password policy (shop-reference.md D12): 10–72 chars (bcrypt limit), letters and numbers. */
+/**
+ * Password policy for every account (shoppers and admins). Must match Supabase → Auth → Sign In / Providers → Email
+ * (Kay, 2026-11-22): at least 12 characters, lowercase, uppercase, digit and symbol.
+ * PASSWORD_MAX is bcrypt's limit, which counts bytes: å/ä/ö take 2 bytes and emoji 4, so the byte count is checked too.
+ * SYMBOL is Supabase's documented symbol set minus the backslash: in that list "\:" is most likely an escaped colon
+ * (GoTrue splits required_characters on ":"), so "\" alone may not count there. Leaving it out keeps this rule
+ * never looser than Supabase's (Arvid review, 2026-11-25).
+ */
+export const PASSWORD_MIN = 12;
+export const PASSWORD_MAX = 72;
+const SYMBOL = /[!@#$%^&*()_+\-=[\]{};':"|<>?,./`~]/;
 export const passwordSchema = z
 	.string()
-	.min(10, "Use at least 10 characters.")
-	.max(72, "Use at most 72 characters.")
-	.regex(/[A-Za-z]/, "Include at least one letter.")
-	.regex(/\d/, "Include at least one number.");
+	.min(PASSWORD_MIN, `Use at least ${PASSWORD_MIN} characters.`)
+	.max(PASSWORD_MAX, `Use at most ${PASSWORD_MAX} characters.`)
+	// Only when the character count is fine, so an over-long plain password gets one message, not two.
+	.refine((s) => s.length > PASSWORD_MAX || new TextEncoder().encode(s).length <= PASSWORD_MAX,"That's too long: letters like å, ä and ö count as two characters, emoji as four.")
+	.regex(/[a-z]/, "Include at least one lowercase letter.")
+	.regex(/[A-Z]/, "Include at least one uppercase letter.")
+	.regex(/\d/, "Include at least one number.")
+	.regex(SYMBOL, "Include at least one symbol, like ! ? # or %.");
 
 const nameField = (label: string) => trimmed(60).min(1, `Please enter your ${label}.`);
 

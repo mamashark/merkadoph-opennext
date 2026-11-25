@@ -2079,6 +2079,13 @@
 		writing-mode: horizontal-tb;
 		transform: none;
 	}
+	/* The narrowest phones (320px): the line may wrap after "·", but "Read the blog →" stays together (Quinn B-Q1). */
+	.chapterSub {
+		white-space: normal;
+	}
+	.chapterCta {
+		white-space: nowrap;
+	}
 	.chapterTitle {
 		font-size: clamp(1.75rem, 9vw, 2.75rem);
 		line-height: 1;

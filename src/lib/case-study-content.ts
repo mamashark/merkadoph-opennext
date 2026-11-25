@@ -55,7 +55,7 @@ export const caseStudy = {
 		},
 		{
 			title: "One design system, two modes",
-			body: "Every page shares one look: a cream page with olive text in light mode and a night-sky navy in dark mode, with a colour per section. It follows the device setting, and every colour pair was measured for contrast in both modes.",
+			body: "Every page shares one look: an off-white page with olive text in light mode and a night-sky navy in dark mode, with a colour per section. It follows the device setting, and every colour pair was measured for contrast in both modes.",
 		},
 		{
 			title: "A content admin shaped around the business",

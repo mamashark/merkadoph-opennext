@@ -15,6 +15,9 @@ import {
 	type SimulationNodeDatum,
 	type Timer,
 } from "d3";
+// Adds selection.transition(). d3 7.9.2+ marks itself side-effect free, so without this direct import the
+// bundler can drop d3-transition and every .transition() call fails (Arvid review, 2026-11-25).
+import "d3-transition";
 import { PHONE_QUERY, type ConstellationHub, type ConstellationItem, type ConstellationLine } from "./types";
 
 /**

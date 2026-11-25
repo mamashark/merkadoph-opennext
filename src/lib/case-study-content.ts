@@ -138,7 +138,7 @@ export const caseStudy = {
 			problem: "Desktop scored 100, but mobile Performance was 90, with the largest paint at about 3.6 s on a simulated slow phone.",
 			cause: "The browser downloaded eight preloaded fonts, render-blocking CSS and JavaScript before it could paint the hero text, and laid out the whole long page up front.",
 			fix: "Preloaded only the fonts the first screen uses, and let the browser skip rendering sections until they're near the screen. One change at a time, each measured as the median of three runs. Inlining all CSS was tried and dropped: the page grew with no gain.",
-			result: "Mobile 97 on the homepage (production build, light mode). Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
+			result: "Mobile 97 on the homepage at the time (production build, light mode); a later hero redesign brought it to 92, which is the next performance task. Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
 		},
 		{
 			area: "Accessibility",

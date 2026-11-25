@@ -183,9 +183,12 @@ export function HighlightsStage({ hubs, items, chapter, label, worlds }: Props) 
 		},
 		[place],
 	);
+	/** The camera's centre (the sky panel's, which starts right of the chapter mark) in stage coordinates. */
 	const stageCentre = () => {
-		const r = stageRef.current?.getBoundingClientRect();
-		return { x: (r?.width ?? 0) / 2, y: (r?.height ?? 0) / 2 };
+		const s = stageRef.current?.getBoundingClientRect();
+		const p = (panelRef.current ?? stageRef.current)?.getBoundingClientRect();
+		if (!s || !p) return { x: 0, y: 0 };
+		return { x: p.left - s.left + p.width / 2, y: p.top - s.top + p.height / 2 };
 	};
 	/** The camera's transition style ("dive", "none", or the default), on the graph and the star layers alike. */
 	const setCam = (v?: "dive" | "none") => {
@@ -719,6 +722,7 @@ export function HighlightsStage({ hubs, items, chapter, label, worlds }: Props) 
 			ref={stageRef}
 			id="top"
 			className={`${styles.stage} ${folded ? styles.folded : ""}`}
+			data-chapter={chapter ? "" : undefined}
 			// Folded, a click on the sun in the centre opens the graph; keyboard users have the Open button.
 		>
 			{/* The chapter mark: a big vertical word down the left edge (across the top on upright phones). The sky starts to its right. */}

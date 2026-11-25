@@ -377,7 +377,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 				/>
 
 				{/* About + index */}
-				<section className={styles.about} id="index" aria-labelledby="home-title">
+				<section className={styles.about} id="index">
 					<div className={styles.wrap}>
 						{/* The welcome moved here from the hero, which is now the sky and the chapter mark (Kay, 2026-11-25).
 						    Same look as before: mono eyebrow, big heading (the page's h1) with a highlighted word, lede. */}

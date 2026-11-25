@@ -313,11 +313,17 @@
 	text-align: right;
 }
 /* The chapter mark (Kay, 2026-11-25): "Ang Bagong Yugto" in big display type running up the hero's left edge, with a small
-   mono "The Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel and the title start to its
+   mono "The Next Chapter" beside it; the whole mark links to the Bagong Yugto post. The sky panel starts to its
    right, so the graph never runs underneath it. The word is sized from the screen height so it always fits. */
 .stage {
-	--chapter-size: clamp(1.6rem, calc((100svh - 56px) / 8.6), 8rem);
+	--chapter-size: clamp(1.6rem, calc((100vh - 56px) / 8.6), 8rem);
 	--chapter-w: calc(var(--chapter-size) + 58px + env(safe-area-inset-left, 0px));
+}
+/* The visible height (svh, as the stage uses) where supported; 100vh above is the fallback. */
+@supports (height: 100svh) {
+	.stage {
+		--chapter-size: clamp(1.6rem, calc((100svh - 56px) / 8.6), 8rem);
+	}
 }
 .chapter {
 	position: absolute;
@@ -376,7 +382,7 @@
 	outline: 2px solid var(--sun);
 	outline-offset: -6px;
 }
-.stage:has(.chapter) .panel {
+.stage[data-chapter] .panel {
 	left: var(--chapter-w);
 }
 @media (max-width: 560px) {
@@ -1956,9 +1962,6 @@
 		display: none;
 	}
 }
-/* Very short (phones held sideways, ≤ 420px tall): just the title, so the sky has room.
-   The same words are in the About section right below. */
-
 /* One long word in a section title (e.g. "Byggnadsavdelning"): break it on narrow screens instead of overflowing. */
 .long {
 	hyphens: auto;
@@ -2083,7 +2086,7 @@
 	.chapter:focus-visible {
 		outline-offset: 4px;
 	}
-	.stage:has(.chapter) .panel {
+	.stage[data-chapter] .panel {
 		left: auto;
 	}
 }

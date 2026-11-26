@@ -1,14 +1,15 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { CheckCircle2, Loader2, Send } from "lucide-react";
+import { CheckCircle2, ChevronDown, Loader2, Send } from "lucide-react";
 import { sendContactMessage, type ContactState } from "@/app/contact-actions";
 import { preloadRecaptcha, withRecaptcha } from "@/lib/recaptcha-client";
 import { RecaptchaNotice } from "@/components/ui/recaptcha-notice";
 import { cn } from "@/lib/ui";
 
+// White fields in both themes (Kay, 2026-11-26): on the night-sky page they read as clear input areas.
 const field =
-	"block w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-500 focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/20 dark:border-stone-700 dark:bg-stone-900 dark:text-stone-100 dark:placeholder:text-stone-500 dark:focus:border-teal-400 dark:[color-scheme:dark]";
+	"block w-full rounded-xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-900 placeholder:text-stone-500 transition-[border-color,box-shadow] focus:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-700/20 dark:focus:ring-teal-400/70";
 const label = "mb-1.5 block text-sm font-medium text-stone-800 dark:text-stone-200";
 const errorText = "mt-1 text-xs font-medium text-red-700 dark:text-red-400";
 
@@ -137,7 +138,8 @@ export function ContactForm({ topics, locale = "en" }: { topics: string[]; local
 					<label htmlFor="c-topic" className={label}>
 						{t.topic}
 					</label>
-					<select id="c-topic" name="topic" defaultValue={v?.topic ?? ""} className={field}>
+					<div className="relative">
+					<select id="c-topic" name="topic" defaultValue={v?.topic ?? ""} className={cn(field, "cursor-pointer appearance-none pr-11")}>
 						<option value="">{t.chooseTopic}</option>
 						{topics.map((t) => (
 							<option key={t} value={t}>
@@ -150,6 +152,8 @@ export function ContactForm({ topics, locale = "en" }: { topics: string[]; local
 							</option>
 						))}
 					</select>
+					<ChevronDown className="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-stone-500" aria-hidden />
+					</div>
 				</div>
 			</div>
 
@@ -184,7 +188,7 @@ export function ContactForm({ topics, locale = "en" }: { topics: string[]; local
 				<button
 					type="submit"
 					disabled={pending}
-					className="inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-stone-900 px-6 text-sm font-semibold text-white transition hover:bg-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200 dark:focus-visible:ring-offset-stone-950"
+					className="inline-flex h-12 items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-stone-900 px-6 text-sm font-semibold text-white transition hover:bg-stone-800 active:bg-stone-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:ring-offset-2 disabled:opacity-60 dark:bg-white dark:text-stone-900 dark:hover:bg-stone-200 dark:active:bg-stone-300 dark:focus-visible:ring-offset-stone-950"
 				>
 					{pending ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
 					{pending ? t.sending : t.send}

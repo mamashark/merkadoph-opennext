@@ -211,6 +211,40 @@ body {
 	h1, h2, h3, h4, h5, h6 {
 		font-family: var(--font-display);
 	}
+
+	/* Tap and click feedback, site-wide (Kay, 2026-11-26: taps felt "hard and dry").
+	   - Drop the grey mobile tap flash; each control gets its own pressed state instead.
+	   - touch-action: manipulation removes the double-tap-zoom wait, so taps respond at once.
+	   - Pressed controls shrink a little. This uses the separate `scale` property, so it adds to any
+	     `transform` animation already on an element instead of replacing it. SVG nodes (the constellation)
+	     are left alone. It goes in at once and eases back out on release.
+	   Hover styles already apply only on devices that can hover (Tailwind v4's hover: variant). */
+	html {
+		-webkit-tap-highlight-color: transparent;
+	}
+	:where(a, button, [role="button"], summary, label, select, input, textarea) {
+		touch-action: manipulation;
+	}
+	:where(button:not(:disabled), [role="button"], summary, input[type="submit"]) {
+		cursor: pointer;
+	}
+	:where(a, button, [role="button"], summary, input[type="submit"]):not(svg *) {
+		transition: scale 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+	:where(button, [role="button"], summary, input[type="submit"]):not(svg *):not(:disabled):active {
+		scale: 0.97;
+		transition-duration: 0s;
+	}
+	/* Links: only blocks such as cards and buttons visibly shrink (scale does nothing to inline text links). */
+	:where(a):not(svg *):active {
+		scale: 0.98;
+		transition-duration: 0s;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		:where(a, button, [role="button"], summary, input[type="submit"]):active {
+			scale: none;
+		}
+	}
 }
 
 /* Blog article body (rendered from Markdown). */

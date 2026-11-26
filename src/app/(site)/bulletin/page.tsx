@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Search } from "lucide-react";
-import { BULLETIN_PER_PAGE, getBulletinCategories, getFeaturedBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
+import { BULLETIN_PER_PAGE, getBoardCategories, getFeaturedBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
 import { OFFERS_SLUG, TYPE_LABEL, issuedBy } from "@/lib/bulletin-shared";
 import { getPublicPromotions, PROMOTIONS_PER_PAGE, type PromotionSummary } from "@/lib/promotions";
 import { EMBASSY_LINKS } from "@/lib/businesses";
@@ -21,7 +21,7 @@ type Filters = { category: string; q: string; page: number };
 
 async function readFilters(searchParams: PageProps<"/bulletin">["searchParams"]): Promise<Filters & { categoryName: string | null; categoryDescription: string | null }> {
 	const params = await searchParams;
-	const categories = await getBulletinCategories().catch(() => []);
+	const categories = await getBoardCategories().catch(() => []);
 	const raw = param(params, "category");
 	// Only known values are accepted (guidelines §0.5); anything else shows everything.
 	const known = raw === OFFERS_SLUG ? "Community Offers" : (categories.find((c) => c.slug === raw)?.name ?? null);
@@ -86,7 +86,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 	const overview = !category && !q && page === 1;
 
 	const [categories, list, featured, offers] = await Promise.all([
-		getBulletinCategories().catch(() => []),
+		getBoardCategories().catch(() => []),
 		offersOnly ? null : getPublicBulletin(category, q, page, BULLETIN_PER_PAGE).catch(() => ({ items: [] as BulletinCard[], total: 0 })),
 		overview ? getFeaturedBulletin(3).catch(() => [] as BulletinCard[]) : Promise.resolve([] as BulletinCard[]),
 		offersOnly || overview ? getPublicPromotions("current", offersOnly ? page : 1, offersOnly ? PROMOTIONS_PER_PAGE : 3).catch(() => ({ promotions: [] as PromotionSummary[], total: 0 })) : null,

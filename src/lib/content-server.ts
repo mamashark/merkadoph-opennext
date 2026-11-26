@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { CAPTION_MAX } from "@/lib/blog-layout";
-import { SUPABASE_URL, toSitePath } from "@/lib/env";
+import { MEDIA_URL, SUPABASE_URL, toSitePath } from "@/lib/env";
 import { revalidatePath } from "next/cache";
 import { purgeContent, type ContentTag } from "@/lib/cache";
 import { audit } from "@/lib/audit";
@@ -39,19 +39,32 @@ export function optionalUrl(formData: FormData, key: string): string | null {
 	return value && isHttpUrl(value) ? value : null;
 }
 
-/** Our media library (Supabase Storage): only public objects on this origin are accepted for images and videos. */
-const MEDIA_ORIGIN = new URL(SUPABASE_URL).origin;
-const MEDIA_PATH = "/storage/v1/object/public/";
+/**
+ * Our media library. Since 2026-11-27 it lives in Cloudflare R2 at MEDIA_URL (`<MEDIA_URL>/<bucket>/<path>`); before
+ * that it was Supabase Storage (`<SUPABASE_URL>/storage/v1/object/public/<bucket>/<path>`). Old URLs are still
+ * accepted (an admin form opened before the move) and stored in the new form, see `toMediaUrl`.
+ */
+const MEDIA_ORIGIN = new URL(MEDIA_URL).origin;
+const LEGACY_ORIGIN = new URL(SUPABASE_URL).origin;
+const LEGACY_PATH = "/storage/v1/object/public/";
+
+/** The R2 form of a media URL: legacy Supabase public URLs are moved to MEDIA_URL with the same `<bucket>/<path>`. */
+export function toMediaUrl(u: URL): string {
+	if (u.origin === LEGACY_ORIGIN && u.pathname.startsWith(LEGACY_PATH)) return `${MEDIA_ORIGIN}/${u.pathname.slice(LEGACY_PATH.length)}${u.search}`;
+	return u.href;
+}
 
 /**
- * True for a public file in our Storage. Parsed, not prefix-matched (Sig F4): same origin, the public-object path,
- * and no path tricks (`..`, encoded dots/slashes, backslashes, whitespace) that could point elsewhere on the host.
+ * True for a public file in our media library. Parsed, not prefix-matched (Sig F4): our origin, a path below the
+ * root, and no path tricks (`..`, encoded dots/slashes, backslashes, whitespace) that could point elsewhere.
  */
 export function isMediaUrl(value: string): boolean {
 	if (!value || value.length > 1000 || /[\s\\]|\.\.|%2e|%2f|%5c/i.test(value)) return false;
 	try {
 		const u = new URL(value);
-		return !u.username && !u.password && u.origin === MEDIA_ORIGIN && u.pathname.startsWith(MEDIA_PATH) && u.pathname.length > MEDIA_PATH.length;
+		if (u.username || u.password) return false;
+		if (u.origin === MEDIA_ORIGIN) return u.pathname.length > 1;
+		return u.origin === LEGACY_ORIGIN && u.pathname.startsWith(LEGACY_PATH) && u.pathname.length > LEGACY_PATH.length;
 	} catch {
 		return false;
 	}
@@ -60,7 +73,7 @@ export function isMediaUrl(value: string): boolean {
 /** A text field cut to `max` characters (never rejected, so a long caption doesn't lose the whole photo). */
 const clipped = (max: number) => z.unknown().transform((v) => (typeof v === "string" ? v.trim().slice(0, max) : ""));
 /** A media library URL, stored in its normalised form (Sig R3). */
-const mediaUrlSchema = z.string().trim().refine(isMediaUrl).transform((v) => new URL(v).href);
+const mediaUrlSchema = z.string().trim().refine(isMediaUrl).transform((v) => toMediaUrl(new URL(v)));
 /** Zod schemas for media inputs (Strict rule 5; Sig F5). Portfolio descriptions keep 500; blog captions use CAPTION_MAX. */
 export const galleryItemSchema = z.object({ url: mediaUrlSchema, alt: clipped(200), description: clipped(500) });
 export const blogPhotoSchema = z.object({ url: mediaUrlSchema, alt: clipped(200), caption: clipped(CAPTION_MAX) });
@@ -68,7 +81,7 @@ export const blogPhotoSchema = z.object({ url: mediaUrlSchema, alt: clipped(200)
 /** A URL from our media library, or null (anything else is dropped, never stored). */
 export function mediaUrl(formData: FormData, key: string): string | null {
 	const value = text(formData, key, 1000);
-	return isMediaUrl(value) ? new URL(value).href : null;
+	return isMediaUrl(value) ? toMediaUrl(new URL(value)) : null;
 }
 
 /** A gallery field (GalleryField's JSON): media library images only, trimmed, at most `max`. Bad input → []. */

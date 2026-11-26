@@ -10,7 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { purgeContent } from "@/lib/cache";
 import { UUID } from "@/lib/validation";
 import { slugify } from "@/lib/content";
-import { commonFields, deleteRow, isMediaUrl, mediaUrl, optional, optionalLink, optionalUrl, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
+import { commonFields, deleteRow, isMediaUrl, mediaUrl, toMediaUrl, optional, optionalLink, optionalUrl, revalidateContent, text, uniqueSlug, upsertRow } from "@/lib/content-server";
 import {
 	BULLETIN_TYPES,
 	LANGUAGES,
@@ -53,7 +53,7 @@ function readAttachments(raw: FormDataEntryValue | null): Attachment[] | string 
 	for (const line of String(raw ?? "").split("\n").map((l) => l.trim()).filter(Boolean)) {
 		const [label, url] = line.includes("|") ? line.split("|").map((s) => s.trim()) : ["", line];
 		if (!isMediaUrl(url)) return "attachment";
-		out.push({ label: (label || "Download").slice(0, 120), url: new URL(url).href });
+		out.push({ label: (label || "Download").slice(0, 120), url: toMediaUrl(new URL(url)) });
 	}
 	return out.length > 10 ? "attachments-max" : out;
 }

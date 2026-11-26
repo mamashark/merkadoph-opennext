@@ -7,6 +7,13 @@ export const SUPABASE_URL = required("NEXT_PUBLIC_SUPABASE_URL", process.env.NEX
 export const SUPABASE_ANON_KEY = required("NEXT_PUBLIC_SUPABASE_ANON_KEY", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 /**
+ * Public origin of the media library: the Cloudflare R2 bucket `merkadoph-media` on its custom domain
+ * (2026-11-27). Media moved off Supabase Storage, whose bandwidth cap (5 GB/month on Free) the image
+ * optimiser and local dev used up; R2 has no egress fees. Objects keep their old keys as `<bucket>/<path>`.
+ */
+export const MEDIA_URL = (process.env.NEXT_PUBLIC_MEDIA_URL || "https://media.merkadoph.se").replace(/\/$/, "");
+
+/**
  * The site's own origin for this deployment (reference.md: every internal redirect and absolute link
  * is built from NEXT_PUBLIC_SITE_URL — never from a hardcoded domain or the incoming request's host).
  */

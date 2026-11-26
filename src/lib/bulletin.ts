@@ -5,7 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList } from "@/lib/content-server";
 import { PastEndError, isPastEnd, pastEnd, searchTerm } from "@/lib/content";
-import { PRESS_TYPES, type BulletinStatus, type BulletinType, type MediaType } from "@/lib/bulletin-shared";
+import { PRESS_CATEGORY, PRESS_TYPES, type BulletinStatus, type BulletinType, type MediaType } from "@/lib/bulletin-shared";
 
 /**
  * Bulletin Board + Press & Media data layer (Kay's spec, 2026-11-25). One record per item (public.bulletin_items),
@@ -133,6 +133,9 @@ export const getBulletinCategories = cached(async (): Promise<BulletinCategory[]
 	return (data ?? []) as BulletinCategory[];
 }, "bulletin:categories", ["bulletin"]);
 
+/** Categories offered as filters on /bulletin: active ones (RLS), without the press category (that lives on /press). */
+export const getBoardCategories = async () => (await getBulletinCategories()).filter((c) => c.slug !== PRESS_CATEGORY);
+
 /** The Bulletin Board list: pinned first, then priority, then newest. `category` is a category slug ("" = all). */
 async function queryBulletin(category: string, q: string, page: number = 1, perPage: number = BULLETIN_PER_PAGE) {
 		const from = (page - 1) * perPage;
@@ -180,12 +183,12 @@ export const getFeaturedBulletin = cached(async (limit: number = 3): Promise<Bul
 }, "bulletin:featured", ["bulletin"]);
 
 /**
- * The homepage preview (Bulletin Board items only; press lives on /press): items chosen for the homepage first (by priority), then the newest live items to fill
+ * The homepage preview (board and press items; each links to its own page via itemPath): items chosen for the homepage first (by priority), then the newest live items to fill
  * up to `limit`. Unpublished, scheduled and expired items never appear (RLS).
  */
 export const getHomeBulletin = cached(async (limit: number = 4): Promise<BulletinCard[]> => {
 	const db = createPublicClient();
-	const chosen = await boardOnly(liveOnly(db.from("bulletin_items").select(CARD)))
+	const chosen = await liveOnly(db.from("bulletin_items").select(CARD))
 		.eq("show_on_homepage", true)
 		.order("display_priority", { ascending: false })
 		.order("published_at", { ascending: false })
@@ -194,8 +197,9 @@ export const getHomeBulletin = cached(async (limit: number = 4): Promise<Bulleti
 	const picked = (chosen.data ?? []) as unknown as BulletinCard[];
 	if (picked.length >= limit) return picked;
 	// "On the homepage" items come first; the newest live items fill any free places (Kay, 2026-11-25).
-	const recent = await boardOnly(liveOnly(db.from("bulletin_items").select(CARD)))
-		.eq("show_in_bulletin", true)
+	// Board items listed on /bulletin, and every press item (they link to /press).
+	const recent = await liveOnly(db.from("bulletin_items").select(CARD))
+		.or(`show_in_bulletin.eq.true,content_type.in.(${PRESS_TYPES.join(",")})`)
 		.order("is_pinned", { ascending: false })
 		.order("published_at", { ascending: false })
 		.limit(limit + picked.length);

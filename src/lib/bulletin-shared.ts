@@ -26,6 +26,8 @@ export const DEFAULT_CATEGORY: Record<BulletinType, string> = {
 /** Press types: canonical page on /press, never expire, can show in the press archive. */
 export const PRESS_TYPES: readonly BulletinType[] = ["media_coverage", "press_release"];
 export const isPressType = (t: string) => (PRESS_TYPES as readonly string[]).includes(t);
+/** The category press items are filed under: it lives on /press, so the Bulletin Board doesn't offer it as a filter. */
+export const PRESS_CATEGORY = DEFAULT_CATEGORY.press_release;
 
 /** Press items can be published now that /press exists (Phase 2, Kay 2026-11-26). */
 export const PRESS_PUBLISHING_OPEN = true;

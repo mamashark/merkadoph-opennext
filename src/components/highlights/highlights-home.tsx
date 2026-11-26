@@ -4,8 +4,8 @@ import { ANNOUNCEMENT_TAG, getPublishedBlogs, PINNED_BLOG_TITLE, getPublishedBlo
 import { getPublicEvents, type EventSummary } from "@/lib/events";
 import { entryYear, getImpactTimeline, portfolioCover, type PortfolioSummary } from "@/lib/portfolio";
 import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
-import { getHomeBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
-import { issuedBy } from "@/lib/bulletin-shared";
+import { getHomeBulletin, getPublicBulletin, getPublicPress, type BulletinCard } from "@/lib/bulletin";
+import { issuedBy, itemPath } from "@/lib/bulletin-shared";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
 import { BYGG } from "@/lib/bygg-content";
 import { DIGITAL } from "@/lib/digital-content";
@@ -68,7 +68,7 @@ export async function HighlightsHome() {
 		safe(getPublishedBlogs(1, PER_TYPE), { blogs: [] as BlogSummary[], total: 0 }),
 		safe(getPublishedBlogByTitle(PINNED_BLOG_TITLE), null),
 		safe(getHomeBulletin(6), [] as BulletinCard[]),
-		safe(getPublicBulletin("", "", 1, 1).then((r) => r.total), 0),
+		safe(Promise.all([getPublicBulletin("", "", 1, 1), getPublicPress({})]).then(([b, p]) => b.total + p.total), 0),
 		safe(getPublicEvents("upcoming", 1, PER_TYPE), { events: [] as EventSummary[], total: 0 }),
 		safe(getPublicEvents("past", 1, RECENT_EVENTS), { events: [] as EventSummary[], total: 0 }),
 		safe(getImpactTimeline(), [] as PortfolioSummary[]),
@@ -235,7 +235,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 			title: b.title,
 			note: [b.category.name, b.published_at && formatDate(b.published_at, { month: "short", year: "numeric" })].filter(Boolean).join(" · "),
 			image: thumb(b.cover_image_url),
-			href: `/bulletin/${b.slug}`,
+			href: itemPath(b),
 			tags: shownTags(b.tags),
 			slug: b.slug,
 			excerpt: clip(b.excerpt),
@@ -656,7 +656,7 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 												{b.published_at && <time dateTime={b.published_at}>{formatDate(b.published_at, { month: "short", year: "numeric" })}</time>}
 											</div>
 											<h3>
-												<Link href={`/bulletin/${b.slug}`} className={styles.stretch}>
+												<Link href={itemPath(b)} className={styles.stretch}>
 													{b.title}
 												</Link>
 											</h3>

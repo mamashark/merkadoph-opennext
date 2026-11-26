@@ -44,6 +44,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
 	poweredByHeader: false,
 	images: {
+		// Press clippings use quality 90; Next only honours listed qualities (default [75]).
+		qualities: [75, 90],
 		remotePatterns: [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }],
 	},
 	experimental: {

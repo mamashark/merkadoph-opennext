@@ -99,12 +99,12 @@ export async function SiteShell({
 								</span>
 							))}
 							{seo.phone && (
-								<a href={`tel:${seo.phone.replace(/[^\d+]/g, "")}`} className="block hover:text-site-ink hover:underline">
+								<a href={`tel:${seo.phone.replace(/[^\d+]/g, "")}`} className="flex min-h-6 w-fit items-center hover:text-site-ink hover:underline">
 									{seo.phone}
 								</a>
 							)}
 							{seo.email && (
-								<a href={`mailto:${seo.email}`} className="block hover:text-site-ink hover:underline">
+								<a href={`mailto:${seo.email}`} className="flex min-h-6 w-fit items-center hover:text-site-ink hover:underline">
 									{seo.email}
 								</a>
 							)}

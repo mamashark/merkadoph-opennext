@@ -32,6 +32,9 @@ const seoSchema = z.object({
 export async function saveSeoSettings(formData: FormData) {
 	await requireAdmin();
 	const value = Object.fromEntries(SEO_FIELDS.map((k) => [k, String(formData.get(k) ?? "").trim().slice(0, k === "opening_hours" || k === "site_description" ? 600 : 300)])) as SeoSettings;
+	// Accept the whole snippet Cloudflare shows (data-cf-beacon='{"token": "…"}') as well as the bare token.
+	const snippetToken = /["']token["']\s*:\s*["']([a-f0-9]+)["']/i.exec(value.cf_analytics_token);
+	if (snippetToken) value.cf_analytics_token = snippetToken[1];
 	const parsed = seoSchema.safeParse(value);
 	if (!parsed.success) back("/admin/seo", { error: parsed.error.issues[0]?.message ?? "Please check the fields." });
 

@@ -4,14 +4,14 @@ import type { LegalPageId, SeoSettings } from "@/lib/site-settings";
  * The legal texts shown on /privacy, /terms and /cookies until an admin saves their own version in
  * Admin → SEO → Legal pages. Rewritten 2026-11-20 and again 2026-11-24 (B4; Kay confirmed retention, Supabase EU, no analytics, no old shop data) for the site as it is now: a content, events and portfolio site with contact forms,
  * a staff-only admin and no shop (local/guidelines.md section 5). They describe what the code actually does (contact form → Supabase,
- * reCAPTCHA loaded only when a form is used, logs kept 180 days, messages 24 months, no analytics or marketing cookies).
+ * reCAPTCHA loaded only when a form is used, logs kept 180 days, messages 24 months, no marketing cookies). 2026-11-26 (Kay): cookieless Cloudflare Web Analytics added (token in Admin → SEO); GA was considered and dropped.
  * Not legal advice: Kay reviews them before launch. If the site changes (analytics, newsletter, a shop), update these.
  * Placeholders are still supported, but these texts now contain the business details (name, org. no., address, email) as literal text,
  * so changing them in Admin → SEO does NOT update the legal pages. Edit this file (or the saved version in Admin → SEO → Legal pages).
  * Placeholders: {{business}}, {{legal_name}}, {{email}}, {{phone}}, {{address}}.
  */
 const TEMPLATES: Record<LegalPageId, string> = {
-	privacy: `*Last updated: 24 November 2026*
+	privacy: `*Last updated: 26 November 2026*
 
 This policy explains how Merkado PH handles personal data when you visit merkadoph.se, read our stories, events and community projects, send us a message or ask for a quote or booking, or appear in photos from our events. We follow the EU General Data Protection Regulation (GDPR).
 
@@ -36,8 +36,9 @@ merkadoph.se is a website about Filipino culture and community in Sweden: blog s
 | You open a page that has moved | A visit counter for the old address only, with no personal data | To keep old links working and see which ones are still used (legitimate interest) | While the redirect exists |
 | You open a preview link we sent you | A preview cookie (see the [cookie policy](/cookies)) | To show you the site before it is public (legitimate interest) | 30 days |
 | Our staff sign in to the admin area | Work email, sign-in session, and a log of admin changes and security events with IP address and browser type | To keep the website and its content secure (legitimate interest) | Logs are deleted after 180 days; the account stays while the person works with us |
+| You visit the website (statistics) | The page you open, the site that linked you here, your browser and device type, your country, and how fast the page loaded. No cookies, no visitor ID and no fingerprinting; your IP address is used only to work out the country and isn't stored | To count visits and see which pages people read, so we can improve the website (legitimate interest) | Kept by Cloudflare as anonymous statistics only |
 
-We don't use analytics or statistics tools on this website. We don't sell your data, we don't use it for advertising, and we don't build profiles of visitors. We don't send newsletters and we don't keep a mailing list.
+For statistics we use **Cloudflare Web Analytics**, which doesn't use cookies or recognise you between visits, so there is no cookie banner. We don't use Google Analytics or any other tracking tools. We don't sell your data, we don't use it for advertising, and we don't build profiles of visitors. We don't send newsletters and we don't keep a mailing list.
 
 ## Photos from our events
 
@@ -51,7 +52,7 @@ Merkado PH's webshop has moved to PH Asian Market ([phasianmarket.se](https://ph
 
 We use service providers (processors) that only process data on our behalf, under data processing agreements:
 
-- **Cloudflare**: hosts and protects the website, blocks abusive traffic and AI crawlers, and limits how often forms can be sent.
+- **Cloudflare**: hosts and protects the website, blocks abusive traffic and AI crawlers, limits how often forms can be sent, and provides our cookie-free visitor statistics (Cloudflare Web Analytics).
 - **Supabase**: our database and file storage, hosted in the EU (Ireland). Messages from the forms, content and staff accounts are stored here.
 - **Microsoft 365**: our email (hello@merkadoph.se).
 - **Google reCAPTCHA**: checks that a form message or sign-in comes from a person, not a bot. It loads only when you start using a form, and Google receives technical data about your visit. Read [Google's privacy policy](https://policies.google.com/privacy).
@@ -125,11 +126,11 @@ Contact us first at [hello@merkadoph.se](mailto:hello@merkadoph.se) and we will 
 
 We may update these terms. The version published on this page applies, with the date at the top.`,
 
-	cookies: `*Last updated: 24 November 2026*
+	cookies: `*Last updated: 26 November 2026*
 
 Cookies are small files a website stores in your browser. This page lists the cookies and similar technologies used on merkadoph.se.
 
-**In short:** we only use what the website needs to work and stay secure. We don't use advertising, tracking or statistics cookies, so we don't ask for your consent with a cookie banner. Visitors don't need an account. Apart from the cookies below, the homepage keeps a few layout numbers in your browser's session storage so that Back and reload return you to the same spot. They contain no personal data and are deleted when you close the tab.
+**In short:** we only use what the website needs to work and stay secure. We don't use advertising, tracking or statistics cookies, so we don't ask for your consent with a cookie banner. Our visitor statistics (Cloudflare Web Analytics) work without cookies. Visitors don't need an account. Apart from the cookies below, the homepage keeps a few layout numbers in your browser's session storage so that Back and reload return you to the same spot. They contain no personal data and are deleted when you close the tab.
 
 ## Cookies and similar technologies we use
 
@@ -144,7 +145,9 @@ Cookies are small files a website stores in your browser. This page lists the co
 
 ## Statistics and marketing
 
-We don't use Google Analytics, Cloudflare Web Analytics, Facebook pixels or any other statistics or advertising tools on this website. If we add one, we will update this page and, where the law requires it, ask for your consent first.
+We use **Cloudflare Web Analytics** to count visits and see which pages people read. It doesn't set cookies, doesn't store anything in your browser and doesn't recognise you between visits, so it needs no consent banner. See the [privacy policy](/privacy) for what it collects.
+
+We don't use Google Analytics, Facebook pixels or any other tracking or advertising tools on this website. If we add one, we will update this page and, where the law requires it, ask for your consent first.
 
 ## Links and shared content
 

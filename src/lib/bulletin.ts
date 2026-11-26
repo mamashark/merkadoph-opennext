@@ -277,12 +277,14 @@ export const getPressFacets = cached(async (): Promise<{ years: PressYears; medi
 async function queryPress(opts: { year?: string; media?: string; publisher?: string; q?: string; page?: number; perPage?: number }) {
 	const { year = "", media = "", publisher = "", q = "", page = 1, perPage = BULLETIN_PER_PAGE } = opts;
 	const from = (page - 1) * perPage;
-	let query = liveOnly(createPublicClient().from("bulletin_items").select(PRESS_CARD, { count: "exact" })).in("content_type", PRESS_TYPES);
+	// The publisher embed is an inner join only when filtering by outlet; otherwise items without a publisher (releases) stay listed.
+	const select = publisher ? PRESS_CARD.replace("bulletin_publishers(", "bulletin_publishers!inner(") : PRESS_CARD;
+	let query = liveOnly(createPublicClient().from("bulletin_items").select(select, { count: "exact" })).in("content_type", PRESS_TYPES);
 	if (year) query = query.gte("original_published_on", `${year}-01-01`).lte("original_published_on", `${year}-12-31`);
 	if (media) query = query.eq("media_type", media);
 	if (publisher) query = query.eq("publisher.slug", publisher);
 	const term = searchTerm(q);
-	if (term) query = query.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%,publisher.name.ilike.%${term}%`);
+	if (term) query = query.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`);
 	const { data, count, error } = await query
 		.order("original_published_on", { ascending: false, nullsFirst: false })
 		.order("published_at", { ascending: false })

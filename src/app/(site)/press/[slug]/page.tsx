@@ -131,7 +131,7 @@ export default async function PressItemPage({ params }: PageProps<"/press/[slug]
 						{p.media_contact && (
 							<p className="text-sm text-site-ink-2">
 								Media contact:{" "}
-								<a href={`mailto:${p.media_contact}`} className="text-site-ink underline underline-offset-4 hover:text-accent">
+								<a href={`mailto:${encodeURIComponent(p.media_contact).replace(/%40/g, "@")}`} className="text-site-ink underline underline-offset-4 hover:text-accent">
 									{p.media_contact}
 								</a>
 							</p>

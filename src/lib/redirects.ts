@@ -21,15 +21,18 @@ export const PUBLIC_BASE: Partial<Record<ContentTable, string>> = {
  * - re-points any redirect that targeted the old path (no chains),
  * - removes a redirect that would now shadow the new path.
  */
-export async function onSlugChange(table: ContentTable, oldSlug: string, newSlug: string, baseOverride?: string) {
-	const base = baseOverride ?? PUBLIC_BASE[table];
-	if (!base || !oldSlug || oldSlug === newSlug) return;
-	const from = `${base}/${oldSlug}`;
-	const to = `${base}/${newSlug}`;
+export async function onSlugChange(table: ContentTable, oldSlug: string, newSlug: string, bases?: { from: string; to: string }) {
+	const fromBase = bases?.from ?? PUBLIC_BASE[table];
+	const toBase = bases?.to ?? PUBLIC_BASE[table];
+	if (!fromBase || !toBase || !oldSlug) return;
+	const from = `${fromBase}/${oldSlug}`;
+	const to = `${toBase}/${newSlug}`;
+	// Same URL (same slug, same section): nothing to redirect.
+	if (from === to) return;
 	const db = createAdminClient();
 	await db.from("redirects").delete().eq("from_path", to);
 	await db.from("redirects").update({ to_path: to }).eq("to_path", from);
-	await db.from("redirects").upsert({ from_path: from, to_path: to, status: 301, source: "auto", note: `Slug changed (${table})` }, { onConflict: "from_path" });
+	await db.from("redirects").upsert({ from_path: from, to_path: to, status: 301, source: "auto", note: `${oldSlug === newSlug ? "Moved section" : "Slug changed"} (${table})` }, { onConflict: "from_path" });
 }
 
 export type RedirectRow = {

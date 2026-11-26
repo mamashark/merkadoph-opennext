@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { cache } from "react";
 import { Newspaper, Radio, Tv, FileText } from "lucide-react";
 import { BULLETIN_PER_PAGE, getPressFacets, getPressPublishers, getPublicPress, type PressCard } from "@/lib/bulletin";
 import { MEDIA_TYPE_LABEL, TYPE_LABEL } from "@/lib/bulletin-shared";
@@ -16,17 +18,17 @@ const description = "Where Merkado PH has been featured, and what we've announce
 type Filters = { year: string; media: string; publisher: string; q: string; page: number };
 
 /** Only known values are used: a year with a count, a media type in the list, a publisher with live items. */
-async function readFilters(searchParams: PageProps<"/press">["searchParams"]): Promise<Filters> {
+const readFilters = cache(async function readFilters(searchParams: PageProps<"/press">["searchParams"]): Promise<Filters> {
 	const params = await searchParams;
 	const rawYear = param(params, "year");
 	const rawMedia = param(params, "media");
 	const rawPublisher = param(params, "publisher");
-	const [facets, publishers] = await Promise.all([getPressFacets().catch(() => ({ years: [], media: [] })), getPressPublishers().catch(() => [])]);
+	const [facets, publishers] = await Promise.all([getPressFacets(), getPressPublishers()]);
 	const year = facets.years.some((y) => String(y.year) === rawYear) ? rawYear : "";
 	const media = facets.media.some((m) => m.value === rawMedia) ? rawMedia : "";
 	const publisher = publishers.some((p) => p.slug === rawPublisher) ? rawPublisher : "";
 	return { year, media, publisher, q: param(params, "q").trim().slice(0, 80), page: pageParam(params) };
-}
+});
 
 const listHref = ({ year, media, publisher, q, page }: Partial<Filters>) => {
 	const qs = new URLSearchParams({
@@ -89,12 +91,12 @@ const card = (p: PressCard, featured = false) => {
 export default async function PressPage({ searchParams }: PageProps<"/press">) {
 	const { year, media, publisher, q, page } = await readFilters(searchParams);
 	const [facets, publishers, result] = await Promise.all([
-		getPressFacets().catch(() => ({ years: [], media: [] })),
-		getPressPublishers().catch(() => []),
-		getPublicPress({ year, media, publisher, q, page }).catch((e) => {
-			throw e;
-		}),
+		getPressFacets(),
+		getPressPublishers(),
+		getPublicPress({ year, media, publisher, q, page }),
 	]);
+	// Past the last page is a 404, like the other listings (guideline 0.5).
+	if (page > 1 && result.items.length === 0) notFound();
 	const filtered = Boolean(year || media || publisher || q);
 	const total = result.total;
 

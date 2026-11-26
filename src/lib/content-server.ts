@@ -221,8 +221,8 @@ export async function upsertRow(
 	id: string | undefined,
 	values: Record<string, unknown>,
 	insertExtra: Record<string, unknown>,
-	/** Public URL prefix, for tables whose items live under more than one section (bulletin items: /bulletin or /press). */
-	baseOverride?: string,
+	/** Public URL prefix of a row, for tables whose items live under more than one section (bulletin items: /bulletin or /press). */
+	baseOf?: (row: Record<string, unknown>) => string,
 ) {
 	const db = createAdminClient();
 	if (id) {
@@ -231,8 +231,12 @@ export async function upsertRow(
 		if (error) throw new Error(`Couldn't save: ${error.message}`);
 		// Published pages (and categories, which have no status) keep their old URL working.
 		const wasLive = before && (!("status" in before) || before.status === "published");
-		if (wasLive && typeof values.slug === "string" && before.slug !== values.slug) {
-			await onSlugChange(table, before.slug as string, values.slug, baseOverride).catch((e) => console.error("redirect create failed:", e));
+		if (wasLive && typeof values.slug === "string") {
+			const bases = baseOf ? { from: baseOf(before), to: baseOf({ ...before, ...values }) } : undefined;
+			// A changed slug, or (for sectioned tables) a changed section, keeps the old URL working.
+			if (before.slug !== values.slug || (bases && bases.from !== bases.to)) {
+				await onSlugChange(table, before.slug as string, values.slug, bases).catch((e) => console.error("redirect create failed:", e));
+			}
 		}
 		await audit({ kind: "admin", action: `${table}.update`, entity: table, entityId: id, summary: String(values.title ?? values.name ?? before?.title ?? before?.name ?? "") });
 		return id;

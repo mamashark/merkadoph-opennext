@@ -34,7 +34,9 @@ export async function refreshDueContent(now = new Date()): Promise<ContentTag[]>
 	}
 	for (const tag of due) {
 		revalidateTag(tag, { expire: 0 });
-		for (const { path, type } of CACHE_GROUPS[tag].paths) {
+		// Bulletin items share one data tag but two sections: /press pages are refreshed with them.
+		const groups = tag === "bulletin" ? [CACHE_GROUPS.bulletin, CACHE_GROUPS.press] : [CACHE_GROUPS[tag]];
+		for (const { path, type } of groups.flatMap((g) => g.paths)) {
 			if (type) revalidatePath(path, type);
 			else revalidatePath(path);
 		}

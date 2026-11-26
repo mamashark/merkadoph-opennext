@@ -189,7 +189,8 @@ export async function saveBulletinItem(formData: FormData) {
 		is_pinned: formData.get("is_pinned") === "on",
 		show_on_homepage: formData.get("show_on_homepage") === "on",
 		show_in_bulletin: formData.get("show_in_bulletin") === "on",
-		show_in_press: press && formData.get("show_in_press") === "on",
+		// Every published press item is in the /press archive (no checkbox, Kay 2026-11-26); the column stays for the DB check.
+		show_in_press: press,
 		display_priority: Math.max(-100, Math.min(100, Math.trunc(Number(formData.get("display_priority")) || 0))),
 		event_id: uuidOrNull(formData.get("event_id")),
 		portfolio_id: uuidOrNull(formData.get("portfolio_id")),
@@ -199,7 +200,7 @@ export async function saveBulletinItem(formData: FormData) {
 
 	let savedId: string;
 	try {
-		savedId = await upsertRow("bulletin_items", id, values, { author_id: user.id }, itemBase(type));
+		savedId = await upsertRow("bulletin_items", id, values, { author_id: user.id }, (row) => itemBase(String(row.content_type)));
 	} catch (e) {
 		console.error("[admin/bulletin] save", e instanceof Error ? e.message : e);
 		return fail("save");

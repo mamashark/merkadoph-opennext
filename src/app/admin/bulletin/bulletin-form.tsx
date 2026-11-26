@@ -302,9 +302,6 @@ export function BulletinForm({ item, choices, initialType = "community_notice" }
 						<Check name="is_pinned" label="Pinned" hint="Stays at the top of the list." defaultChecked={!!i?.is_pinned} />
 						<Check name="is_featured" label="Featured" hint="A large card at the top of /bulletin." defaultChecked={!!i?.is_featured} />
 						<Check name="show_on_homepage" label="On the homepage" hint="Shown first in the homepage preview; the newest items fill any free places." defaultChecked={!!i?.show_on_homepage} />
-						<ForTypes types={PRESS_TYPES}>
-							<Check name="show_in_press" label="In the Press & Media archive" hint="From Phase 2." defaultChecked={i ? i.show_in_press : true} />
-						</ForTypes>
 						<Field id="display_priority" label="Priority" hint="Higher shows first (−100 to 100). Default 0.">
 							<input id="display_priority" name="display_priority" type="number" min={-100} max={100} step={1} defaultValue={i?.display_priority ?? 0} className={inputClass} />
 						</Field>

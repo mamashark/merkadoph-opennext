@@ -138,8 +138,14 @@ export function commonFields(formData: FormData) {
 }
 
 /** After a save/delete in a Server Action: purge that content type's cached data and pages, plus the admin views. */
-export function revalidateContent(publicBase: `/${ContentTag}`, adminBase: string, slugs: Array<string | null | undefined> = []) {
-	purgeContent(publicBase.slice(1) as ContentTag, slugs);
+export function revalidateContent(
+	publicBase: `/${ContentTag}`,
+	adminBase: string,
+	slugs: Array<string | null | undefined> = [],
+	/** Data tag to purge, when the public section name differs from it (/press is tagged "bulletin"). */
+	tag: ContentTag = publicBase.slice(1) as ContentTag,
+) {
+	purgeContent(tag, slugs);
 	revalidatePath(adminBase);
 	revalidatePath("/admin");
 }
@@ -210,7 +216,14 @@ export async function fetchExisting(table: ContentTable, id: string | undefined)
 
 /** Insert or update, returning the row id. */
 /** Insert or update, returning the row id. Also writes the audit log and slug-change redirects. */
-export async function upsertRow(table: ContentTable, id: string | undefined, values: Record<string, unknown>, insertExtra: Record<string, unknown>) {
+export async function upsertRow(
+	table: ContentTable,
+	id: string | undefined,
+	values: Record<string, unknown>,
+	insertExtra: Record<string, unknown>,
+	/** Public URL prefix, for tables whose items live under more than one section (bulletin items: /bulletin or /press). */
+	baseOverride?: string,
+) {
 	const db = createAdminClient();
 	if (id) {
 		const { data: before } = await db.from(table).select("*").eq("id", id).maybeSingle();
@@ -219,7 +232,7 @@ export async function upsertRow(table: ContentTable, id: string | undefined, val
 		// Published pages (and categories, which have no status) keep their old URL working.
 		const wasLive = before && (!("status" in before) || before.status === "published");
 		if (wasLive && typeof values.slug === "string" && before.slug !== values.slug) {
-			await onSlugChange(table, before.slug as string, values.slug).catch((e) => console.error("redirect create failed:", e));
+			await onSlugChange(table, before.slug as string, values.slug, baseOverride).catch((e) => console.error("redirect create failed:", e));
 		}
 		await audit({ kind: "admin", action: `${table}.update`, entity: table, entityId: id, summary: String(values.title ?? values.name ?? before?.title ?? before?.name ?? "") });
 		return id;

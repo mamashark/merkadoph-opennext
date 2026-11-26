@@ -5,6 +5,7 @@ import { getPromotionSlugs } from "@/lib/promotions";
 import { getServiceSlugs } from "@/lib/services";
 import { getPortfolioSlugs } from "@/lib/portfolio";
 import { getBulletinSlugs } from "@/lib/bulletin";
+import { isPressType } from "@/lib/bulletin-shared";
 import { SITE_URL } from "@/lib/env";
 import { stageGateEnabled } from "@/lib/stage";
 import { getLegalPages, LEGAL_PAGE_IDS, LEGAL_PAGES } from "@/lib/site-settings";
@@ -12,7 +13,7 @@ import { getAllLiveProducts, getCategories, getShopSettings, type Category, type
 
 export const revalidate = 3600;
 
-type Entry = { slug: string; updated_at: string };
+type Entry = { slug: string; updated_at: string; content_type?: string };
 
 const safe = (p: Promise<Entry[]>) => p.catch(() => [] as Entry[]);
 
@@ -20,7 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 	// While the site is behind the staging gate only the "coming soon" homepage is public.
 	if (stageGateEnabled()) return [{ url: SITE_URL, changeFrequency: "weekly", priority: 1 }];
 
-	const [blogs, events, promotions, services, portfolio, bulletin, legal] = await Promise.all([
+	const [blogs, events, promotions, services, portfolio, board, legal] = await Promise.all([
 		safe(getAllPublishedSlugs()),
 		safe(getEventSlugs()),
 		safe(getPromotionSlugs()),
@@ -65,13 +66,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${SITE_URL}/digital`, changeFrequency: "weekly", priority: 0.9 },
 		{ url: `${SITE_URL}/tahooo`, changeFrequency: "weekly", priority: 0.9 },
 		{ url: `${SITE_URL}/bulletin`, changeFrequency: "daily", priority: 0.8 },
+		{ url: `${SITE_URL}/press`, changeFrequency: "weekly", priority: 0.7 },
 		{ url: `${SITE_URL}/case-study`, changeFrequency: "monthly", priority: 0.4 },
 		...section("/blogs", blogs, "weekly"),
 		...section("/events", events, "weekly"),
 		...section("/promotions", promotions, "daily"),
 		...section("/services", services, "monthly"),
 		...section("/impact", portfolio, "monthly"),
-		...section("/bulletin", bulletin, "weekly"),
+		...section("/bulletin", board.filter((r) => !isPressType(r.content_type ?? "")), "weekly"),
+		...section("/press", board.filter((r) => isPressType(r.content_type ?? "")), "monthly"),
 		...shop,
 		...LEGAL_PAGE_IDS.map((id) => ({
 			url: `${SITE_URL}${LEGAL_PAGES[id].path}`,

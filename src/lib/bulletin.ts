@@ -5,7 +5,7 @@ import { createPublicClient } from "@/lib/supabase/public";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { adminGet, adminList } from "@/lib/content-server";
 import { PastEndError, isPastEnd, pastEnd, searchTerm } from "@/lib/content";
-import type { BulletinStatus, BulletinType, MediaType } from "@/lib/bulletin-shared";
+import { PRESS_TYPES, type BulletinStatus, type BulletinType, type MediaType } from "@/lib/bulletin-shared";
 
 /**
  * Bulletin Board + Press & Media data layer (Kay's spec, 2026-11-25). One record per item (public.bulletin_items),
@@ -117,6 +117,12 @@ function liveOnly<Q>(query: Q): Q {
 	const now = new Date().toISOString();
 	return (query as unknown as Filterable).eq("status", "published").lte("published_at", now).or(`expires_at.is.null,expires_at.gt.${now}`) as unknown as Q;
 }
+/** The Bulletin Board never lists press items: those live on /press (spec §4.7). */
+function boardOnly<Q>(query: Q): Q {
+	return (query as unknown as Branchable).not("content_type", "in", `(${PRESS_TYPES.join(",")})`) as unknown as Q;
+}
+/** Everything live, press included (homepage, site search, sitemap). */
+type Branchable = Filterable & { not(c: string, op: string, v: unknown): Filterable };
 
 /* ------------------------------ Public ------------------------------ */
 
@@ -130,7 +136,7 @@ export const getBulletinCategories = cached(async (): Promise<BulletinCategory[]
 /** The Bulletin Board list: pinned first, then priority, then newest. `category` is a category slug ("" = all). */
 async function queryBulletin(category: string, q: string, page: number = 1, perPage: number = BULLETIN_PER_PAGE) {
 		const from = (page - 1) * perPage;
-		let query = liveOnly(createPublicClient().from("bulletin_items").select(CARD, { count: "exact" })).eq("show_in_bulletin", true);
+		let query = boardOnly(liveOnly(createPublicClient().from("bulletin_items").select(CARD, { count: "exact" }))).eq("show_in_bulletin", true);
 		if (category) query = query.eq("category.slug", category);
 		const term = searchTerm(q);
 		if (term) query = query.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`);
@@ -163,7 +169,7 @@ export async function getPublicBulletin(category: string, q: string, page: numbe
 
 /** Featured items: the large cards at the top of /bulletin. */
 export const getFeaturedBulletin = cached(async (limit: number = 3): Promise<BulletinCard[]> => {
-	const { data, error } = await liveOnly(createPublicClient().from("bulletin_items").select(CARD))
+	const { data, error } = await boardOnly(liveOnly(createPublicClient().from("bulletin_items").select(CARD)))
 		.eq("show_in_bulletin", true)
 		.eq("is_featured", true)
 		.order("display_priority", { ascending: false })
@@ -174,12 +180,12 @@ export const getFeaturedBulletin = cached(async (limit: number = 3): Promise<Bul
 }, "bulletin:featured", ["bulletin"]);
 
 /**
- * The homepage preview: items chosen for the homepage first (by priority), then the newest live items to fill
+ * The homepage preview (Bulletin Board items only; press lives on /press): items chosen for the homepage first (by priority), then the newest live items to fill
  * up to `limit`. Unpublished, scheduled and expired items never appear (RLS).
  */
 export const getHomeBulletin = cached(async (limit: number = 4): Promise<BulletinCard[]> => {
 	const db = createPublicClient();
-	const chosen = await liveOnly(db.from("bulletin_items").select(CARD))
+	const chosen = await boardOnly(liveOnly(db.from("bulletin_items").select(CARD)))
 		.eq("show_on_homepage", true)
 		.order("display_priority", { ascending: false })
 		.order("published_at", { ascending: false })
@@ -188,7 +194,7 @@ export const getHomeBulletin = cached(async (limit: number = 4): Promise<Bulleti
 	const picked = (chosen.data ?? []) as unknown as BulletinCard[];
 	if (picked.length >= limit) return picked;
 	// "On the homepage" items come first; the newest live items fill any free places (Kay, 2026-11-25).
-	const recent = await liveOnly(db.from("bulletin_items").select(CARD))
+	const recent = await boardOnly(liveOnly(db.from("bulletin_items").select(CARD)))
 		.eq("show_in_bulletin", true)
 		.order("is_pinned", { ascending: false })
 		.order("published_at", { ascending: false })
@@ -209,19 +215,110 @@ export const getPublicBulletinBySlug = cache(
 
 /** Every live item has a /bulletin page (also ones not listed on the board, Kay 2026-11-25): for the sitemap. */
 export const getBulletinSlugs = cached(async () => {
-	const { data } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,updated_at,category:bulletin_categories!inner(slug)")).limit(5000);
-	return ((data ?? []) as unknown as { slug: string; updated_at: string }[]).map(({ slug, updated_at }) => ({ slug, updated_at }));
+	const { data } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,updated_at,content_type,category:bulletin_categories!inner(slug)")).limit(5000);
+	return ((data ?? []) as unknown as { slug: string; updated_at: string; content_type: string }[]).map(({ slug, updated_at, content_type }) => ({ slug, updated_at, content_type }));
 }, "bulletin:slugs", ["bulletin"]);
 
 /** Site search (/search): live items whose title or summary contains `term` (already cleaned with searchTerm()). */
 export async function searchPublicBulletin(term: string, limit: number = 8) {
-	const { data, error } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,title,excerpt,published_at,category:bulletin_categories!inner(name)"))
+	const { data, error } = await liveOnly(createPublicClient().from("bulletin_items").select("slug,title,content_type,excerpt,published_at,category:bulletin_categories!inner(name)"))
 		.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`)
 		.order("published_at", { ascending: false })
 		.limit(limit);
 	if (error) throw new Error(`Failed to search the Bulletin Board: ${error.message}`);
-	return (data ?? []) as unknown as { slug: string; title: string; excerpt: string | null; published_at: string | null; category: { name: string } }[];
+	return (data ?? []) as unknown as { slug: string; title: string; content_type: string; excerpt: string | null; published_at: string | null; category: { name: string } }[];
 }
+
+/* ------------------------------ Press ------------------------------ */
+
+export type PressCard = {
+	id: string;
+	title: string;
+	slug: string;
+	excerpt: string | null;
+	content_type: BulletinType;
+	cover_image_url: string | null;
+	cover_image_alt: string | null;
+	source_url: string | null;
+	media_type: MediaType | null;
+	original_published_on: string | null;
+	published_at: string | null;
+	source_language: string | null;
+	publisher: { name: string; slug: string; logo_url: string | null } | null;
+	category: { name: string; slug: string };
+};
+
+const PRESS_CARD =
+	"id,title,slug,excerpt,content_type,cover_image_url,cover_image_alt,source_url,media_type,original_published_on,published_at,source_language,publisher:bulletin_publishers(name,slug,logo_url),category:bulletin_categories!inner(name,slug)";
+
+export type PressYears = { year: number; count: number }[];
+
+/** Year and media-type facets for the /press filters: counted on every live press item, never on the current filter. */
+export const getPressFacets = cached(async (): Promise<{ years: PressYears; media: { value: MediaType; count: number }[] }> => {
+	const { data, error } = await liveOnly(createPublicClient().from("bulletin_items").select("original_published_on,published_at,media_type"))
+		.in("content_type", PRESS_TYPES)
+		.limit(5000);
+	if (error) throw new Error(`Failed to load press filters: ${error.message}`);
+	const rows = (data ?? []) as unknown as { original_published_on: string | null; published_at: string | null; media_type: MediaType | null }[];
+	const years = new Map<number, number>();
+	const media = new Map<string, number>();
+	for (const r of rows) {
+		const y = Number((r.original_published_on ?? r.published_at ?? "").slice(0, 4));
+		if (y) years.set(y, (years.get(y) ?? 0) + 1);
+		if (r.media_type) media.set(r.media_type, (media.get(r.media_type) ?? 0) + 1);
+	}
+	return {
+		years: [...years].map(([year, count]) => ({ year, count })).sort((a, b) => b.year - a.year),
+		media: [...media].map(([value, count]) => ({ value: value as MediaType, count })).sort((a, b) => a.value.localeCompare(b.value)),
+	};
+}, "press:facets", ["bulletin"]);
+
+/** One page of the press archive: original date first (spec §8), newest first. */
+async function queryPress(opts: { year?: string; media?: string; publisher?: string; q?: string; page?: number; perPage?: number }) {
+	const { year = "", media = "", publisher = "", q = "", page = 1, perPage = BULLETIN_PER_PAGE } = opts;
+	const from = (page - 1) * perPage;
+	let query = liveOnly(createPublicClient().from("bulletin_items").select(PRESS_CARD, { count: "exact" })).in("content_type", PRESS_TYPES);
+	if (year) query = query.gte("original_published_on", `${year}-01-01`).lte("original_published_on", `${year}-12-31`);
+	if (media) query = query.eq("media_type", media);
+	if (publisher) query = query.eq("publisher.slug", publisher);
+	const term = searchTerm(q);
+	if (term) query = query.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%,publisher.name.ilike.%${term}%`);
+	const { data, count, error } = await query
+		.order("original_published_on", { ascending: false, nullsFirst: false })
+		.order("published_at", { ascending: false })
+		.range(from, from + perPage - 1);
+	if (error) {
+		if (pastEnd(error)) throw new PastEndError();
+		throw new Error(`Failed to load the press archive: ${error.message}`);
+	}
+	return { items: (data ?? []) as unknown as PressCard[], total: count ?? 0 };
+}
+const EMPTY_PRESS = { items: [] as PressCard[], total: 0 };
+const cachedPress = cachedPaged(queryPress, "press:list", ["bulletin"], EMPTY_PRESS);
+
+/** Filtered press lists are cached; searches are not, so endless different search words can't fill the cache. */
+export async function getPublicPress(opts: Parameters<typeof queryPress>[0]) {
+	if (!searchTerm(opts.q ?? "")) return cachedPress({ ...opts, q: "" });
+	try {
+		return await queryPress(opts);
+	} catch (e) {
+		if (isPastEnd(e)) return EMPTY_PRESS;
+		throw e;
+	}
+}
+
+/** Publishers that have at least one live press item (the "outlet" filter). */
+export const getPressPublishers = cached(async (): Promise<{ name: string; slug: string; count: number }[]> => {
+	const { data, error } = await liveOnly(createPublicClient().from("bulletin_items").select("publisher:bulletin_publishers!inner(name,slug)")).in("content_type", PRESS_TYPES).limit(5000);
+	if (error) throw new Error(`Failed to load press publishers: ${error.message}`);
+	const counts = new Map<string, { name: string; slug: string; count: number }>();
+	for (const r of (data ?? []) as unknown as { publisher: { name: string; slug: string } }[]) {
+		const p = counts.get(r.publisher.slug);
+		if (p) p.count++;
+		else counts.set(r.publisher.slug, { ...r.publisher, count: 1 });
+	}
+	return [...counts.values()].sort((a, b) => a.name.localeCompare(b.name));
+}, "press:publishers", ["bulletin"]);
 
 /* ------------------------------ Admin ------------------------------ */
 

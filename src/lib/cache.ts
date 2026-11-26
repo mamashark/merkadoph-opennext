@@ -27,15 +27,15 @@ export type CacheTag = ContentTag | ShopTag | SiteTag;
 
 type PathTarget = { path: string; type?: "page" | "layout" };
 
-export type CacheGroupId = "home" | "listings" | ContentTag | "shop" | "site" | "sitemap";
+export type CacheGroupId = "home" | "listings" | ContentTag | "press" | "shop" | "site" | "sitemap";
 
 export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: string; tags: string[]; paths: PathTarget[] }> = {
 	home: { label: "Homepage", description: "The / page.", tags: [], paths: [{ path: "/" }] },
 	listings: {
 		label: "Listing pages",
-		description: "/blogs, /events, /promotions, /services, /impact, /bygg, /digital, /bulletin, /tahooo and /search (all tabs and pages).",
+		description: "/blogs, /events, /promotions, /services, /impact, /bygg, /digital, /bulletin, /press, /tahooo and /search (all tabs and pages).",
 		tags: [],
-		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/impact" }, { path: "/bygg" }, { path: "/digital" }, { path: "/bulletin" }, { path: "/tahooo" }, { path: "/search" }],
+		paths: [{ path: "/blogs" }, { path: "/events" }, { path: "/promotions" }, { path: "/services" }, { path: "/impact" }, { path: "/bygg" }, { path: "/digital" }, { path: "/bulletin" }, { path: "/press" }, { path: "/tahooo" }, { path: "/search" }],
 	},
 	blogs: {
 		label: "Blogs",
@@ -67,6 +67,12 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 		description: "Notices, embassy updates, opportunities and press items: /bulletin, every notice page, its categories and publishers.",
 		tags: ["bulletin"],
 		paths: [{ path: "/bulletin" }, { path: "/bulletin/[slug]", type: "page" }],
+	},
+	press: {
+		label: "Press & Media",
+		description: "Media coverage and press releases: /press and every press item page.",
+		tags: ["bulletin"],
+		paths: [{ path: "/press" }, { path: "/press/[slug]", type: "page" }],
 	},
 	shop: {
 		label: "Shop",
@@ -129,7 +135,8 @@ export function purgeAll() {
 
 /** After saving content: that type's data + pages, the homepage (it shows every type) and the sitemap. */
 export function purgeContent(tag: ContentTag, slugs: Array<string | null | undefined> = []) {
-	purgeGroups([tag, "home", "sitemap"]);
+	// Bulletin items share one data tag but two sections: press pages are purged with them.
+	purgeGroups([tag, "home", "sitemap", ...(tag === "bulletin" ? (["press"] as const) : [])]);
 	// Projects (cache tag "portfolio") are public at /impact.
 	const base = tag === "portfolio" ? "impact" : tag;
 	for (const slug of new Set(slugs)) if (slug) revalidatePath(`/${base}/${slug}`);

@@ -396,6 +396,7 @@ html[data-hero-lock] {
 .accent-bulletin,
 .accent-promotions { --accent: var(--site-coral); }
 .accent-services { --accent: var(--site-orange); }
+.accent-press { --accent: var(--site-blue); }
 .accent-case-study { --accent: var(--site-blue); }
 
 /* A small square in the section colour before a label (the homepage's kicker mark). */

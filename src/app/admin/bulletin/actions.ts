@@ -18,6 +18,7 @@ import {
 	MEDIA_TYPES,
 	PRESS_PUBLISHING_OPEN,
 	isOfficialEmbassyUrl,
+	itemBase,
 	isPressType,
 	TYPE_FIELDS,
 	type BulletinStatus,
@@ -198,7 +199,7 @@ export async function saveBulletinItem(formData: FormData) {
 
 	let savedId: string;
 	try {
-		savedId = await upsertRow("bulletin_items", id, values, { author_id: user.id });
+		savedId = await upsertRow("bulletin_items", id, values, { author_id: user.id }, itemBase(type));
 	} catch (e) {
 		console.error("[admin/bulletin] save", e instanceof Error ? e.message : e);
 		return fail("save");
@@ -208,7 +209,7 @@ export async function saveBulletinItem(formData: FormData) {
 		await audit({ kind: "admin", action: `bulletin_items.${status}`, entity: "bulletin_items", entityId: savedId, summary: `${fields.title} (${existing ? prev : "new"} → ${status})` });
 	}
 
-	revalidateContent("/bulletin", "/admin/bulletin", [slug, existing?.slug as string | undefined]);
+	revalidateContent(itemBase(type) as "/bulletin", "/admin/bulletin", [slug, existing?.slug as string | undefined], "bulletin");
 	if (publishError) redirect(`/admin/bulletin/${savedId}/edit?error=${publishError}&notice=held`);
 	const notice = { publish: "published", review: "review", unpublish: "unpublished", archive: "archived", restore: "restored", draft: existing ? "saved" : "created", save: "saved" }[intent];
 	redirect(`/admin/bulletin/${savedId}/edit?notice=${notice}`);
@@ -223,7 +224,7 @@ export async function deleteBulletinItem(formData: FormData) {
 		console.error("[admin/bulletin] delete", error);
 		redirect("/admin/bulletin?error=delete-failed");
 	}
-	revalidateContent("/bulletin", "/admin/bulletin", [slug]);
+	revalidateContent("/bulletin", "/admin/bulletin", [slug], "bulletin");
 	redirect("/admin/bulletin?notice=deleted");
 }
 

@@ -11,7 +11,7 @@ export const PUBLIC_BASE: Partial<Record<ContentTable, string>> = {
 	portfolios: "/impact",
 	products: "/product",
 	product_categories: "/shop",
-	// Phase 1: every published item lives at /bulletin (press types are held until /press exists, Kay 2026-11-25).
+	// Press items live at /press, everything else at /bulletin (spec §4.7); the action passes the item's own base.
 	bulletin_items: "/bulletin",
 };
 
@@ -21,8 +21,8 @@ export const PUBLIC_BASE: Partial<Record<ContentTable, string>> = {
  * - re-points any redirect that targeted the old path (no chains),
  * - removes a redirect that would now shadow the new path.
  */
-export async function onSlugChange(table: ContentTable, oldSlug: string, newSlug: string) {
-	const base = PUBLIC_BASE[table];
+export async function onSlugChange(table: ContentTable, oldSlug: string, newSlug: string, baseOverride?: string) {
+	const base = baseOverride ?? PUBLIC_BASE[table];
 	if (!base || !oldSlug || oldSlug === newSlug) return;
 	const from = `${base}/${oldSlug}`;
 	const to = `${base}/${newSlug}`;

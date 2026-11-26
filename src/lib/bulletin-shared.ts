@@ -27,11 +27,15 @@ export const DEFAULT_CATEGORY: Record<BulletinType, string> = {
 export const PRESS_TYPES: readonly BulletinType[] = ["media_coverage", "press_release"];
 export const isPressType = (t: string) => (PRESS_TYPES as readonly string[]).includes(t);
 
+/** Press items can be published now that /press exists (Phase 2, Kay 2026-11-26). */
+export const PRESS_PUBLISHING_OPEN = true;
+
 /**
- * Phase 1 (Kay, 2026-11-25): press items can be saved, but published only once /press exists (Phase 2).
- * Flip to true in Phase 2.
+ * Canonical URL of an item by type (spec §4.7): press items live on /press, everything else on /bulletin.
+ * Used for the page, share links, breadcrumbs and slug-change redirects, so the two can never disagree.
  */
-export const PRESS_PUBLISHING_OPEN = false;
+export const itemBase = (type: string) => (isPressType(type) ? "/press" : "/bulletin");
+export const itemPath = (item: { content_type: string; slug: string }) => `${itemBase(item.content_type)}/${item.slug}`;
 
 export const MEDIA_TYPES = ["newspaper", "online", "television", "radio_podcast", "embassy", "government", "event_coverage", "community_publication"] as const;
 export type MediaType = (typeof MEDIA_TYPES)[number];

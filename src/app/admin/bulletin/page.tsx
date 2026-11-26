@@ -5,7 +5,7 @@ import { deleteBulletinItem } from "./actions";
 import { BULLETIN_ERRORS } from "./notices";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinCategories, adminListBulletin } from "@/lib/bulletin";
-import { BULLETIN_TYPES, STATE_LABEL, TYPE_LABEL, bulletinState, type BulletinState } from "@/lib/bulletin-shared";
+import { BULLETIN_TYPES, STATE_LABEL, TYPE_LABEL, bulletinState, itemPath, type BulletinState } from "@/lib/bulletin-shared";
 import { messageFor, pageParam, param } from "@/lib/content";
 import { UUID } from "@/lib/validation";
 import { formatDate } from "@/lib/datetime";
@@ -135,7 +135,7 @@ export default async function BulletinAdminPage({ searchParams }: PageProps<"/ad
 												)}
 											</div>
 										</div>
-										<RowActions label={r.title} id={r.id} editHref={`/admin/bulletin/${r.id}/edit`} viewHref={s === "published" ? `/bulletin/${r.slug}` : null} deleteAction={deleteBulletinItem} />
+										<RowActions label={r.title} id={r.id} editHref={`/admin/bulletin/${r.id}/edit`} viewHref={s === "published" ? itemPath(r) : null} deleteAction={deleteBulletinItem} />
 									</li>
 								);
 							})}

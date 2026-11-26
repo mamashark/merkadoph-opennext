@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowUpRight, CalendarClock, CalendarDays, Download, Languages, Newspaper, Landmark } from "lucide-react";
 import { getPublicBulletinBySlug } from "@/lib/bulletin";
-import { MEDIA_TYPE_LABEL, issuedBy, languageLabel } from "@/lib/bulletin-shared";
+import { MEDIA_TYPE_LABEL, isPressType, issuedBy, languageLabel } from "@/lib/bulletin-shared";
 import { summarize } from "@/lib/content";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, organization, pageMetadata } from "@/lib/seo";
@@ -17,8 +17,14 @@ export function generateStaticParams() {
 	return [];
 }
 
+/** Press items live on /press (spec §4.7): on /bulletin they are a plain 404, like /press/[slug] does for notices. */
+async function load(slug: string) {
+	const item = await getPublicBulletinBySlug(slug);
+	return item && !isPressType(item.content_type) ? item : null;
+}
+
 export async function generateMetadata({ params }: PageProps<"/bulletin/[slug]">): Promise<Metadata> {
-	const n = await getPublicBulletinBySlug((await params).slug);
+	const n = await load((await params).slug);
 	if (!n) return { title: "Notice not found", robots: { index: false } };
 	return pageMetadata({
 		title: n.meta_title || n.title,
@@ -36,7 +42,7 @@ export async function generateMetadata({ params }: PageProps<"/bulletin/[slug]">
 const LABEL = "font-label text-xs font-medium tracking-[0.14em] uppercase";
 
 export default async function BulletinItemPage({ params }: PageProps<"/bulletin/[slug]">) {
-	const n = await getPublicBulletinBySlug((await params).slug);
+	const n = await load((await params).slug);
 	if (!n) notFound();
 
 	const path = `/bulletin/${n.slug}`;

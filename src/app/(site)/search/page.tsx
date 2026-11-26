@@ -7,6 +7,7 @@ import { searchPublicPortfolios } from "@/lib/portfolio";
 import { searchPublicServices } from "@/lib/services";
 import { searchPublicPromotions } from "@/lib/promotions";
 import { searchPublicBulletin } from "@/lib/bulletin";
+import { itemPath } from "@/lib/bulletin-shared";
 import { BYGG } from "@/lib/bygg-content";
 import { DIGITAL } from "@/lib/digital-content";
 import { TAHOOO } from "@/lib/tahooo-content";
@@ -85,7 +86,7 @@ export default async function SearchPage({ searchParams }: PageProps<"/search">)
 			{ id: "digital", label: BUSINESSES.digital.name, swatch: "bg-blue-600", hits: digital },
 			{ id: "tahooo", label: TAHOOO.highlight, swatch: "bg-tahooo-caramel", hits: tahooo },
 			{ id: "services", label: "Services", swatch: "bg-blue-600", hits: services.map((s) => ({ href: `/services/${s.slug}`, title: s.title, text: short(s.excerpt), meta: s.category ?? undefined })) },
-			{ id: "bulletin", label: "Bulletin Board", swatch: "bg-brand-promo", hits: notices.map((n) => ({ href: `/bulletin/${n.slug}`, title: n.title, text: short(n.excerpt), meta: [n.category.name, n.published_at ? formatDate(n.published_at) : null].filter(Boolean).join(" · ") })) },
+			{ id: "bulletin", label: "Bulletin Board", swatch: "bg-brand-promo", hits: notices.map((n) => ({ href: itemPath(n), title: n.title, text: short(n.excerpt), meta: [n.category.name, n.published_at ? formatDate(n.published_at) : null].filter(Boolean).join(" · ") })) },
 			{ id: "offers", label: "Offers", swatch: "bg-brand-promo", hits: offers.map((p) => ({ href: `/promotions/${p.slug}`, title: p.title, text: short(p.excerpt), meta: p.ends_at ? `Until ${formatDate(p.ends_at)}` : undefined })) },
 		].filter((g) => g.hits.length > 0);
 	}

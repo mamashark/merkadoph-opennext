@@ -6,7 +6,7 @@ import { BulletinForm } from "../../bulletin-form";
 import { BULLETIN_ERRORS, BULLETIN_NOTICES } from "../../notices";
 import { requireAdmin } from "@/lib/auth";
 import { adminBulletinCategories, adminBulletinPublishers, adminGetBulletin, adminRelationChoices } from "@/lib/bulletin";
-import { bulletinState } from "@/lib/bulletin-shared";
+import { bulletinState, itemPath } from "@/lib/bulletin-shared";
 import { messageFor, param } from "@/lib/content";
 import { PageHeader } from "@/components/admin/page-header";
 import { DangerZone, UUID } from "@/components/admin/form-parts";
@@ -35,7 +35,7 @@ export default async function EditBulletinPage({ params, searchParams }: PagePro
 				]}
 				actions={
 					bulletinState(item) === "published" && (
-						<a href={`/bulletin/${item.slug}`} target="_blank" rel="noreferrer" className={buttonClass("secondary")}>
+						<a href={itemPath(item)} target="_blank" rel="noreferrer" className={buttonClass("secondary")}>
 							<ExternalLink className="h-4 w-4" aria-hidden /> View live
 						</a>
 					)

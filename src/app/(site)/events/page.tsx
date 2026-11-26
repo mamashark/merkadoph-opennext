@@ -10,7 +10,7 @@ import { Pagination } from "@/components/admin/pagination";
 
 // Renders per request (it reads the tab/tag/page from the URL); the data itself comes from the cache.
 
-const description = "Gatherings, celebrations and home-improvement workshops from the Merkado PH Filipino-Swedish community. See what's coming up and join us.";
+const description = "Gatherings, celebrations and markets from the Merkado PH Filipino-Swedish community in Gothenburg. See what's coming up and join us.";
 
 export async function generateMetadata({ searchParams }: PageProps<"/events">): Promise<Metadata> {
 	const params = await searchParams;
@@ -79,7 +79,7 @@ export default async function EventsPage({ searchParams }: PageProps<"/events">)
 								excerpt={event.excerpt}
 								image={event.cover_image_url}
 								imageAlt={event.cover_image_alt}
-								priority={i === 0}
+								priority={i < 3} // first row (3 columns on desktop); one of them is the LCP image
 								badge={
 									<Pill tone={when === "past" ? "muted" : "light"}>
 										<span className="font-display font-bold">{formatDate(event.starts_at, { month: "short", day: "numeric" })}</span>

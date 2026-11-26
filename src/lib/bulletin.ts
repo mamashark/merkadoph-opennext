@@ -280,7 +280,12 @@ async function queryPress(opts: { year?: string; media?: string; publisher?: str
 	// The publisher embed is an inner join only when filtering by outlet; otherwise items without a publisher (releases) stay listed.
 	const select = publisher ? PRESS_CARD.replace("bulletin_publishers(", "bulletin_publishers!inner(") : PRESS_CARD;
 	let query = liveOnly(createPublicClient().from("bulletin_items").select(select, { count: "exact" })).in("content_type", PRESS_TYPES);
-	if (year) query = query.gte("original_published_on", `${year}-01-01`).lte("original_published_on", `${year}-12-31`);
+	// Same bucket as the year facet: the original date, else the date we published it (`year` is validated against the facets).
+	if (year) {
+		const inOriginal = `and(original_published_on.gte.${year}-01-01,original_published_on.lte.${year}-12-31)`;
+		const inPublished = `and(original_published_on.is.null,published_at.gte.${year}-01-01T00:00:00Z,published_at.lte.${year}-12-31T23:59:59.999Z)`;
+		query = query.or(`${inOriginal},${inPublished}`);
+	}
 	if (media) query = query.eq("media_type", media);
 	if (publisher) query = query.eq("publisher.slug", publisher);
 	const term = searchTerm(q);

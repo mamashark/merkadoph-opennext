@@ -83,7 +83,6 @@ const card = (p: PressCard, featured = false) => {
 			}
 			badge={p.content_type === "press_release" ? TYPE_LABEL.press_release : undefined}
 			featured={featured}
-			headingLevel="h3"
 		/>
 	);
 };

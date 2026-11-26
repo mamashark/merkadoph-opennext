@@ -6,6 +6,9 @@ const IGNORED = [/ERR_ABORTED/, /net::ERR_FAILED.*_rsc/, /Failed to fetch RSC pa
 /** Collects console errors and uncaught page errors. Read `.list` at the end of a test. */
 export function watchErrors(page: Page) {
 	const list: string[] = [];
+	// Cloudflare Web Analytics loads in production builds when a token is saved in Admin → SEO (the suite reads live
+	// settings). Its beacon reports are refused (CORS) from localhost, which logs console errors, so stub the script out.
+	void page.route(/static\.cloudflareinsights\.com\//, (r) => r.fulfill({ status: 200, contentType: "text/javascript", body: "" }));
 	page.on("pageerror", (e) => list.push(`pageerror: ${e.message}`));
 	page.on("console", (m) => {
 		if (m.type() !== "error") return;

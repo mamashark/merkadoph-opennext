@@ -66,7 +66,7 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 		<>
 			<PageHeader
 				title="Media library"
-				description="Upload and manage images stored in Supabase Storage."
+				description="Upload and manage images and videos in the media library (Cloudflare R2)."
 				breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Media" }]}
 			/>
 
@@ -76,7 +76,7 @@ export default async function MediaPage({ searchParams }: PageProps<"/admin/medi
 				<WebpGuide />
 
 				{!bucket ? (
-					<div className={`${cardClass} p-10 text-center text-sm text-slate-500 dark:text-slate-400`}>No public storage buckets found. Create one in Supabase Storage first.</div>
+					<div className={`${cardClass} p-10 text-center text-sm text-slate-500 dark:text-slate-400`}>The media library is not configured.</div>
 				) : (
 					<div className={cardClass}>
 						{/* Bucket tabs */}

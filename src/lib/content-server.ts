@@ -51,7 +51,7 @@ const LEGACY_PATH = "/storage/v1/object/public/";
 /** The R2 form of a media URL: legacy Supabase public URLs are moved to MEDIA_URL with the same `<bucket>/<path>`. */
 export function toMediaUrl(u: URL): string {
 	if (u.origin === LEGACY_ORIGIN && u.pathname.startsWith(LEGACY_PATH)) return `${MEDIA_ORIGIN}/${u.pathname.slice(LEGACY_PATH.length)}${u.search}`;
-	return u.href;
+	return `${u.origin}${u.pathname}${u.search}`;
 }
 
 /**

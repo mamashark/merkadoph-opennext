@@ -23,7 +23,7 @@ export async function clientIp(): Promise<string> {
 export async function rateLimit(bucket: Bucket, action: string, keys: string[]): Promise<boolean> {
 	let limiter: Limiter | undefined;
 	try {
-		limiter = (getCloudflareContext().env as Record<string, unknown>)[BINDINGS[bucket]] as Limiter | undefined;
+		limiter = (getCloudflareContext().env as unknown as Record<string, unknown>)[BINDINGS[bucket]] as Limiter | undefined;
 	} catch {
 		limiter = undefined;
 	}

@@ -33,7 +33,7 @@ const BUCKETS = ["blogs"] as const;
 const CACHE_CONTROL = "public, max-age=31536000, immutable";
 
 async function r2(): Promise<R2Bucket> {
-	const bucket = (getCloudflareContext().env as Record<string, unknown>).MEDIA as R2Bucket | undefined;
+	const bucket = getCloudflareContext().env.MEDIA as R2Bucket | undefined;
 	if (!bucket) throw new Error("Media storage (R2 binding MEDIA) is not configured.");
 	return bucket;
 }

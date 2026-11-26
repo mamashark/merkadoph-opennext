@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Search } from "lucide-react";
 import { BULLETIN_PER_PAGE, getBoardCategories, getFeaturedBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
-import { OFFERS_SLUG, TYPE_LABEL, issuedBy } from "@/lib/bulletin-shared";
+import { OFFERS_SLUG, TYPE_LABEL, issuedBy, itemPath } from "@/lib/bulletin-shared";
 import { getPublicPromotions, PROMOTIONS_PER_PAGE, type PromotionSummary } from "@/lib/promotions";
 import { EMBASSY_LINKS } from "@/lib/businesses";
 import { pageParam, param } from "@/lib/content";
@@ -47,7 +47,7 @@ export async function generateMetadata({ searchParams }: PageProps<"/bulletin">)
 const card = (n: BulletinCard, featured = false) => (
 	<ContentCard
 		key={n.id}
-		href={`/bulletin/${n.slug}`}
+		href={itemPath(n)}
 		title={n.title}
 		excerpt={n.excerpt}
 		image={n.cover_image_url}
@@ -128,6 +128,8 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 					{ label: "All updates", value: "", href: listHref({ q }) },
 					...categories.map((c) => ({ label: c.name, value: c.slug, href: listHref({ category: c.slug, q }) })),
 					{ label: "Community Offers", value: OFFERS_SLUG, href: listHref({ category: OFFERS_SLUG }) },
+					// Press has its own archive with year/outlet filters: the tab goes there instead of filtering here.
+					{ label: "Press & Media", value: "press-archive-link", href: "/press" },
 				]}
 			/>
 

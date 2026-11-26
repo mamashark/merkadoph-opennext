@@ -209,8 +209,8 @@ export default async function PressPage({ searchParams }: PageProps<"/press">) {
 				</h2>
 				<p className="mt-2 max-w-2xl text-site-ink-2">
 					For interviews, images or information about Merkado PH, write to{" "}
-					<a href="mailto:press@merkadoph.se" className="text-site-ink underline underline-offset-4 hover:text-accent">
-						press@merkadoph.se
+					<a href="mailto:hello@merkadoph.se" className="text-site-ink underline underline-offset-4 hover:text-accent">
+						hello@merkadoph.se
 					</a>
 					.
 				</p>

@@ -117,12 +117,14 @@ function liveOnly<Q>(query: Q): Q {
 	const now = new Date().toISOString();
 	return (query as unknown as Filterable).eq("status", "published").lte("published_at", now).or(`expires_at.is.null,expires_at.gt.${now}`) as unknown as Q;
 }
-/** The Bulletin Board never lists press items: those live on /press (spec §4.7). */
-function boardOnly<Q>(query: Q): Q {
-	return (query as unknown as Branchable).not("content_type", "in", `(${PRESS_TYPES.join(",")})`) as unknown as Q;
+/**
+ * What the Bulletin Board lists (/bulletin, featured, homepage band): items ticked "on the Bulletin Board", plus every
+ * press item (Kay 2026-11-26, option A: the board is the "everything latest" feed). Press cards link to /press/<slug>,
+ * their only page (itemPath); /bulletin/<press slug> stays a 404.
+ */
+function boardFeed<Q>(query: Q): Q {
+	return (query as unknown as Filterable).or(`show_in_bulletin.eq.true,content_type.in.(${PRESS_TYPES.join(",")})`) as unknown as Q;
 }
-/** Everything live, press included (homepage, site search, sitemap). */
-type Branchable = Filterable & { not(c: string, op: string, v: unknown): Filterable };
 
 /* ------------------------------ Public ------------------------------ */
 
@@ -139,7 +141,7 @@ export const getBoardCategories = async () => (await getBulletinCategories()).fi
 /** The Bulletin Board list: pinned first, then priority, then newest. `category` is a category slug ("" = all). */
 async function queryBulletin(category: string, q: string, page: number = 1, perPage: number = BULLETIN_PER_PAGE) {
 		const from = (page - 1) * perPage;
-		let query = boardOnly(liveOnly(createPublicClient().from("bulletin_items").select(CARD, { count: "exact" }))).eq("show_in_bulletin", true);
+		let query = boardFeed(liveOnly(createPublicClient().from("bulletin_items").select(CARD, { count: "exact" })));
 		if (category) query = query.eq("category.slug", category);
 		const term = searchTerm(q);
 		if (term) query = query.or(`title.ilike.%${term}%,excerpt.ilike.%${term}%`);
@@ -172,8 +174,7 @@ export async function getPublicBulletin(category: string, q: string, page: numbe
 
 /** Featured items: the large cards at the top of /bulletin. */
 export const getFeaturedBulletin = cached(async (limit: number = 3): Promise<BulletinCard[]> => {
-	const { data, error } = await boardOnly(liveOnly(createPublicClient().from("bulletin_items").select(CARD)))
-		.eq("show_in_bulletin", true)
+	const { data, error } = await boardFeed(liveOnly(createPublicClient().from("bulletin_items").select(CARD)))
 		.eq("is_featured", true)
 		.order("display_priority", { ascending: false })
 		.order("published_at", { ascending: false })
@@ -197,9 +198,8 @@ export const getHomeBulletin = cached(async (limit: number = 4): Promise<Bulleti
 	const picked = (chosen.data ?? []) as unknown as BulletinCard[];
 	if (picked.length >= limit) return picked;
 	// "On the homepage" items come first; the newest live items fill any free places (Kay, 2026-11-25).
-	// Board items listed on /bulletin, and every press item (they link to /press).
-	const recent = await liveOnly(db.from("bulletin_items").select(CARD))
-		.or(`show_in_bulletin.eq.true,content_type.in.(${PRESS_TYPES.join(",")})`)
+	// The same feed as /bulletin, so the band and its "see all" page agree.
+	const recent = await boardFeed(liveOnly(db.from("bulletin_items").select(CARD)))
 		.order("is_pinned", { ascending: false })
 		.order("published_at", { ascending: false })
 		.limit(limit + picked.length);

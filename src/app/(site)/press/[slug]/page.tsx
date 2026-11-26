@@ -108,7 +108,7 @@ export default async function PressItemPage({ params }: PageProps<"/press/[slug]
 					{p.cta_url && <CtaLink href={p.cta_url}>{p.cta_label || "Find out more"}</CtaLink>}
 				</Facts>
 
-				<CoverFigure src={p.cover_image_url} alt={p.cover_image_alt || p.title} caption={caption} />
+				<CoverFigure uncropped src={p.cover_image_url} alt={p.cover_image_alt || p.title} caption={caption} />
 				<Body content={p.content} />
 
 				{(p.attachments.length > 0 || p.media_contact) && (

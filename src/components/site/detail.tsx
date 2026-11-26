@@ -50,13 +50,24 @@ export function DetailHeader({
 	);
 }
 
-export function CoverFigure({ src, alt, caption }: { src: string | null; alt: string; caption?: string | null }) {
+/**
+ * The cover under the title. By default it is cropped to a 16:9 box; `uncropped` shows the whole image at its own
+ * proportions across the full column (press clippings and scans must never lose their edges).
+ */
+export function CoverFigure({ src, alt, caption, uncropped = false }: { src: string | null; alt: string; caption?: string | null; uncropped?: boolean }) {
 	if (!src) return null;
 	return (
 		<figure className="mx-auto mt-4 max-w-5xl px-4 sm:px-8">
-			<div className="relative aspect-[16/9] overflow-hidden bg-site-sunken">
-				<Image src={src} alt={alt} fill loading="eager" fetchPriority="high" sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover" />
-			</div>
+			{uncropped ? (
+				<div className="bg-site-sunken">
+					{/* Natural size is unknown for remote images: width/height 0 + auto height keeps the image's own ratio (no crop, no layout shift beyond the load). */}
+					<Image src={src} alt={alt} width={0} height={0} loading="eager" fetchPriority="high" quality={90} sizes="(min-width: 1024px) 1024px, 100vw" className="block h-auto w-full" />
+				</div>
+			) : (
+				<div className="relative aspect-[16/9] overflow-hidden bg-site-sunken">
+					<Image src={src} alt={alt} fill loading="eager" fetchPriority="high" sizes="(min-width: 1024px) 1024px, 100vw" className="object-cover" />
+				</div>
+			)}
 			{caption && <figcaption className="mt-2.5 text-sm text-site-muted">{caption}</figcaption>}
 		</figure>
 	);

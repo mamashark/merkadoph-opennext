@@ -19,7 +19,7 @@ export const caseStudy = {
 	/** ISO date of the last content update, shown on the page. */
 	/** ISO date the page was first published (structured data). */
 	published: "2026-11-25",
-	updated: "2026-11-25",
+	updated: "2026-11-26",
 	title: "How this site was built",
 	description:
 		"A case study of merkadoph.se: why it was rebuilt, how it works, the decisions behind it and the problems solved along the way.",
@@ -28,7 +28,7 @@ export const caseStudy = {
 
 	facts: [
 		{ label: "Role", value: "Designed & built by KLA" },
-		{ label: "Timeline", value: "Oct 2026 – ongoing" },
+		{ label: "Timeline", value: "Oct 2026 – live 26 Nov 2026" },
 		{ label: "Stack", value: "Next.js 16 · Cloudflare · Supabase" },
 		{ label: "Hosting", value: "About $5 a month" },
 	] satisfies Fact[],
@@ -103,8 +103,14 @@ export const caseStudy = {
 		{
 			area: "Release",
 			title: "Live on the real domain, behind a gate",
-			why: "The site was deployed to merkadoph.se early but shows visitors a coming-soon page, while testing happens on the real platform. Pages behind the gate are hidden from search engines.",
-			tradeoff: "Going live becomes one deliberate switch instead of something that happens whenever code is saved.",
+			why: "The site was deployed to merkadoph.se early but showed visitors a coming-soon page until launch on 26 November 2026, so testing could happen on the real platform. Pages behind the gate were hidden from search engines.",
+			tradeoff: "Going live was one deliberate switch instead of something that happens whenever code is saved.",
+		},
+		{
+			area: "Privacy",
+			title: "Cookieless analytics instead of Google Analytics",
+			why: "Google Analytics sets cookies, so it needs a consent banner and only counts the visitors who accept. Cloudflare Web Analytics counts visits without cookies or a visitor ID, so there is no banner and no gaps, and it adds almost nothing to the page.",
+			tradeoff: "No conversion tracking or audience reports. If the site ever runs ads, Google Analytics can come back behind a consent banner.",
 		},
 	] satisfies Decision[],
 
@@ -178,11 +184,19 @@ export const caseStudy = {
 			fix: "I rolled the live site back to the previous version the same evening, pinned the adapter to the last working version, checked it on the Cloudflare runtime with and without cookies, and released it again.",
 			result: "Down for logged-in visitors for about ten minutes. Every dependency update is now run on the Cloudflare runtime and requested with a cookie before release, and the checks after each deploy send cookies too.",
 		},
+		{
+			area: "Launch",
+			title: "Launch day: two small details",
+			problem: "The last update before launch failed every accessibility test, although the same tests had passed an hour earlier. Then the launch build finished and the site still showed the coming-soon page.",
+			cause: "The tests read the live content, and a phone number and an email had just been added to the footer: two small links stacked under the 24px minimum tap size. The launch switch is read when the site is built and must say exactly \"true\"; it had been saved as \"True\".",
+			fix: "The footer links got a minimum tap size in the code, so any content passes, and the switch was corrected before rebuilding.",
+			result: "Live on 26 November 2026. Right after launch, every public page and every sitemap address loaded, nothing blocked search engines, and Lighthouse Best Practices measured 100.",
+		},
 	] satisfies Challenge[],
 
 	results: [
 		{ label: "Lighthouse, desktop homepage", value: "100 / 100 / 100 / 100" },
-		{ label: "Lighthouse, mobile homepage", value: "92 performance, 100 accessibility" },
+		{ label: "Lighthouse, mobile homepage (live site)", value: "90 performance, 100 accessibility" },
 		{ label: "Automated end-to-end tests", value: "103, on every push" },
 		{ label: "Database tables with Row Level Security", value: "All 26" },
 		{ label: "Accessibility checks (axe, WCAG 2.2 AA)", value: "0 violations on 14 page types, light and dark" },
@@ -190,10 +204,9 @@ export const caseStudy = {
 	] satisfies Fact[],
 
 	next: [
-		"Mobile performance from 92 to 100: a faster first paint for the homepage's big title, a lighter stylesheet for public pages and a smaller JavaScript bundle.",
-		"Testing on real phones and with screen readers. Phone testing so far is emulated.",
+		"Mobile performance to 100: the live site measured 75–90 on mobile after launch. Faster image loading on the list pages ships with this update; next come a faster first paint for the homepage's big title, a lighter stylesheet for public pages and a smaller JavaScript bundle.",
+		"A full test pass on real phones and with screen readers. Most phone testing so far is emulated.",
 		"Captions for videos with speech.",
-		"Launch: switching off the coming-soon gate once the content is ready.",
 	],
 
 	process:

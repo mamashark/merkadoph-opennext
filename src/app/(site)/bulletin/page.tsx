@@ -44,7 +44,8 @@ export async function generateMetadata({ searchParams }: PageProps<"/bulletin">)
 	return q ? { ...meta, robots: { index: false, follow: true } } : meta;
 }
 
-const card = (n: BulletinCard, featured = false) => (
+// `priority`: the first row's covers load eagerly (one is the LCP image; B44).
+const card = (n: BulletinCard, featured = false, priority = false) => (
 	<ContentCard
 		key={n.id}
 		href={itemPath(n)}
@@ -62,6 +63,7 @@ const card = (n: BulletinCard, featured = false) => (
 		}
 		badge={n.content_type === "embassy_update" ? TYPE_LABEL.embassy_update : undefined}
 		featured={featured}
+		priority={priority}
 		headingLevel="h3"
 	/>
 );
@@ -164,7 +166,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 					<h2 id="featured-title" className="sr-only">
 						Featured
 					</h2>
-					<div className="grid gap-6 lg:grid-cols-2">{featured.map((n) => card(n, true))}</div>
+					<div className="grid gap-6 lg:grid-cols-2">{featured.map((n, i) => card(n, true, i < 2))}</div>
 				</section>
 			)}
 
@@ -179,7 +181,7 @@ export default async function BulletinPage({ searchParams }: PageProps<"/bulleti
 							description={q ? "Try another word, or browse all updates." : "Embassy updates, community notices and opportunities will appear here."}
 						/>
 					) : (
-						<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{items.map((n) => card(n))}</div>
+						<div className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{items.map((n, i) => card(n, false, featured.length === 0 && i < 3))}</div>
 					)}
 					{list!.total > BULLETIN_PER_PAGE && (
 						<div className="mt-12">

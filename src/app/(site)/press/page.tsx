@@ -53,7 +53,8 @@ export async function generateMetadata({ searchParams }: PageProps<"/press">): P
 const icon = (media: PressCard["media_type"]) =>
 	media === "television" ? Tv : media === "radio_podcast" ? Radio : media === "newspaper" ? Newspaper : FileText;
 
-const card = (p: PressCard, featured = false) => {
+// `priority`: the first row's covers load eagerly (one is the LCP image; B44).
+const card = (p: PressCard, featured = false, priority = false) => {
 	const Icon = icon(p.media_type);
 	return (
 		<ContentCard
@@ -83,6 +84,7 @@ const card = (p: PressCard, featured = false) => {
 			}
 			badge={p.content_type === "press_release" ? TYPE_LABEL.press_release : undefined}
 			featured={featured}
+			priority={priority}
 		/>
 	);
 };
@@ -194,8 +196,8 @@ export default async function PressPage({ searchParams }: PageProps<"/press">) {
 				/>
 			) : (
 				<ul className="grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
-					{result.items.map((p) => (
-						<li key={p.id}>{card(p)}</li>
+					{result.items.map((p, i) => (
+						<li key={p.id}>{card(p, false, i < 3)}</li>
 					))}
 				</ul>
 			)}

@@ -10,7 +10,7 @@ import { Pagination } from "@/components/admin/pagination";
 
 // Renders per request (it reads the tag/page from the URL); the data itself comes from the cache.
 
-const description = "Guides, stories and news from Merkado PH — roofing and home tips for Sweden, and life in our Filipino-Swedish community.";
+const description = "Stories, guides and news from Merkado PH: Filipino food, culture and traditions, and life in our Filipino-Swedish community.";
 
 /** Only known tags filter the list; anything else shows every post. */
 async function readFilters(searchParams: PageProps<"/blogs">["searchParams"]) {

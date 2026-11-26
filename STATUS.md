@@ -119,6 +119,7 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 | B41 | Press item pages: translated items (source language not English) have no `lang` on the original-language text; only a "Language" fact (WCAG 3.1.2) | Minor | Finn (FE) | Open (Ally, 2026-11-26). Needs a rule for which fields are in the original language. |
 | B42 | `/press?q=x` showed the site-default title/description in Ally's local run; `generateMetadata` looks right and noindex is present | Minor | Finn (FE) | Unverified (not reproduced, 2026-11-26). Recheck now that a press item exists. |
 | B43 | /press and /bulletin filters are full-page GET forms: the `aria-live` results line likely isn't announced and focus returns to the top (WCAG 4.1.3) | Minor | Finn (FE) | Open (Ally, 2026-11-26). Optional: move focus to the results line after a filtered load. |
+| B44 | /bulletin mobile: the first card's cover image (the LCP element) is lazy-loaded (Lighthouse `lcp-lazy-loaded`), LCP 5.1 s, Performance 81 (local `next start`, simulated mobile). Same cause as B26 on blog covers. Also ~150 KiB image-delivery savings. | Major | Finn (FE) | Open (Builder, 2026-11-26 launch check) |
 
 ## Needs Kay
 
@@ -417,3 +418,26 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-26 · Builder · `gh` installed (Homebrew) and logged in as mamashark: releases go through PRs with CI/CodeQL/E2E checks again.
 2026-11-26 · Builder · Regression from Phase 2: with only press items live, the homepage Bulletin band and constellation highlight disappeared (press was excluded from the band). CI e2e caught it (B29 test finds no #bulletin; the suite reads live content). Fixed in PR #34 (band includes press, linking to /press; no press chip on /bulletin) together with the press cover change (whole image, full column width, quality 90 + `images.qualities`). Released `9004de5`, 03:55 UTC; Kay confirmed the constellation highlight is back.
 2026-11-26 · Builder · Kay chose option A: /bulletin is the "everything latest" feed, the same rule as the homepage band (board items + every press item; press cards link to /press/<slug>; "Press & Media" tab opens /press). PR #35, checks green, released `9a05fa7`, 04:22 UTC. Verified locally on live data: listed, search and category filters combine (AND), 404 kept. Branches feat/press-phase2, fe/press-cover-full, fe/bulletin-includes-press deleted.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+2026-11-26 · Builder · Google tag (GA4 G-RRQJMQTL37) added on Kay's request, not committed or deployed: one tag per page in the root layout `<head>` (standard gtag.js + config), Consent Mode v2 default **denied** (no analytics cookies, cookieless pings only); CSP opened for googletagmanager.com / *.google-analytics.com / *.analytics.google.com with Kay's OK. tsc + lint pass; `next dev` shows exactly one tag on /, /blogs, /events. Follow-ups: consent banner to grant analytics_storage; legal pages (Admin → SEO) must name Google Analytics; Lighthouse impact unverified; GA receiving hits unverified
+2026-11-26 · Builder · GA follow-up (Kay): switched to Google's own snippet (gtm.js?id=G-…, no config line; Kay's screenshot shows that is the official tag). Consent banner built (`src/components/site/consent-banner.tsx`, root layout; "No thanks" / "Allow statistics" equal weight; choice in localStorage `mph-consent`; "Cookie settings" in the footer reopens it; "No thanks" deletes _ga cookies). Privacy and cookie policy templates (`src/lib/legal-defaults.ts`) now list Google Analytics, its cookies and the consent choice. Headless Chromium at 320px light + dark: banner shows, allow/reject saved, consent restored on reload, reopen moves focus, no console errors. Not committed or deployed, so Google's "tag detected" test fails until release. **Needs Kay:** in GA admin set data retention to 14 months and keep Google signals and ad personalisation off (the privacy text says so); Lighthouse impact unverified
+2026-11-26 · Builder · Kay chose Cloudflare Web Analytics over GA4: all GA work undone (tag, consent banner, footer button, CSP back to original; it was never committed or deployed). Privacy and cookie policy templates (`src/lib/legal-defaults.ts`) now describe cookieless Cloudflare Web Analytics (what it collects, Cloudflare as processor, no banner). Not live until Kay pastes the token in Admin → SEO and the legal text ships in a release. Optional: delete the GA4 property / G-RRQJMQTL37 in Google Analytics
+2026-11-26 · Builder · Launch check (Kay asked to remove coming-soon) on main `3991117` + local legal/test changes, production build with HOMEPAGE_LIVE=true, live data: E2E 103/103 (after stubbing the Cloudflare analytics beacon in tests: with the token now saved, its localhost CORS error would turn CI red). Lighthouse 12.8.2, one run each, local `next start` (not Workers): desktop 100/100/96/100 on /, /blogs, a post, /events, /impact, /bulletin, /press; mobile Performance 94, 91, 87, 88, 95, 81, 91, Accessibility and SEO 100. Best Practices 96 is only the beacon's localhost CORS error (expected 100 on merkadoph.se, unverified). Logged B44. Before launch: ship the legal text + test fix, decide on the `sample`-tagged published event "Paskong Bayanihan", Kay's real-phone check (Needs Kay #5)

@@ -36,6 +36,12 @@
 			"id": "b8ab751db2df44bbb36af9e9eeb834fe"
 		}
 	],
+	// Media library (2026-11-27): images and videos, served publicly at https://media.merkadoph.se (the bucket's custom
+	// domain), written by the admin through this binding (src/lib/media.ts). Moved off Supabase Storage to stay within
+	// its Free bandwidth cap; R2 has no egress fees. `remote`: `next dev` uses the real bucket, as it used real Storage.
+	"r2_buckets": [
+		{ "binding": "MEDIA", "bucket_name": "merkadoph-media", "remote": true }
+	],
 	// Cache tags for on-demand purges (revalidateTag / revalidatePath). Table is created by `opennextjs-cloudflare deploy`.
 	"d1_databases": [
 		{

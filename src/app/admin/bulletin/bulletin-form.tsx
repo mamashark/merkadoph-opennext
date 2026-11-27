@@ -170,7 +170,7 @@ export function BulletinForm({ item, choices, initialType = "community_notice" }
 									name="attachments"
 									rows={3}
 									defaultValue={(i?.attachments ?? []).map((a) => `${a.label} | ${a.url}`).join("\n")}
-									placeholder="Press kit (PDF) | https://…/storage/v1/object/public/media/…"
+									placeholder="Press kit (PDF) | https://media.merkadoph.se/blogs/…"
 									className={`${inputClass} font-mono text-xs`}
 								/>
 							</Field>

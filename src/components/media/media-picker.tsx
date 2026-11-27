@@ -22,7 +22,7 @@ type Props = {
 type State = MediaListing & { buckets: string[] };
 
 /**
- * Modal for choosing an image from Supabase Storage. Mount it only while open:
+ * Modal for choosing an image from the media library (Cloudflare R2). Mount it only while open:
  *   {open && <MediaPicker onSelect={...} onClose={() => setOpen(false)} />}
  */
 export function MediaPicker({ onSelect, onClose, title = "Choose an image", confirmLabel = "Use image" }: Props) {

@@ -10,7 +10,7 @@ export function secret(name: "SUPABASE_SERVICE_ROLE_KEY" | "CRON_SECRET" | "STAG
 	let value = process.env[name];
 	if (!value) {
 		try {
-			value = (getCloudflareContext().env as Record<string, unknown>)[name] as string | undefined;
+			value = (getCloudflareContext().env as unknown as Record<string, unknown>)[name] as string | undefined;
 		} catch {
 			// No Cloudflare context (e.g. during `next build`).
 		}

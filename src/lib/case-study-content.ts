@@ -19,7 +19,7 @@ export const caseStudy = {
 	/** ISO date of the last content update, shown on the page. */
 	/** ISO date the page was first published (structured data). */
 	published: "2026-11-25",
-	updated: "2026-11-26",
+	updated: "2026-11-27",
 	title: "How this site was built",
 	description:
 		"A case study of merkadoph.se: why it was rebuilt, how it works, the decisions behind it and the problems solved along the way.",
@@ -44,7 +44,7 @@ export const caseStudy = {
 		{ title: "Edge", body: "Cloudflare DNS and CDN, with a firewall rule that turns away vulnerability scanners before the app runs." },
 		{ title: "App", body: "Next.js 16 (App Router, Server Components) running as a Cloudflare Worker through the OpenNext adapter." },
 		{ title: "Cache", body: "Pages are rendered once and stored at the edge; saving content purges only the affected group, instantly." },
-		{ title: "Data", body: "Supabase Postgres with Row Level Security on every table, Supabase Auth with two-step login for admins, and image storage." },
+		{ title: "Data", body: "Supabase Postgres with Row Level Security on every table, Supabase Auth with two-step login for admins. Images and videos are served from Cloudflare R2." },
 		{ title: "Delivery", body: "GitHub Actions for type checks, a security audit, a full build and end-to-end tests on every push. Production deploys only from a release branch." },
 	] satisfies Feature[],
 
@@ -191,6 +191,14 @@ export const caseStudy = {
 			cause: "The tests read the live content, and a phone number and an email had just been added to the footer: two small links stacked under the 24px minimum tap size. The launch switch is read when the site is built and must say exactly \"true\"; it had been saved as \"True\".",
 			fix: "The footer links got a minimum tap size in the code, so any content passes, and the switch was corrected before rebuilding.",
 			result: "Live on 26 November 2026. Right after launch, every public page and every sitemap address loaded, nothing blocked search engines, and Lighthouse Best Practices measured 100.",
+		},
+		{
+			area: "Platform limits",
+			title: "The free database plan ran out of bandwidth",
+			problem: "The day after launch, the database host warned that the free plan's monthly bandwidth was used up more than twice over, and that the site's data would stop loading within three days. The database itself was tiny.",
+			cause: "The logs showed almost all of it was images. The image optimiser fetched the original photo again for each size it made, and local development did the same, about 1.8 GB a day. A long cache lifetime didn't help, because cached downloads still count towards that plan's bandwidth.",
+			fix: "I moved the media library to Cloudflare R2, which has no download fees, keeping every file's path so the links only needed a new prefix. The files were copied and checked first, the code was reviewed and released, and then one script updated the stored links, with a backup taken and every page's \"last updated\" date left as it was.",
+			result: "Image downloads from the database host fell from about 1.8 GB a day to almost nothing within the hour, with no downtime and no broken images.",
 		},
 	] satisfies Challenge[],
 

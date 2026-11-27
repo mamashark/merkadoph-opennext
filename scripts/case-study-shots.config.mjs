@@ -39,6 +39,10 @@ export const shots = [
 	...everywhere({ feature: "constellation", state: "world-events", url: "/?world=events", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
 	// 4b. Project Taho zoom (deterministic deep link)
 	...everywhere({ feature: "constellation", state: "world-tahooo", url: "/?world=tahooo", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
+	// 4c. Bygg, Digital and Bulletin Highlights (deep links)
+	...everywhere({ feature: "constellation", state: "world-bygg", url: "/?world=bygg", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
+	...everywhere({ feature: "constellation", state: "world-digital", url: "/?world=digital", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
+	...everywhere({ feature: "constellation", state: "world-bulletin", url: "/?world=bulletin", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
 	// 5. Community Impact grouped by year
 	...everywhere({ feature: "constellation", state: "world-impact-year", url: "/?world=impact&year=2025", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
 	// 6. One entry open

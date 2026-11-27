@@ -137,11 +137,13 @@ export const constellation: ShowcaseFeature = {
 			what: "Merkado Byggnadsavdelning, the construction business by Tindero Pedro. Its page is in Swedish.",
 			feeds: "Fixed content from the site's code, not the database: its page and its services.",
 			rule: "Always shown, even before any service is listed. It has a star for its page and one for each service.",
+			shots: pair("world-bygg", "desktop", "Merkado Byggnadsavdelning", "The Byggnadsavdelning Highlight with its page and four services listed, and photo tiles in the sky.", "Merkado Byggnadsavdelning and its services."),
 		},
 		digital: {
 			what: "Merkado PH Digital: branding, marketing, websites and consulting.",
 			feeds: "Fixed content from the site's code, not the database: its page and its services.",
 			rule: "Always shown. It has a star for its page and one for each service.",
+			shots: pair("world-digital", "desktop", "Merkado PH Digital", "The Merkado PH Digital Highlight with its page and four services listed.", "Merkado PH Digital and its services."),
 		},
 		tahooo: {
 			what: "Project Taho, with Tahooo Corner: taho for events in Gothenburg.",
@@ -154,6 +156,7 @@ export const constellation: ShowcaseFeature = {
 			what: "Embassy news, community notices and offers.",
 			feeds: "Bulletin Board items and current offers.",
 			rule: "Up to 6 notices (by their set priority, then newest) and up to 4 current offers.",
+			shots: pair("world-bulletin", "desktop", "Bulletin Board", "The Bulletin Board Highlight with six notices listed by title, category and month.", "The Bulletin Board, six notices."),
 			count: { value: 6, asOf: DATE },
 		},
 	},

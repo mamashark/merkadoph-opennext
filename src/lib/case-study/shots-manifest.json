@@ -131,6 +131,78 @@
 		"captured": "2026-11-27",
 		"bytes": 60800
 	},
+	"constellation--world-bulletin--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 40426
+	},
+	"constellation--world-bulletin--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 40784
+	},
+	"constellation--world-bulletin--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 69492
+	},
+	"constellation--world-bulletin--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 69720
+	},
+	"constellation--world-bygg--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 28828
+	},
+	"constellation--world-bygg--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 29280
+	},
+	"constellation--world-bygg--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 44276
+	},
+	"constellation--world-bygg--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 44902
+	},
+	"constellation--world-digital--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 26034
+	},
+	"constellation--world-digital--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 25070
+	},
+	"constellation--world-digital--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 41298
+	},
+	"constellation--world-digital--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 40090
+	},
 	"constellation--world-events--desktop-dark.webp": {
 		"width": 1440,
 		"height": 900,

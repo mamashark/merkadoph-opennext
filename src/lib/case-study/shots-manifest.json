@@ -178,5 +178,29 @@
 		"height": 1688,
 		"captured": "2026-11-27",
 		"bytes": 61568
+	},
+	"constellation--world-tahooo--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 34874
+	},
+	"constellation--world-tahooo--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 35092
+	},
+	"constellation--world-tahooo--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 46562
+	},
+	"constellation--world-tahooo--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 47634
 	}
 }

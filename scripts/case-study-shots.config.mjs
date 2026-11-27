@@ -37,6 +37,8 @@ export const shots = [
 	...everywhere({ feature: "constellation", state: "hub-preview-events", url: "/", clip: "stage", ready: "svg g.hub", steps: [{ open: true }, { hoverHub: "events" }], check: "constellation" }),
 	// 4. Hub selected: zoomed into a Highlight (deterministic deep link; Events: its list is short and shows no group names)
 	...everywhere({ feature: "constellation", state: "world-events", url: "/?world=events", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
+	// 4b. Project Taho zoom (deterministic deep link)
+	...everywhere({ feature: "constellation", state: "world-tahooo", url: "/?world=tahooo", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
 	// 5. Community Impact grouped by year
 	...everywhere({ feature: "constellation", state: "world-impact-year", url: "/?world=impact&year=2025", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
 	// 6. One entry open

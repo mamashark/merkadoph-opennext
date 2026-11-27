@@ -52,7 +52,7 @@ function StepBody({ step, n, total }: { step: WalkthroughStep; n: number; total:
 	const { paired, single } = groupShots(step);
 	return (
 		<article aria-labelledby={`step-${step.id}-h`} className="border border-site-line bg-site-surface p-5 sm:p-7">
-			<p className={`${LABEL} text-accent`}>
+			<p className={`${LABEL} text-accent`} aria-hidden>
 				Step {n} of {total}
 			</p>
 			<h3 id={`step-${step.id}-h`} className="mt-2 font-display text-2xl leading-snug font-bold text-site-ink">
@@ -98,6 +98,7 @@ export default async function FeaturePage({ params }: PageProps<"/case-study/[fe
 	const next = at < pages.length - 1 ? pages[at + 1] : null;
 	const challenges = (f.challenges ?? []).flatMap((id) => cs.challenges.filter((c) => c.id === id));
 	const decisions = (f.decisions ?? []).flatMap((id) => cs.decisions.filter((d) => d.id === id));
+	const articleImage = steps.flatMap((s) => s.shots).find((s) => s.viewport === "desktop" && s.mode === "light");
 	let n = 0;
 	const num = () => ++n;
 
@@ -111,6 +112,7 @@ export default async function FeaturePage({ params }: PageProps<"/case-study/[fe
 						headline: featureMetaTitle(f),
 						description: f.summary,
 						url: absoluteUrl(path),
+						...(articleImage && { image: absoluteUrl(`/case-study/${articleImage.file}`) }),
 						datePublished: cs.published,
 						dateModified: f.updated,
 						mainEntityOfPage: absoluteUrl(path),
@@ -174,7 +176,7 @@ export default async function FeaturePage({ params }: PageProps<"/case-study/[fe
 													</Row>
 													{c.count && (
 														<Row label="Size">
-															{c.count.value} in the sky on {formatDate(c.count.asOf)} (a snapshot, not live)
+															The Highlight showed {c.count.value} {c.count.unit} on {formatDate(c.count.asOf)} (a snapshot, not live)
 														</Row>
 													)}
 												</dl>

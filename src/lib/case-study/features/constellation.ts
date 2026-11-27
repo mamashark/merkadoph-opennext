@@ -56,7 +56,6 @@ export const constellation: ShowcaseFeature = {
 			body: "Hovering a Highlight with a mouse brings it forward, dims the rest and shows a small preview: its description and its first entries. Clicking it zooms in. On a phone there is no hover, so a tap opens the Highlight straight away.",
 			shots: [
 				...pair("hub-preview-events", "desktop", "Preview", "The opened sky with the Events Highlight in front: a preview card lists two events with their dates and places and says Click to zoom into Events.", "The preview of Events."),
-				...pair("hub-preview-events", "mobile", "Preview", "On a phone, the sky with the Events Highlight lit up and the other Highlights dimmed.", "Selected, on a phone: the chosen Highlight lights up and the rest dim."),
 			],
 		},
 		{
@@ -117,21 +116,21 @@ export const constellation: ShowcaseFeature = {
 			feeds: "Blog posts.",
 			rule: "The pinned post first, then the 10 newest published posts (the pinned one is not repeated). Its hub shows the total number of published posts.",
 			shots: pair("entry-open", "desktop", "A story open in Blogs", "The Blogs Highlight with one story open beside the sky.", "Blogs, with a story open."),
-			count: { value: 10, asOf: DATE },
+			count: { value: 10, unit: "posts", asOf: DATE },
 		},
 		events: {
 			what: "Community and cultural events, pop-ups and festivals.",
 			feeds: "Events.",
 			rule: "Up to 10 upcoming events. When nothing is coming up, the 5 most recent events instead, and the Highlight says so (\"Our most recent events\" and a link to the archive).",
 			shots: pair("world-events", "desktop", "Events", "The Events Highlight with its upcoming events listed.", "Events, with two upcoming events."),
-			count: { value: 2, asOf: DATE },
+			count: { value: 2, unit: "events", asOf: DATE },
 		},
 		impact: {
 			what: "A record of the community's work, year by year.",
 			feeds: "Community Impact entries.",
 			rule: "One star per year, newest year first. A year opens a list of its entries in calendar order, and each year is also a link.",
 			shots: pair("world-impact-year", "desktop", "Community Impact, 2025", "Community Impact for 2025 with its entries listed.", "Community Impact, year 2025."),
-			count: { value: 3, asOf: DATE },
+			count: { value: 3, unit: "entries", asOf: DATE },
 		},
 		bygg: {
 			what: "Merkado Byggnadsavdelning, the construction business by Tindero Pedro. Its page is in Swedish.",
@@ -150,14 +149,14 @@ export const constellation: ShowcaseFeature = {
 			feeds: "Fixed content from the site's code, not the database: the cart page and the flavour menu.",
 			rule: "Always shown. It has a star for the Tahooo Corner page and one for each flavour. Blogs and events tagged Tahooo are joined to its page star by a thread.",
 			shots: pair("world-tahooo", "desktop", "Project Taho", "The Project Taho Highlight with the Tahooo Corner page and its flavours listed.", "Project Taho and its flavours."),
-			count: { value: 9, asOf: DATE },
+			count: { value: 9, unit: "entries", asOf: DATE },
 		},
 		bulletin: {
 			what: "Embassy news, community notices and offers.",
 			feeds: "Bulletin Board items and current offers.",
 			rule: "Up to 6 notices (by their set priority, then newest) and up to 4 current offers.",
 			shots: pair("world-bulletin", "desktop", "Bulletin Board", "The Bulletin Board Highlight with six notices listed by title, category and month.", "The Bulletin Board, six notices."),
-			count: { value: 6, asOf: DATE },
+			count: { value: 6, unit: "notices and offers", asOf: DATE },
 		},
 	},
 

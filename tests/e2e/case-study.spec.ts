@@ -77,4 +77,25 @@ test.describe("the constellation walkthrough", () => {
 			await ctx.close();
 		}
 	});
+	test("every screenshot file exists (light and dark) and the visible ones decode", async ({ page }) => {
+		await page.goto("/case-study/constellation", { waitUntil: "load" });
+		// Hidden steps keep lazy images unloaded, so ask the server for every file (img and dark <source>) instead.
+		const urls = await page.evaluate(() => [...new Set([...document.querySelectorAll("picture img, picture source")].map((el) => el.getAttribute("src") ?? el.getAttribute("srcset") ?? "").filter(Boolean).map((u) => u.split(" ")[0]))]);
+		expect(urls.length).toBeGreaterThan(20);
+		for (const u of urls) {
+			const res = await page.request.get(u);
+			expect(res.ok(), u).toBe(true);
+			expect(res.headers()["content-type"], u).toContain("image/");
+		}
+		const img = page.locator(".wt-step:not([data-off]) picture img").first();
+		await img.scrollIntoViewIfNeeded();
+		await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
+	});
+
+	test("a #step-... link opens that step and scrolls to it", async ({ page }) => {
+		await page.setViewportSize({ width: 1280, height: 800 });
+		await page.goto("/case-study/constellation#step-zoom-in", { waitUntil: "load" });
+		await expect(page.locator(".wt-step:not([data-off])")).toHaveAttribute("id", "step-zoom-in");
+		await expect.poll(() => page.locator("#step-zoom-in").evaluate((el) => { const t = el.getBoundingClientRect().top; return t >= 0 && t < 400; })).toBe(true);
+	});
 });

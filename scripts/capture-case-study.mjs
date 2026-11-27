@@ -8,7 +8,8 @@
  *   npm run capture:case-study -- --dry-run              print what would be written, write nothing
  *
  * Output: public/case-study/<name>.webp (PNG -> WebP via sharp), manifest src/lib/case-study/shots-manifest.json,
- * previous versions moved to public/case-study/archived/<name>--<YYYY-MM-DD>.webp (last 3 kept).
+ * previous versions moved to case-study-archive/<name>--<YYYY-MM-DD>.webp at the repo root (last 3 kept).
+ * The archive is outside public/, so it is never deployed; copy an old shot back into public/case-study/ by hand when a page shows a before/after.
  * Public pages only: /admin and /login are refused (no admin screenshots in v1). Exits non-zero if any shot fails.
  * Design: local/behind-the-build-phase2-design.md section 4.
  */
@@ -22,9 +23,19 @@ import { DEVICES, shots as ALL_SHOTS } from "./case-study-shots.config.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = path.join(ROOT, "public", "case-study");
-const ARCHIVE = path.join(OUT, "archived");
+const ARCHIVE = path.join(ROOT, "case-study-archive");
 const MANIFEST = path.join(ROOT, "src", "lib", "case-study", "shots-manifest.json");
 const BASE = (process.env.CAPTURE_BASE ?? "http://localhost:3310").replace(/\/$/, "");
+{
+	let host = "";
+	try {
+		host = new URL(BASE).hostname;
+	} catch {}
+	if (!["localhost", "127.0.0.1", "[::1]", "::1"].includes(host)) {
+		console.error(`Refusing to capture from "${BASE}": CAPTURE_BASE must be localhost or 127.0.0.1 (never production).`);
+		process.exit(1);
+	}
+}
 const MAX_TRIES = 15; // fresh loads for the random constellation layout / cue
 const KEEP_ARCHIVED = 3;
 const FORBIDDEN = /^\/(admin|login)(\/|\?|#|$)/i;
@@ -256,12 +267,10 @@ async function archive(file, manifest) {
 	const date = manifest[file]?.captured ?? (await stat(from)).mtime.toISOString().slice(0, 10);
 	const target = `${base}--${date}.webp`;
 	await rename(from, path.join(ARCHIVE, target)); // same-day re-run overwrites: one per day
-	if (manifest[file]) manifest[`archived/${target}`] = manifest[file];
 	// keep the last 3 per shot
 	const mine = (await readdir(ARCHIVE)).filter((f) => f.startsWith(`${base}--`) && /--\d{4}-\d{2}-\d{2}\.webp$/.test(f) && f.slice(base.length + 2).length === 15).sort();
 	for (const old of mine.slice(0, Math.max(0, mine.length - KEEP_ARCHIVED))) {
 		await rm(path.join(ARCHIVE, old));
-		delete manifest[`archived/${old}`];
 	}
 }
 

@@ -19,10 +19,10 @@ const DEVICES = {
 	mobile: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2, label: "mobile" },
 };
 
-/** Expands one state into desktop/mobile x light/dark. */
-function everywhere(base) {
+/** Expands one state into desktop/mobile x light/dark (`devices: ["desktop"]` limits it). */
+function everywhere({ devices = ["desktop", "mobile"], ...base }) {
 	const out = [];
-	for (const device of ["desktop", "mobile"]) for (const scheme of ["light", "dark"]) out.push({ ...base, device, scheme, clip: device === "mobile" ? base.clip : undefined });
+	for (const device of devices) for (const scheme of ["light", "dark"]) out.push({ ...base, device, scheme, clip: device === "mobile" ? base.clip : undefined });
 	return out;
 }
 
@@ -33,8 +33,8 @@ export const shots = [
 	...everywhere({ feature: "constellation", state: "folded", url: "/", clip: "stage", ready: OPEN_BUTTON, steps: [{ wait: 1500 }] }),
 	// 2. Opened: the full constellation
 	...everywhere({ feature: "constellation", state: "open", url: "/", clip: "stage", ready: "svg g.hub", steps: [{ open: true }], check: "constellation" }),
-	// 3. Hover a hub (preview; Events, whose preview shows no personal or group names). Touch devices have no hover: the phone shot taps it instead (see capture script).
-	...everywhere({ feature: "constellation", state: "hub-preview-events", url: "/", clip: "stage", ready: "svg g.hub", steps: [{ open: true }, { hoverHub: "events" }], check: "constellation" }),
+	// 3. Hover a hub (preview; Events, whose preview shows no personal or group names). Desktop only: a phone has no hover, so no phone shot is captured.
+	...everywhere({ feature: "constellation", state: "hub-preview-events", url: "/", clip: "stage", ready: "svg g.hub", steps: [{ open: true }, { hoverHub: "events" }], check: "constellation", devices: ["desktop"] }),
 	// 4. Hub selected: zoomed into a Highlight (deterministic deep link; Events: its list is short and shows no group names)
 	...everywhere({ feature: "constellation", state: "world-events", url: "/?world=events", ready: "[data-slug]", steps: [{ wait: 2500 }] }),
 	// 4b. Project Taho zoom (deterministic deep link)

@@ -36,7 +36,7 @@ export type ChangeCategory = "New" | "Improvement" | "UI/UX" | "Fix" | "Performa
 
 /** What the content file says about a screenshot. Size and capture date come from the manifest, never typed by hand. */
 export type Shot = {
-	/** File name in public/case-study/ (archived: "archived/<name>"); the key into the manifest. */
+	/** File name in public/case-study/; the key into the manifest. */
 	file: string;
 	/** Describes what the shot shows, for a screen reader (not "screenshot"). */
 	alt: string;
@@ -45,7 +45,7 @@ export type Shot = {
 	/** Human state name ("Opened sky", "Impact, year 2025"). */
 	state: string;
 	mode?: "light" | "dark";
-	/** An older capture kept for a before/after; the file lives in public/case-study/archived/. */
+	/** An older capture shown for a before/after; copy it by hand from case-study-archive/ (repo root, not deployed) into public/case-study/ first. */
 	archived?: boolean;
 };
 /** Written by scripts/capture-case-study.mjs into shots-manifest.json, keyed by Shot.file. */
@@ -78,7 +78,7 @@ export type HighlightCopy = {
 	/** The opened Highlight, light and dark variants of one capture (the page picks by colour scheme). */
 	shots?: Shot[];
 	/** Snapshot only, always dated; never read live. */
-	count?: { value: number; asOf: ISODate };
+	count?: { value: number; unit: string; asOf: ISODate };
 };
 
 export type ShowcaseFeature = {

@@ -34,7 +34,12 @@ export function Walkthrough({ steps, children }: { steps: StepMeta[]; children: 
 	useEffect(() => {
 		const fromHash = () => {
 			const n = steps.findIndex((s) => `step-${s.id}` === location.hash.slice(1));
-			if (n >= 0) go(n, false);
+			if (n < 0) return;
+			go(n, false);
+			// The target was display:none until now, so the browser could not scroll to it: do it once the step is shown.
+			const id = location.hash.slice(1);
+			const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+			requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" })));
 		};
 		fromHash();
 		window.addEventListener("hashchange", fromHash);
@@ -65,10 +70,7 @@ export function Walkthrough({ steps, children }: { steps: StepMeta[]; children: 
 
 	return (
 		<section aria-label="Guided walkthrough" onKeyDown={onKeyDown}>
-			{/* No JavaScript: show every step and drop the controls. (globals.css has the same rule under @media (scripting: none).) */}
-			<noscript>
-				<style>{".wt-step[data-off]{display:block}.wt-controls{display:none!important}"}</style>
-			</noscript>
+			{/* No JavaScript: globals.css shows every step and drops the controls (@media (scripting: none)). */}
 			<div className="wt-controls flex flex-wrap items-center gap-3 border border-site-line bg-site-surface p-3 sm:p-4">
 				<p className="mr-auto font-label text-xs font-medium tracking-[0.12em] text-site-ink uppercase">
 					<span className="text-accent">

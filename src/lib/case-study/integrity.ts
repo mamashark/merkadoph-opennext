@@ -66,6 +66,8 @@ export function checkCaseStudyIntegrity(d: CaseStudyData): string[] {
 		for (const s of f.related ?? []) if (!slugs.has(s)) errors.push(`${f.slug}: unknown related slug "${s}"`);
 		for (const r of f.results ?? []) checkDate(`${f.slug}.results "${r.label}"`, r.measured);
 		for (const u of f.underTheHood ?? []) checkDate(`${f.slug}.underTheHood "${u.label}"`, u.verified);
+		dup(`${f.slug} walkthrough step id`, (f.walkthrough ?? []).map((s) => s.id));
+		dup(`${f.slug} underTheHood label`, (f.underTheHood ?? []).map((u) => u.label));
 		for (const s of f.walkthrough ?? []) if (s.liveHref && !s.liveHref.startsWith("/")) errors.push(`${f.slug}.walkthrough.${s.id}: liveHref must start with "/"`);
 		for (const { where, shot } of shotsOf(f)) {
 			if (!d.manifest[shot.file]) errors.push(`${where}: shot "${shot.file}" is not in shots-manifest.json`);

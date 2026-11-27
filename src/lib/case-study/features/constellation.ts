@@ -32,7 +32,7 @@ export const constellation: ShowcaseFeature = {
 		{
 			id: "fresh-visit",
 			step: "A folded sky",
-			body: "The page opens with a quiet, folded sky and a short invitation to open it. The invitation is one of 14 lines, seven that nod to José Rizal and Filipino sayings and seven that play on Shakespeare. One is picked at random on load, and a different one each time the sky folds again. [CONFIRM: Kay, the story behind the lines in your own words, and any line you would rather not show publicly]",
+			body: "The page opens with a quiet, folded sky and a short invitation to open it. The invitation is one of 14 lines, seven that nod to José Rizal and Filipino sayings and seven that play on Shakespeare. One is picked at random on load, and a different one each time the sky folds again. The two writers are a personal nod: I liked reading Shakespeare in my literature classes, and in college a minor subject on the Life and Works of Rizal was where I felt at ease, a break from the maths and programming.",
 			shots: [
 				...pair("folded", "desktop", "Folded sky", "The folded sky on a wide screen: a dark sky with a few stars, the title \"Ang Bagong Yugto\" set upright on the left, an Open button at the top right and a short invitation line in the middle.", "The folded sky on first visit."),
 				...pair("folded", "mobile", "Folded sky", "The folded sky on a phone: the title and an Open button above a framed panel of stars with a short invitation line in the middle.", "The same view on a phone."),
@@ -146,7 +146,7 @@ export const constellation: ShowcaseFeature = {
 		tahooo: {
 			what: "Project Taho, with Tahooo Corner: taho for events in Gothenburg.",
 			feeds: "Fixed content from the site's code, not the database: the cart page and the flavour menu.",
-			rule: "Always shown. It has a star for the Tahooo Corner page and one for each flavour. Blogs and events tagged Tahooo are joined to its page star by a thread. [CONFIRM: Kay, the Tahooo facts are still open (Needs Kay #9)]",
+			rule: "Always shown. It has a star for the Tahooo Corner page and one for each flavour. Blogs and events tagged Tahooo are joined to its page star by a thread.",
 			shots: pair("world-tahooo", "desktop", "Project Taho", "The Project Taho Highlight with the Tahooo Corner page and its flavours listed.", "Project Taho and its flavours."),
 			count: { value: 9, asOf: DATE },
 		},

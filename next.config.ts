@@ -74,4 +74,6 @@ export default nextConfig;
 // Enable calling `getCloudflareContext()` in `next dev`.
 // See https://opennext.js.org/cloudflare/bindings#local-access-to-bindings.
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
-initOpenNextCloudflareForDev();
+// Remote bindings (the R2 media bucket, `"remote": true` in wrangler.jsonc) only in `next dev`: `next build` runs this
+// too, and CI has no Cloudflare credentials to open a remote session.
+initOpenNextCloudflareForDev({ remoteBindings: process.env.NODE_ENV === "development" });

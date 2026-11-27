@@ -453,3 +453,4 @@ Rules: tasks move between sections with owner and date (YYYY-MM-DD) · bugs get 
 2026-11-27 · ARCH · PR #40 (media → R2): approve with changes; OPS fixed all items the same day (see In progress).
 2026-11-27 · OPS · PR #40 CI green (first runs failed: `remote: true` made `next build` open a Cloudflare session without a token; now dev-only).
 2026-11-27 · OPS · Released PR #40 (Kay's OK): media served from R2 (media.merkadoph.se). Backup + URL rewrite done (0 old URLs left). Kay purged all caches 00:16 UTC; Storage egress since then 0.3 MB (was ~1.8 GB/day).
+2026-11-27 · OPS · Released PR #41 (Kay's OK): public case study gets the bandwidth/R2 challenge; live 00:42 UTC, /case-study and /api/health checked. Private case study republished (v20).

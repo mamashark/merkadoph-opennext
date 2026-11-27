@@ -1,0 +1,182 @@
+{
+	"constellation--entry-open--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 43614
+	},
+	"constellation--entry-open--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 43680
+	},
+	"constellation--entry-open--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 58204
+	},
+	"constellation--entry-open--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 59152
+	},
+	"constellation--folded--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17018
+	},
+	"constellation--folded--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 18494
+	},
+	"constellation--folded--mobile-dark.webp": {
+		"width": 780,
+		"height": 1963,
+		"captured": "2026-11-27",
+		"bytes": 19196
+	},
+	"constellation--folded--mobile-light.webp": {
+		"width": 780,
+		"height": 1963,
+		"captured": "2026-11-27",
+		"bytes": 23808
+	},
+	"constellation--folded-cue-noli--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17308
+	},
+	"constellation--folded-cue-noli--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17452
+	},
+	"constellation--folded-cue-stage--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17576
+	},
+	"constellation--folded-cue-stage--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17710
+	},
+	"constellation--folded-cue-to-click--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17278
+	},
+	"constellation--folded-cue-to-click--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 17420
+	},
+	"constellation--hub-preview--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 43996
+	},
+	"constellation--hub-preview--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 45206
+	},
+	"constellation--hub-preview--mobile-dark.webp": {
+		"width": 780,
+		"height": 1963,
+		"captured": "2026-11-27",
+		"bytes": 42980
+	},
+	"constellation--hub-preview--mobile-light.webp": {
+		"width": 780,
+		"height": 1963,
+		"captured": "2026-11-27",
+		"bytes": 41282
+	},
+	"constellation--open--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 58242
+	},
+	"constellation--open--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 57134
+	},
+	"constellation--open--mobile-dark.webp": {
+		"width": 780,
+		"height": 1963,
+		"captured": "2026-11-27",
+		"bytes": 61894
+	},
+	"constellation--open--mobile-light.webp": {
+		"width": 780,
+		"height": 1963,
+		"captured": "2026-11-27",
+		"bytes": 60800
+	},
+	"constellation--world-blogs--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 48656
+	},
+	"constellation--world-blogs--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 48666
+	},
+	"constellation--world-blogs--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 63404
+	},
+	"constellation--world-blogs--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 64652
+	},
+	"constellation--world-impact-year--desktop-dark.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 47404
+	},
+	"constellation--world-impact-year--desktop-light.webp": {
+		"width": 1440,
+		"height": 900,
+		"captured": "2026-11-27",
+		"bytes": 48026
+	},
+	"constellation--world-impact-year--mobile-dark.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 59940
+	},
+	"constellation--world-impact-year--mobile-light.webp": {
+		"width": 780,
+		"height": 1688,
+		"captured": "2026-11-27",
+		"bytes": 61568
+	}
+}

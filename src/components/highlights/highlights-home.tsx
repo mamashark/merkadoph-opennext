@@ -7,6 +7,7 @@ import { getPublicPromotions, type PromotionSummary } from "@/lib/promotions";
 import { getHomeBulletin, getPublicBulletin, type BulletinCard } from "@/lib/bulletin";
 import { issuedBy, itemPath } from "@/lib/bulletin-shared";
 import { BUSINESSES, type Business, type BusinessId } from "@/lib/businesses";
+import { HIGHLIGHTS, type HighlightId } from "@/lib/highlights";
 import { BYGG } from "@/lib/bygg-content";
 import { DIGITAL } from "@/lib/digital-content";
 import { TAHOOO, FLAVOUR_RATIO, flavourImage } from "@/lib/tahooo-content";
@@ -53,7 +54,7 @@ const clip = (s: string | null | undefined, n = 240) => {
 	return t.length > n ? `${t.slice(0, t.lastIndexOf(" ", n - 1) > n * 0.6 ? t.lastIndexOf(" ", n - 1) : n - 1).trimEnd()}…` : t;
 };
 
-type WorldId = "blogs" | "events" | "impact" | BusinessId | "tahooo" | "bulletin";
+type WorldId = HighlightId;
 type World = { id: WorldId; label: string; sub: string; color: ConstellationColor; count: number; list: string; dots: number; allLabel: string; cta: string };
 
 /** Events in the sky: what's coming up; when nothing is, the most recent ones (the rest are in the /events archive). */
@@ -107,29 +108,18 @@ safe(getPublicPromotions("current", 1, 4), { promotions: [] as PromotionSummary[
 
 	const worlds: World[] = (
 		[
-			{ id: "blogs", allLabel: H.blogs.allLabel, cta: H.blogs.cta, label: H.blogs.label, sub: H.blogs.sub, color: "leaf", count: blogsRes.total, list: "/blogs", dots: 18, has: stories.length },
-			{
-				id: "events",
-				allLabel: live ? H.events.upcoming.allLabel : H.events.past.allLabel,
-				cta: H.events.cta,
-				label: H.events.label,
-				sub: live ? H.events.upcoming.sub : H.events.past.sub,
-				color: "red",
-				count: live ? upcoming.total : past.total,
-				list: live ? "/events" : "/events?when=past",
-				dots: 10,
-				has: events.length,
-			},
-			{ id: "impact", allLabel: H.impact.allLabel, cta: H.impact.cta, label: H.impact.label, sub: H.impact.sub, color: "sun", count: impact.length, list: "/impact", dots: 8, has: impactYears.length },
+			{ ...HIGHLIGHTS.blogs, count: blogsRes.total, has: stories.length },
+			{ ...HIGHLIGHTS.events, ...(live ? {} : HIGHLIGHTS.events.whenEmpty), count: live ? upcoming.total : past.total, has: events.length },
+			{ ...HIGHLIGHTS.impact, count: impact.length, has: impactYears.length },
 			// The two businesses always show: their page is worth visiting even before offerings are listed.
-			{ id: "bygg", allLabel: `${H.bygg.allLabelPrefix} ${BUSINESSES.bygg.name}`, cta: H.bygg.cta, label: BUSINESSES.bygg.name, sub: H.bygg.sub, color: "orange", count: biz.bygg.offerings.length + 1, list: BUSINESSES.bygg.path, dots: 8, has: 1 },
-			{ id: "digital", allLabel: `${H.digital.allLabelPrefix} ${BUSINESSES.digital.name}`, cta: H.digital.cta, label: BUSINESSES.digital.name, sub: H.digital.sub, color: "blue", count: biz.digital.offerings.length + 1, list: BUSINESSES.digital.path, dots: 8, has: 1 },
-			{ id: "tahooo", allLabel: H.tahooo.allLabel, cta: H.tahooo.cta, label: TAHOOO.highlight, sub: H.tahooo.sub, color: "caramel", count: TAHOOO.flavours.length + 1, list: "/tahooo", dots: 6, has: 1 },
-			{ id: "bulletin", allLabel: H.bulletin.allLabel, cta: H.bulletin.cta, label: H.bulletin.label, sub: H.bulletin.sub, color: "coral", count: noticeCount + promotions.total, list: "/bulletin", dots: 6, has: notices.length + promotions.promotions.length },
-		] as (World & { has: number })[]
+			{ ...HIGHLIGHTS.bygg, count: biz.bygg.offerings.length + 1, has: 1 },
+			{ ...HIGHLIGHTS.digital, count: biz.digital.offerings.length + 1, has: 1 },
+			{ ...HIGHLIGHTS.tahooo, count: TAHOOO.flavours.length + 1, has: 1 },
+			{ ...HIGHLIGHTS.bulletin, count: noticeCount + promotions.total, has: notices.length + promotions.promotions.length },
+		] as (World & { has: number; whenEmpty?: unknown })[]
 	)
 		.filter((w) => w.has > 0)
-		.map(({ has: _has, ...w }) => ({ ...w, count: Math.max(w.count, _has) }));
+		.map(({ has: _has, whenEmpty: _whenEmpty, ...w }) => ({ ...w, count: Math.max(w.count, _has) }));
 	const W = Object.fromEntries(worlds.map((w, i) => [w.id, { ...w, n: String(i + 1).padStart(2, "0") }])) as Partial<Record<WorldId, World & { n: string }>>;
 
 	/* ------------------------- Graph: hubs + tiles ------------------------- */

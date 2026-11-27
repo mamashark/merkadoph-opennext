@@ -82,9 +82,9 @@ export const CACHE_GROUPS: Record<CacheGroupId, { label: string; description: st
 	},
 	site: {
 		label: "Site settings & legal",
-		description: "SEO settings (business info, footer, structured data), /privacy, /terms, /cookies, /case-study and /blogs/rss.xml. Refreshes every public page.",
+		description: "SEO settings (business info, footer, structured data), /privacy, /terms, /cookies, /case-study (and its feature pages) and /blogs/rss.xml. Refreshes every public page.",
 		tags: ["seo", "legal"],
-		paths: [{ path: "/", type: "layout" }],
+		paths: [{ path: "/", type: "layout" }, { path: "/case-study", type: "layout" }],
 	},
 	sitemap: { label: "Sitemap", description: "/sitemap.xml.", tags: [], paths: [{ path: "/sitemap.xml" }] },
 };

@@ -433,6 +433,30 @@ html[data-hero-lock] {
 .accent-press { --accent: var(--site-blue); }
 .accent-case-study { --accent: var(--site-blue); }
 
+/* Case-study walkthrough (src/components/case-study/walkthrough.tsx): the steps are server-rendered with all but the first
+   marked data-off. Without JavaScript every step is shown and the controls (which would do nothing) are removed. */
+.wt-step[data-off] {
+	display: none;
+}
+@media (scripting: none) {
+	.wt-step[data-off] {
+		display: block;
+	}
+	.wt-controls {
+		display: none;
+	}
+}
+@keyframes wt-in {
+	from {
+		opacity: 0;
+	}
+}
+@media (prefers-reduced-motion: no-preference) {
+	.wt-step[data-current] {
+		animation: wt-in 0.25s ease-out;
+	}
+}
+
 /* A small square in the section colour before a label (the homepage's kicker mark). */
 .kicker-mark::before {
 	content: "";

@@ -30,7 +30,7 @@ function shotsOf(f: ShowcaseFeature): { where: string; shot: Shot }[] {
 	const out: { where: string; shot: Shot }[] = [];
 	if (f.cardShot) out.push({ where: `${f.slug}.cardShot`, shot: f.cardShot });
 	for (const s of f.walkthrough ?? []) s.shots.forEach((shot, i) => out.push({ where: `${f.slug}.walkthrough.${s.id}[${i}]`, shot }));
-	for (const [id, h] of Object.entries(f.highlights ?? [])) if (h?.shot) out.push({ where: `${f.slug}.highlights.${id}`, shot: h.shot });
+	for (const [id, h] of Object.entries(f.highlights ?? [])) h?.shots?.forEach((shot, i) => out.push({ where: `${f.slug}.highlights.${id}[${i}]`, shot }));
 	f.versions?.forEach((v, i) => {
 		if (v.before) out.push({ where: `${f.slug}.versions[${i}].before`, shot: v.before });
 		if (v.after) out.push({ where: `${f.slug}.versions[${i}].after`, shot: v.after });

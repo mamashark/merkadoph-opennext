@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageIntro } from "@/components/site/content-card";
+import { LABEL, Row, Section } from "@/components/case-study/parts";
 import { JsonLd } from "@/components/site/json-ld";
 import { caseStudy as cs } from "@/lib/case-study-content";
+import { caseStudyPages } from "@/lib/case-study/features";
 import { formatDate } from "@/lib/datetime";
 import { absoluteUrl, breadcrumbs, pageMetadata } from "@/lib/seo";
 
@@ -13,7 +16,6 @@ import { absoluteUrl, breadcrumbs, pageMetadata } from "@/lib/seo";
 export const revalidate = 86400; // CACHE_TTL
 
 const PATH = "/case-study";
-const LABEL = "font-label text-xs font-medium tracking-[0.14em] uppercase";
 
 export function generateMetadata(): Promise<Metadata> {
 	return pageMetadata({ title: cs.title, description: cs.description, path: PATH, type: "article", modifiedTime: cs.updated });
@@ -28,31 +30,6 @@ const SECTIONS = [
 	{ id: "results", label: "Results" },
 	{ id: "next", label: "What's next" },
 ] as const;
-
-function Section({ id, n, title, intro, children }: { id: string; n: number; title: string; intro?: string; children: React.ReactNode }) {
-	return (
-		<section id={id} aria-labelledby={`${id}-h`} className="scroll-mt-24 border-t border-site-line pt-10 sm:pt-14">
-			<p className={`${LABEL} text-accent`} aria-hidden>
-				{String(n).padStart(2, "0")}
-			</p>
-			<h2 id={`${id}-h`} className="mt-3 font-display text-3xl leading-tight font-bold tracking-tight text-balance text-site-ink sm:text-4xl">
-				{title}
-			</h2>
-			{intro && <p className="mt-3 max-w-2xl text-site-ink-2">{intro}</p>}
-			<div className="mt-8">{children}</div>
-		</section>
-	);
-}
-
-/** Label/text pairs inside a card (Why, Trade-off, Problem…). */
-function Row({ label, children, tone = "muted" }: { label: string; children: React.ReactNode; tone?: "muted" | "accent" }) {
-	return (
-		<div className="grid gap-1 sm:grid-cols-[7.5rem_1fr] sm:gap-4">
-			<dt className={`${LABEL} pt-0.5 ${tone === "accent" ? "text-accent" : "text-site-muted"}`}>{label}</dt>
-			<dd className="text-site-ink-2">{children}</dd>
-		</div>
-	);
-}
 
 export default function CaseStudyPage() {
 	return (
@@ -103,6 +80,15 @@ export default function CaseStudyPage() {
 					))}
 				</ul>
 			</nav>
+
+			<p className="mt-6 text-site-ink-2">
+				Feature walkthroughs:{" "}
+				{caseStudyPages().map((f) => (
+					<Link key={f.slug} href={`/case-study/${f.slug}`} className="inline-flex min-h-11 items-center font-medium text-site-ink underline underline-offset-4 hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
+						{f.title}
+					</Link>
+				))}
+			</p>
 
 			<div className="mt-14 space-y-16 sm:space-y-20">
 				<Section id="goals" n={1} title="Why it was rebuilt">

@@ -39,7 +39,7 @@ for (const scheme of SCHEMES) {
 	for (const size of SIZES) {
 		test.describe(`axe ${scheme} ${size.width}`, () => {
 			test.use({ viewport: size, colorScheme: scheme });
-			for (const target of ["/", "/blogs", "post", "/events", "/impact", "impact entry", "/tahooo", "/digital", "/bygg", "/privacy", "/cookies"]) {
+			for (const target of ["/", "/blogs", "post", "/events", "/impact", "impact entry", "/tahooo", "/digital", "/bygg", "/privacy", "/cookies", "/case-study", "/case-study/constellation"]) {
 				test(`${target}: no WCAG 2.2 AA violations (except known open bugs)`, async ({ page, request }) => {
 					const path = target === "post" ? await firstPostPath(request) : target === "impact entry" ? await firstImpactPath(request) : target;
 					await page.goto(path, { waitUntil: "load" });

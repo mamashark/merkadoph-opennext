@@ -5,7 +5,7 @@ import { hasHorizontalScroll, watchErrors } from "./helpers";
 // /portfolio redirects (308), so the final status after following it is what counts.
 const ROUTES = [
 	"/", "/blogs", "/events", "/portfolio", "/services", "/promotions", "/privacy", "/terms", "/cookies",
-	"/bygg", "/digital", "/tahooo", "/bulletin", "/impact", "/search?q=taho",
+	"/bygg", "/digital", "/tahooo", "/bulletin", "/impact", "/search?q=taho", "/case-study", "/case-study/constellation",
 ];
 
 for (const route of ROUTES) {
@@ -25,6 +25,11 @@ for (const route of ROUTES) {
 
 test("an unknown route returns 404", async ({ request }) => {
 	const res = await request.get("/this-page-does-not-exist", { maxRedirects: 0 });
+	expect(res.status()).toBe(404);
+});
+
+test("an unknown case-study feature returns 404", async ({ request }) => {
+	const res = await request.get("/case-study/unknown", { maxRedirects: 0 });
 	expect(res.status()).toBe(404);
 });
 

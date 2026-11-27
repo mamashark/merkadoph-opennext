@@ -1,7 +1,8 @@
 /*
  * Types for "Behind the Build" (the living case study). Types only, no data (design: local/behind-the-build-phase2-design.md, section 1.2).
- * `Decision` and `Challenge` get an additive `id` here; src/lib/case-study-content.ts keeps its own copies until phase 4.2.
+ * `Decision` and `Challenge` carry a stable `id`; src/lib/case-study-content.ts imports them from here.
  */
+import type { HighlightId } from "@/lib/highlights";
 
 export type Fact = { label: string; value: string };
 export type Feature = { title: string; body: string };
@@ -28,12 +29,6 @@ export type SkillId = (typeof SKILL_IDS)[number];
 
 export const CATEGORY_IDS = ["experience", "design", "content", "admin", "discovery", "platform", "quality"] as const;
 export type Category = (typeof CATEGORY_IDS)[number];
-
-/**
- * The seven Highlights, in homepage order. Phase 4.1 moves this list to src/lib/highlights.ts (single source of truth)
- * and this file re-imports it from there; until then keep it in step with `worlds` in highlights-home.tsx.
- */
-export type HighlightId = "blogs" | "events" | "impact" | "bygg" | "digital" | "tahooo" | "bulletin";
 
 export type ShowcaseStatus = "live" | "in-progress" | "planned" | "experimental";
 export type ShotViewport = "desktop" | "tablet" | "mobile";
@@ -80,7 +75,8 @@ export type HighlightCopy = {
 	what: string;
 	feeds: string;
 	rule: string;
-	shot?: Shot;
+	/** The opened Highlight, light and dark variants of one capture (the page picks by colour scheme). */
+	shots?: Shot[];
 	/** Snapshot only, always dated; never read live. */
 	count?: { value: number; asOf: ISODate };
 };

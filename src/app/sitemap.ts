@@ -6,6 +6,8 @@ import { getServiceSlugs } from "@/lib/services";
 import { getPortfolioSlugs } from "@/lib/portfolio";
 import { getBulletinSlugs } from "@/lib/bulletin";
 import { isPressType } from "@/lib/bulletin-shared";
+import { caseStudy } from "@/lib/case-study-content";
+import { caseStudyPages } from "@/lib/case-study/features";
 import { SITE_URL } from "@/lib/env";
 import { stageGateEnabled } from "@/lib/stage";
 import { getLegalPages, LEGAL_PAGE_IDS, LEGAL_PAGES } from "@/lib/site-settings";
@@ -67,7 +69,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 		{ url: `${SITE_URL}/tahooo`, changeFrequency: "weekly", priority: 0.9 },
 		{ url: `${SITE_URL}/bulletin`, changeFrequency: "daily", priority: 0.8 },
 		{ url: `${SITE_URL}/press`, changeFrequency: "weekly", priority: 0.7 },
-		{ url: `${SITE_URL}/case-study`, changeFrequency: "monthly", priority: 0.4 },
+		{ url: `${SITE_URL}/case-study`, lastModified: caseStudy.updated, changeFrequency: "monthly", priority: 0.4 },
+		...caseStudyPages().map((f) => ({ url: `${SITE_URL}/case-study/${f.slug}`, lastModified: f.updated, changeFrequency: "monthly" as const, priority: 0.4 })),
 		...section("/blogs", blogs, "weekly"),
 		...section("/events", events, "weekly"),
 		...section("/promotions", promotions, "daily"),

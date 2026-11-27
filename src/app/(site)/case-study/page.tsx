@@ -142,7 +142,7 @@ export default function CaseStudyPage() {
 				<Section id="decisions" n={4} title="Key decisions" intro="Each choice, the reason for it and the trade-off accepted.">
 					<div className="grid gap-5 lg:grid-cols-2">
 						{cs.decisions.map((d) => (
-							<article key={d.title} className="border border-site-line bg-site-surface p-5 sm:p-6">
+							<article key={d.id} id={`decision-${d.id}`} className="scroll-mt-24 border border-site-line bg-site-surface p-5 sm:p-6">
 								<p className={`${LABEL} text-accent`}>{d.area}</p>
 								<h3 className="mt-2 font-display text-xl leading-snug font-bold text-site-ink">{d.title}</h3>
 								<dl className="mt-4 space-y-3">
@@ -159,8 +159,8 @@ export default function CaseStudyPage() {
 				<Section id="challenges" n={5} title="Challenges and how they were solved" intro="Real problems from the project log, with the cause, the fix and what came of it.">
 					<ol className="space-y-5">
 						{cs.challenges.map((c, i) => (
-							<li key={c.title}>
-								<article className="border border-site-line bg-site-surface p-5 sm:p-7">
+							<li key={c.id}>
+								<article id={`challenge-${c.id}`} className="scroll-mt-24 border border-site-line bg-site-surface p-5 sm:p-7">
 									<p className={`${LABEL} text-site-muted`}>
 										<span className="text-accent">{String(i + 1).padStart(2, "0")}</span> · {c.area}
 									</p>

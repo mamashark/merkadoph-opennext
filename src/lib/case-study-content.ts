@@ -10,10 +10,9 @@
  * - The AI-assisted workflow gets one accurate sentence (`process`), with no details of the team, rules or playbook.
  */
 
-export type Fact = { label: string; value: string };
-export type Decision = { area: string; title: string; why: string; tradeoff: string };
-export type Feature = { title: string; body: string };
-export type Challenge = { area: string; title: string; problem: string; cause?: string; fix: string; result: string };
+import type { Challenge, Decision, Fact, Feature } from "./case-study/types";
+
+export type { Challenge, Decision, Fact, Feature };
 
 export const caseStudy = {
 	/** ISO date of the last content update, shown on the page. */
@@ -77,36 +76,42 @@ export const caseStudy = {
 
 	decisions: [
 		{
+			id: "cloudflare-over-vercel",
 			area: "Hosting",
 			title: "Next.js on Cloudflare Workers instead of Vercel",
 			why: "Cloudflare was cheaper at this size, already ran the domain's DNS, and includes storage, a small database, rate limiting and scheduled jobs on the same platform.",
 			tradeoff: "The adapter needs more setup by hand, and Workers have strict per-request CPU limits. That limit later caused the biggest production issue (see the challenges).",
 		},
 		{
+			id: "custom-admin",
 			area: "Content",
 			title: "A custom admin instead of a headless CMS",
 			why: "The content is specific: events in Swedish time, community projects grouped by year, tags shared across every type. A hosted CMS would add a vendor and a monthly bill.",
 			tradeoff: "More code to build and maintain, in exchange for no lock-in and an editor that fits how the business works.",
 		},
 		{
+			id: "cache-and-purge",
 			area: "Performance",
 			title: "Cache everything, purge precisely",
 			why: "Pages are rendered once and served from the edge. Each save purges only its content type, and a small scheduled job publishes or retires timed posts, offers and events on schedule.",
 			tradeoff: "Caching adds moving parts, so every content type has a clear purge path, and the admin can clear any group by hand.",
 		},
 		{
+			id: "defence-in-depth",
 			area: "Security",
 			title: "Defence in depth",
 			why: "No single layer is trusted: the admin is checked again on the server for every page and action, the database refuses unpublished or private rows to the public, every input is validated, and forms and log-in are rate limited.",
 			tradeoff: "The strictest Content Security Policy would make every page render per request and switch off the cache. I chose a slightly looser policy, locked down everywhere else, and documented why.",
 		},
 		{
+			id: "live-behind-a-gate",
 			area: "Release",
 			title: "Live on the real domain, behind a gate",
 			why: "The site was deployed to merkadoph.se early but showed visitors a coming-soon page until launch on 26 November 2026, so testing could happen on the real platform. Pages behind the gate were hidden from search engines.",
 			tradeoff: "Going live was one deliberate switch instead of something that happens whenever code is saved.",
 		},
 		{
+			id: "cookieless-analytics",
 			area: "Privacy",
 			title: "Cookieless analytics instead of Google Analytics",
 			why: "Google Analytics sets cookies, so it needs a consent banner and only counts the visitors who accept. Cloudflare Web Analytics counts visits without cookies or a visitor ID, so there is no banner and no gaps, and it adds almost nothing to the page.",
@@ -116,6 +121,7 @@ export const caseStudy = {
 
 	challenges: [
 		{
+			id: "error-1102",
 			area: "Production",
 			title: "Visitors getting a Cloudflare error page",
 			problem: "Some requests failed with Cloudflare's \"Error 1102\", clustered around a site crawl and busy editing sessions.",
@@ -124,6 +130,7 @@ export const caseStudy = {
 			result: "No CPU-limit errors since the upgrade so far, and it stays monitored. The lesson: read the metrics before guessing. It looked like a code bug but was a platform limit.",
 		},
 		{
+			id: "every-push-live",
 			area: "Release control",
 			title: "Every push was going live",
 			problem: "A new production version appeared that nobody had approved.",
@@ -132,6 +139,7 @@ export const caseStudy = {
 			result: "Saving work and publishing it are now two separate steps.",
 		},
 		{
+			id: "scanners",
 			area: "Security",
 			title: "Scanners probing the site",
 			problem: "Bots requested paths like /.env and /wp-login.php, and each one woke the app to render a full 404 page.",
@@ -139,6 +147,7 @@ export const caseStudy = {
 			result: "Less wasted work per day, and real visitors unaffected.",
 		},
 		{
+			id: "mobile-lighthouse",
 			area: "Performance",
 			title: "Mobile Lighthouse from 90 towards 100",
 			problem: "Desktop scored 100, but mobile Performance was 90, with the largest paint at about 3.6 s on a simulated slow phone.",
@@ -147,6 +156,7 @@ export const caseStudy = {
 			result: "Mobile 97 on the homepage at the time (production build, light mode); a later hero redesign brought it to 92, which is the next performance task. Skipping off-screen sections broke in-page links and the Back button at first; both were caught in review and fixed before release.",
 		},
 		{
+			id: "hidden-labels",
 			area: "Accessibility",
 			title: "Labels hidden behind photos",
 			problem: "On the homepage sky, some section names were partly covered by photos, and the hero title could sit on top of a cluster.",
@@ -155,6 +165,7 @@ export const caseStudy = {
 			result: "Checked on 44 random layouts in both modes: no label, photo or star inside the title, and labels still clickable.",
 		},
 		{
+			id: "shopify-migration",
 			area: "Migration",
 			title: "Moving years of content off Shopify",
 			problem: "Blog posts, images and event write-ups had to move without breaking a single old link.",
@@ -162,6 +173,7 @@ export const caseStudy = {
 			result: "Old addresses lead to the new pages, and nothing was published without a review.",
 		},
 		{
+			id: "shop-moved-out",
 			area: "Business change",
 			title: "The shop moved out mid-project",
 			problem: "A full shop (products, cart, checkout, payments, accounts) was already built when the groceries moved to a partner store.",
@@ -169,6 +181,7 @@ export const caseStudy = {
 			result: "The feature is safely unreachable, and can return if the business needs it.",
 		},
 		{
+			id: "dependency-update",
 			area: "Testing",
 			title: "A small dependency update that broke the homepage",
 			problem: "A routine update of libraries within their allowed versions passed lint, type checks and the build, but several end-to-end browser tests on the homepage graph started failing.",
@@ -177,6 +190,7 @@ export const caseStudy = {
 			result: "Caught before anything went live, and fixed at the cause instead of by holding the library back.",
 		},
 		{
+			id: "cookie-only-release",
 			area: "Release process",
 			title: "A release that only broke for logged-in visitors",
 			problem: "Right after a release, every request that carried a cookie crashed with a Cloudflare error, including the admin. Requests without cookies worked, so the automated tests and the health checks after the deploy were all green.",
@@ -185,6 +199,7 @@ export const caseStudy = {
 			result: "Down for logged-in visitors for about ten minutes. Every dependency update is now run on the Cloudflare runtime and requested with a cookie before release, and the checks after each deploy send cookies too.",
 		},
 		{
+			id: "launch-day",
 			area: "Launch",
 			title: "Launch day: two small details",
 			problem: "The last update before launch failed every accessibility test, although the same tests had passed an hour earlier. Then the launch build finished and the site still showed the coming-soon page.",
@@ -193,6 +208,7 @@ export const caseStudy = {
 			result: "Live on 26 November 2026. Right after launch, every public page and every sitemap address loaded, nothing blocked search engines, and Lighthouse Best Practices measured 100.",
 		},
 		{
+			id: "r2-bandwidth",
 			area: "Platform limits",
 			title: "The free database plan ran out of bandwidth",
 			problem: "The day after launch, the database host warned that the free plan's monthly bandwidth was used up more than twice over, and that the site's data would stop loading within three days. The database itself was tiny.",

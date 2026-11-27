@@ -83,41 +83,41 @@
 		"captured": "2026-11-27",
 		"bytes": 17420
 	},
-	"constellation--hub-preview--desktop-dark.webp": {
+	"constellation--hub-preview-events--desktop-dark.webp": {
 		"width": 1440,
 		"height": 900,
 		"captured": "2026-11-27",
-		"bytes": 43996
+		"bytes": 37714
 	},
-	"constellation--hub-preview--desktop-light.webp": {
+	"constellation--hub-preview-events--desktop-light.webp": {
 		"width": 1440,
 		"height": 900,
 		"captured": "2026-11-27",
-		"bytes": 45206
+		"bytes": 39362
 	},
-	"constellation--hub-preview--mobile-dark.webp": {
+	"constellation--hub-preview-events--mobile-dark.webp": {
 		"width": 780,
 		"height": 1963,
 		"captured": "2026-11-27",
-		"bytes": 42980
+		"bytes": 38032
 	},
-	"constellation--hub-preview--mobile-light.webp": {
+	"constellation--hub-preview-events--mobile-light.webp": {
 		"width": 780,
 		"height": 1963,
 		"captured": "2026-11-27",
-		"bytes": 41282
+		"bytes": 37490
 	},
 	"constellation--open--desktop-dark.webp": {
 		"width": 1440,
 		"height": 900,
 		"captured": "2026-11-27",
-		"bytes": 58242
+		"bytes": 59064
 	},
 	"constellation--open--desktop-light.webp": {
 		"width": 1440,
 		"height": 900,
 		"captured": "2026-11-27",
-		"bytes": 57134
+		"bytes": 56346
 	},
 	"constellation--open--mobile-dark.webp": {
 		"width": 780,
@@ -131,29 +131,29 @@
 		"captured": "2026-11-27",
 		"bytes": 60800
 	},
-	"constellation--world-blogs--desktop-dark.webp": {
+	"constellation--world-events--desktop-dark.webp": {
 		"width": 1440,
 		"height": 900,
 		"captured": "2026-11-27",
-		"bytes": 48656
+		"bytes": 17050
 	},
-	"constellation--world-blogs--desktop-light.webp": {
+	"constellation--world-events--desktop-light.webp": {
 		"width": 1440,
 		"height": 900,
 		"captured": "2026-11-27",
-		"bytes": 48666
+		"bytes": 17608
 	},
-	"constellation--world-blogs--mobile-dark.webp": {
+	"constellation--world-events--mobile-dark.webp": {
 		"width": 780,
 		"height": 1688,
 		"captured": "2026-11-27",
-		"bytes": 63404
+		"bytes": 28298
 	},
-	"constellation--world-blogs--mobile-light.webp": {
+	"constellation--world-events--mobile-light.webp": {
 		"width": 780,
 		"height": 1688,
 		"captured": "2026-11-27",
-		"bytes": 64652
+		"bytes": 28752
 	},
 	"constellation--world-impact-year--desktop-dark.webp": {
 		"width": 1440,

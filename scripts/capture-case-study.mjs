@@ -105,7 +105,7 @@ const overlapCheck = () => {
 			coveredBy.push(a.g.__data__.hub + " by " + el?.tagName + "." + (el?.getAttribute?.("class") ?? ""));
 		}
 	}
-	// Stricter than the spec (a clean picture): no photo tile under the hint line. (Tiles under a label are by design: labels sit in a layer above them; reported, not failed.)
+	// Stricter than the spec (a clean picture): no photo tile under the hint line. (Also no tile under a hub label, so the picture reads cleanly.)
 	const rects = (sel) => [...document.querySelectorAll(sel)].map((e) => e.getBoundingClientRect()).filter((r) => r.width > 0);
 	const hit = (a, r) => Math.min(a.r, r.right) > Math.max(a.l, r.left) && Math.min(a.b, r.bottom) > Math.max(a.top, r.top);
 	const tiles = rects("svg image");
@@ -216,7 +216,7 @@ async function attempt(browser, s, url) {
 			checked = true;
 			await settle(page);
 			const r = await page.evaluate(overlapCheck);
-			if (r.n < 6 || r.labelPairs > 0 || r.covered > 0 || r.tileOnHint > 0) throw new Error(`layout check failed (hubs ${r.n}, label overlaps ${r.labelPairs}, covered ${r.covered} [${r.coveredBy}], tiles on labels ${r.tileOnLabel}, tile on hint ${r.tileOnHint})`);
+			if (r.n < 6 || r.labelPairs > 0 || r.covered > 0 || r.tileOnLabel > 0 || r.tileOnHint > 0) throw new Error(`layout check failed (hubs ${r.n}, label overlaps ${r.labelPairs}, covered ${r.covered} [${r.coveredBy}], tiles on labels ${r.tileOnLabel}, tile on hint ${r.tileOnHint})`);
 		};
 		for (const step of s.steps ?? []) {
 			await runStep(page, step);
